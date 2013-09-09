@@ -1,2 +1,0 @@
-"C:\\Users\\Bohan\\Documents\\JCreator LE\\MyProjects\\Transactional IO\\TransactionalFileInputStream.java"
-"C:\\Users\\Bohan\\Documents\\JCreator LE\\MyProjects\\Transactional IO\\TransactionalFileOutputStream.java"
