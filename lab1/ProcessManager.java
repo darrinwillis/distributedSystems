@@ -4,24 +4,26 @@ import java.util.HashMap;
 
 public class ProcessManager
 {
-    private HashMap<String, MigratableProcess> processes;
+    private HashMap<String, TimedProcess> processes;
     private static final String MasterServerURL=
         "some url?";
 
     public ProcessManager()
     {
-        processes = new HashMap<String, MigratableProcess>();
+        processes = new HashMap<String, TimedProcess>();
     }
 
     // Requires a unique name for the process; otherwise replaces old process
     public void runProcess(MigratableProcess process, String name)
     {
-        MigratableProcess oldProcess = processes.put(name, process);
+        TimedProcess timedProcess = new TimedProcess(process);
+        TimedProcess oldProcess = processes.put(name, timedProcess);
         if (oldProcess != null)
         {
             System.out.println("Old Process replaced");
             //Handle old thread
         }
+        //This must handle the timer TODO
         Thread thread = new Thread(process, name);
         thread.start();
     }
@@ -29,14 +31,13 @@ public class ProcessManager
     //Stops a process by name, and writes it to out
     public void stopProcess(String name, ObjectOutputStream out)
     {
-        MigratableProcess process = this.processes.remove(name);
+        TimedProcess process = this.processes.remove(name);
         if (process != null)
         {
             try {
-                process.suspend();
+                process.migratableProcess.suspend();
                 //Handle stopping thread
                 System.out.println("Suspending and writing process " + name);
-                out.writeObject(process);
             } catch (Exception e)
             {
                 e.printStackTrace();

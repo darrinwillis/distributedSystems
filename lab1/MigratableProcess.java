@@ -1,8 +1,9 @@
 import java.lang.Runnable;
-import java.io.Serializable;
+import java.io.*;
 
 public interface MigratableProcess extends Runnable, Serializable
 {
-    //void run();
+    void run();
     void suspend();
+    public ObjectOutputStream out();
 }

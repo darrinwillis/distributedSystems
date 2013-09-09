@@ -15,6 +15,7 @@ JFLAGS = -g
 
 CLASSES = \
 		MigratableProcess.java \
+		TimedProcess.java \
 		ProcessManager.java \
 		MigratableProcessManagerInterface.java \
 		ProcessManagerClient.java \
