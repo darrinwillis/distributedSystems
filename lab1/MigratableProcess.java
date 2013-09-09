@@ -1,8 +1,8 @@
 import java.lang.Runnable;
 import java.io.Serializable;
 
-public interface MigratableProcess implements Runnable, Serializable
+public interface MigratableProcess extends Runnable, Serializable
 {
-    void run();
+    //void run();
     void suspend();
 }
