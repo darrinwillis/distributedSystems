@@ -1,5 +1,7 @@
 # A makefile for lab1
 
+# Transactional IO Directory
+TRANS_DIR = TransactionalIO/ 
 
 # Java compiler variable
 JC = javac
@@ -15,12 +17,13 @@ CLASSES = \
 		MigratableProcess.java \
 		ProcessManager.java \
 		MigratableProcessManagerInterface.java \
-		ProcessManagerClient.java
+		ProcessManagerClient.java \
+		TransactionalIO/TransactionalFileOutputStream.java \
+		TransactionalIO/TransactionalFileInputStream.java
 
 default: classes
 
 classes: $(CLASSES:.java=.class)
 
 clean:
-	$(RM) *.class
-
+	find . -type f -name "*.class" -delete
