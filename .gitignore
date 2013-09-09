@@ -1,0 +1,9 @@
+# Java Object Files #
+#####################
+*.class
+
+# Project Files #
+#################
+*.jcp
+*.jcu
+*.jcw
