@@ -4,45 +4,31 @@ import java.util.*;
 
 class ProcessManagerClient
 {
-    private static final String MasterServerURL = "Some url";
+//    private static final String DefaultMasterServerURL = "rmi://unix12.andrew.cmu.edu/usr18/dswillis/private/15440/distributedSystems/lab1";
 
+    private static final String DefaultMasterServerURL = "rmi://unix12.andrew.cmu.edu/processDelegationServer";
     public static void main (String []args)
     {
+        String MasterServerURL = DefaultMasterServerURL;
+        if (args.length != 0)
+            MasterServerURL = args[0];
+
         try
         {
             System.setSecurityManager (new RMISecurityManager());
-            MigratableProcessManagerInterface processMaster = (MigratableProcessManagerInterface) Naming.lookup(MasterServerURL);
-            List<MigratableProcess> processStarts = processMaster.lookupStarts();
-            List<MigratableProcess> processEnds = processMaster.lookupEnds();
+            MigratableProcessManagerInterface processMaster = (MigratableProcessManagerInterface) Naming.lookup(DefaultMasterServerURL);
 
             ProcessManager processManager = new ProcessManager();
-            start(processStarts, processManager);
-            end(processEnds, processManager);
-
-
+            while (true)
+            {
+                List<MigratableProcess> processes =
+                        processMaster.lookupCurrentProcesses();
+                processManager.setProcesses(processes);
+            }
         }
         catch (Exception e)
         {
             e.printStackTrace();
-        }
-    }
-
-    private static void start(List<MigratableProcess> processStarts, ProcessManager processManager)
-    {
-        for (int i = 0; i < processStarts.size(); i++)
-        {
-            MigratableProcess process = processStarts.get(i);
-            processManager.runProcess(process, "NAME");
-        }
-    }
-
-    //Writes out all processes to a given file NOTE:NEEDS FILE
-    private static void end(List<MigratableProcess> processEnds, ProcessManager processManager)
-    {
-        for (int i = 0; i < processEnds.size(); i++)
-        {
-            MigratableProcess process = processEnds.get(i);
-            processManager.stopProcess("NAME", null);
         }
     }
 

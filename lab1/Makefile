@@ -20,7 +20,8 @@ CLASSES = \
 		MigratableProcessManagerInterface.java \
 		ProcessManagerClient.java \
 		TransactionalIO/TransactionalFileOutputStream.java \
-		TransactionalIO/TransactionalFileInputStream.java
+		TransactionalIO/TransactionalFileInputStream.java \
+		ProcessDelegationServer.java
 
 default: classes
 

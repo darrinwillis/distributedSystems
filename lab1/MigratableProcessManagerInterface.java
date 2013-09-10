@@ -1,7 +1,7 @@
 import java.util.*;
+import java.rmi.*;
 
-public interface MigratableProcessManagerInterface
+public interface MigratableProcessManagerInterface extends Remote
 {
-    public List<MigratableProcess> lookupStarts();
-    public List<MigratableProcess> lookupEnds();
+    public List<MigratableProcess> lookupCurrentProcesses() throws RemoteException;
 }

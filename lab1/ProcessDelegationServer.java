@@ -29,15 +29,12 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MigratableP
         }
     }
 
-    public List<MigratableProcess> lookupStarts()
+    public List<MigratableProcess> lookupCurrentProcesses() throws RemoteException
     {
+        System.out.println("Client Connected");
         return null;
     }
     
     
-    public List<MigratableProcess> lookupEnds()
-    {
-        return null;
-    }
 
 }

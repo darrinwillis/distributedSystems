@@ -1,6 +1,6 @@
 import java.rmi.*;
 import java.io.*;
-import java.util.HashMap;
+import java.util.*;
 
 public class ProcessManager
 {
@@ -11,6 +11,11 @@ public class ProcessManager
     public ProcessManager()
     {
         processes = new HashMap<String, TimedProcess>();
+    }
+
+    public void setProcesses(List<MigratableProcess> processes)
+    {
+        // This should internally handle run vs. stop
     }
 
     // Requires a unique name for the process; otherwise replaces old process
