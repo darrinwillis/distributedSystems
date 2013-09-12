@@ -3,8 +3,8 @@
 grant
 {
     permission java.net.SocketPermission
-        "unix12.andrew.cmu.edu:1024-65535", "connect";
+        "unix12.andrew.cmu.edu:1024-65535", "connect, accept, resolve";
     permission java.net.SocketPermission
-        "unix12.andrew.cmu.edu:80", "connect";
+        "unix12.andrew.cmu.edu:80", "connect, accept, resolve";
 };
 

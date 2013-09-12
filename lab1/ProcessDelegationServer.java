@@ -37,6 +37,7 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
             {
                 //DO SOME LOAD BALANCING
                 server.balanceProcesses();
+                Thread.sleep(1000);
             }
 
         }
@@ -83,7 +84,13 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
 
             try{
                 firstClient.setProcesses(this.processes);
-            } catch(Exception e)
+            } 
+            catch(ConnectException|UnmarshalException e)
+            {
+                System.out.println("Client disconnected");
+                clients.remove(firstClient);
+            } 
+            catch(Exception e)
             {
                 e.printStackTrace();
             }
