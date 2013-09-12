@@ -37,7 +37,7 @@ public class GrepProcess implements MigratableProcess
 
 	try {
 	    while (!suspending) {
-		String line = in.readInt();
+		String line = in.readLine();
 		System.out.println("Read Line");
 
 		if (line == null) break;

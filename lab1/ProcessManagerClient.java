@@ -7,9 +7,12 @@ class ProcessManagerClient implements ProcessManagerClientInterface
 //    private static final String DefaultMasterServerURL = "rmi://unix12.andrew.cmu.edu/usr18/dswillis/private/15440/distributedSystems/lab1";
 
     private static final String DefaultMasterServerURL = "rmi://unix12.andrew.cmu.edu/processDelegationServer";
+    private ProcessManager processManager;
+
     public ProcessManagerClient(String masterServerURL)
     {
-        
+        processManager = new ProcessManager();
+            
         try
         {
             System.setSecurityManager (new RMISecurityManager());
@@ -46,10 +49,12 @@ class ProcessManagerClient implements ProcessManagerClientInterface
         if (processes != null)
         {
             System.out.println("Attempting to set list of " + processes.size() + " processes");
+            processManager.setProcesses((MigratableProcess[]) processes.toArray());
         }
         else
         {
             System.out.println("No Processes to do");
+            
         }
     }
 }
