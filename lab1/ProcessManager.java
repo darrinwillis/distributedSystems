@@ -4,19 +4,21 @@ import java.util.*;
 
 public class ProcessManager
 {
-    private HashMap<Integer, TimedProcess> processMap;
+    private HashMap<Integer, MigratableProcess> processMap;
     private HashMap<Thread, Integer> threadMap;
     
     private LinkedList<Thread> threads;
+    private LinkedList<MigratableProcess> processes; 
     	
     private static final String MasterServerURL=
         "some url?";
 
     public ProcessManager()
     {
-        processMap = new HashMap<Integer, TimedProcess>();
+        processMap = new HashMap<Integer, MigratableProcess>();
         threadMap = new HashMap<Thread, Integer>();
         
+        processes = new LinkedList<MigratableProcess>();
         threads = new LinkedList<Thread>();
     }
     
@@ -27,9 +29,33 @@ public class ProcessManager
     	}
     	return -1;
     }
+    
+    public static <T, E> T getKeyByValue(Map<T, E> map, E value) {
+	    for (Map.Entry<T, E> entry : map.entrySet()) {
+	        if (value.equals(entry.getValue())) {
+	            return entry.getKey();
+	        }
+	    }
+	    return null;
+	}
 
-    public void setProcesses(List<MigratableProcess> processes)
-    {
+    public void setProcesses(MigratableProcess[] ps)
+    { 
+   		LinkedList<MigratableProcess> seen = new LinkedList<MigratableProcess>();
+    	for(int i = 0; i < ps.length; i++) {
+    		if(processes.contains(ps[i])) 
+    			seen.add(ps[i]);
+    		else
+    			runProcess(ps[i]);
+    	}
+    	MigratableProcess[] processArray = (MigratableProcess[]) processes.toArray();
+    	for(int i = 0; i < processArray.length; i++) {
+    		if(!seen.contains(processArray[i]))
+    			suspendProcess(getKeyByValue(processMap,processArray[i]));
+    	}
+    }
+    
+    public void checkThreads(){
     	Thread t;
     	while(true) {
     		try {
@@ -69,7 +95,7 @@ public class ProcessManager
     }
     
     public void suspendProcess(Integer pid) {
-    	TimedProcess p = processMap.remove(pid);
+    	MigratableProcess p = processMap.remove(pid);
     	p.suspend();
     	try{   	
 	    	TransactionalFileOutputStream out = new TransactionalFileOutputStream(pid.toString(), false);
@@ -87,9 +113,8 @@ public class ProcessManager
     // Requires a unique name for the process; otherwise replaces old process
     public void runProcess(MigratableProcess process)
     {
-        TimedProcess timedProcess = new TimedProcess(process);
         Integer pid = nextPid();
-        processMap.put(pid, timedProcess);
+        processMap.put(pid, process);
         //This must handle the timer TODO
         
         Thread thread = new Thread(process);
@@ -100,8 +125,4 @@ public class ProcessManager
     }
 
     //Stops a process by name, and writes it to out
-    public void stopProcess(Integer pid, ObjectOutputStream out)
-    {
-        
-    }
 }
