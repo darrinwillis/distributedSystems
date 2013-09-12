@@ -7,7 +7,7 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
 {
     private static final String serverName = "processDelegationServer";
     private List<ProcessManagerClientInterface> clients;
-    private List<MigratableProcess> processes;
+    private List<String> processIDs;
 
     public ProcessDelegationServer() throws RemoteException
     {
@@ -83,7 +83,7 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
         
 
             try{
-                firstClient.setProcesses(this.processes);
+                firstClient.setProcesses(processIDs);
             } 
             catch(ConnectException|UnmarshalException e)
             {
@@ -96,4 +96,13 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
             }
         }
     }
+
+    private Integer nextPid() {
+        for(int i = 0; i <= Integer.MAX_VALUE; i++) {
+            if(processIDs.contains(Integer.toString(i)) == false)
+                return (new Integer(i));
+        }
+        return -1;
+    }
+
 }

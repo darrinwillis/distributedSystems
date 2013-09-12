@@ -39,17 +39,17 @@ class ProcessManagerClient implements ProcessManagerClientInterface
         ProcessManagerClient client = new ProcessManagerClient(MasterServerURL);
     }
 
-    public List<MigratableProcess> getProcesses()
+    public List<String> getProcesses()
     {
         return null;
     }
 
-    public void setProcesses(List<MigratableProcess> processes)
+    public void setProcesses(List<String> processes)
     {
         if (processes != null)
         {
             System.out.println("Attempting to set list of " + processes.size() + " processes");
-            processManager.setProcesses((MigratableProcess[]) processes.toArray());
+            //processManager.setProcesses((String[]) processes.toArray());
         }
         else
         {
