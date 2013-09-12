@@ -5,5 +5,4 @@ public interface MigratableProcess extends Runnable, Serializable
 {
     void run();
     void suspend();
-    public ObjectOutputStream out();
 }

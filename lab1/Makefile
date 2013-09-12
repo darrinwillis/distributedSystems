@@ -17,10 +17,11 @@ CLASSES = \
 		MigratableProcess.java \
 		TimedProcess.java \
 		ProcessManager.java \
-		MigratableProcessManagerInterface.java \
+		MasterServerInterface.java \
+		ProcessManagerClientInterface.java \
 		ProcessManagerClient.java \
-		TransactionalIO/TransactionalFileOutputStream.java \
-		TransactionalIO/TransactionalFileInputStream.java \
+		TransactionalFileOutputStream.java \
+		TransactionalFileInputStream.java \
 		ProcessDelegationServer.java
 
 default: classes
