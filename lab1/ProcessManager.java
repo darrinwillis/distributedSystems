@@ -4,30 +4,20 @@ import java.util.*;
 
 public class ProcessManager
 {
-    private HashMap<Integer, MigratableProcess> processMap;
-    private HashMap<Thread, Integer> threadMap;
+    private HashMap<String, MigratableProcess> processMap;
+    private HashMap<Thread, String> threadMap;
     
     private LinkedList<Thread> threads;
-    private LinkedList<MigratableProcess> processes; 
     	
     private static final String MasterServerURL=
         "some url?";
 
     public ProcessManager()
     {
-        processMap = new HashMap<Integer, MigratableProcess>();
-        threadMap = new HashMap<Thread, Integer>();
+        processMap = new HashMap<String, MigratableProcess>();
+        threadMap = new HashMap<Thread, String>();
         
-        processes = new LinkedList<MigratableProcess>();
         threads = new LinkedList<Thread>();
-    }
-    
-    private Integer nextPid() {
-    	for(int i = 0; i <= Integer.MAX_VALUE; i++) {
-	    if(processMap.containsValue(i) == false)
-		return (new Integer(i));
-    	}
-    	return -1;
     }
     
     public static <T, E> T getKeyByValue(Map<T, E> map, E value) {
@@ -39,19 +29,20 @@ public class ProcessManager
 	return null;
     }
 
-    public void setProcesses(MigratableProcess[] ps)
+    public void setProcesses(String[] pids)
     { 
-	LinkedList<MigratableProcess> seen = new LinkedList<MigratableProcess>();
-    	for(int i = 0; i < ps.length; i++) {
-	    if(processes.contains(ps[i])) 
-		seen.add(ps[i]);
+	LinkedList<String> seen = new LinkedList<String>();
+    	for(int i = 0; i < pids.length; i++) {
+	    if(processMap.containsKey(pids[i])) 
+		seen.add(pids[i]);
 	    else
-		runProcess(ps[i]);
+		runProcess(pids[i]);
     	}
-    	MigratableProcess[] processArray = (MigratableProcess[]) processes.toArray();
-    	for(int i = 0; i < processArray.length; i++) {
-	    if(!seen.contains(processArray[i]))
-		suspendProcess(getKeyByValue(processMap,processArray[i]));
+    	String[] pidArray = (String[]) processMap.keySet().toArray();
+
+    	for(int i = 0; i < pidArray.length; i++) {
+	    if(!seen.contains(pidArray[i]))
+		suspendProcess(pidArray[i]);
     	}
     }
     
@@ -79,43 +70,17 @@ public class ProcessManager
     	}
     }
     
-    public MigratableProcess unsuspendProcess(Integer pid) {
-    	try{	
-	    TransactionalFileInputStream in = new TransactionalFileInputStream(pid.toString());
-	    ObjectInputStream ois = new ObjectInputStream(in);
-	    	
-	    MigratableProcess p = (MigratableProcess)ois.readObject();
-	    	
-	    ois.close();
-	    in.close();
-	    return p;
-    	} catch (Exception e)	{
-	    System.out.println("Exception: " + e.getMessage());
-	    return null;
-        }
-    }
-    
-    public void suspendProcess(Integer pid) {
+    public void suspendProcess(String pid) {
     	MigratableProcess p = processMap.remove(pid);
     	p.suspend();
-    	try{   	
-	    TransactionalFileOutputStream out = new TransactionalFileOutputStream(pid.toString(), false);
-	    ObjectOutputStream oos = new ObjectOutputStream(out); 
-	    		
-	    oos.writeObject(p);
-	    	
-	    oos.close();
-	    out.close();
-    	} catch (Exception e)	{
-	    System.out.println("Exception: " + e.getMessage());
-        }
+    	ProcessIO.writeProcess(p, pid.toString());
     }
 
     // Requires a unique name for the process; otherwise replaces old process
-    public void runProcess(MigratableProcess process)
+    public void runProcess(String pid)
     {
 	System.out.println("Running");
-        Integer pid = nextPid();
+	MigratableProcess process = ProcessIO.readProcess(pid);
         processMap.put(pid, process);
         //This must handle the timer TODO
         
@@ -126,6 +91,4 @@ public class ProcessManager
 	System.out.println("Starting Thread");
         thread.start();
     }
-
-    //Stops a process by name, and writes it to out
 }
