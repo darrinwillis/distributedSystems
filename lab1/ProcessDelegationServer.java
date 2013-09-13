@@ -11,8 +11,9 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
 
     public ProcessDelegationServer() throws RemoteException
     {
-        clients = new LinkedList<ProcessManagerClientInterface>();
         //Any constructor methods   
+        clients = new LinkedList<ProcessManagerClientInterface>();
+        processIDs = new LinkedList<String>(); 
     }
 
     public static void main (String []args)
@@ -56,15 +57,28 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
     
     private void addProcess(Class<? extends MigratableProcess> processClass)
     {
-    /*    MigratableProcess newProcess = processClass.newInstance();
-        String fileName = newProcess.getCanonicalName();
-        File newProcessFile = new File(fileName);
-        newProcessFile.createNewFile();
+        MigratableProcess newProcess = null;
+        try {
+            newProcess = processClass.newInstance();
+        } catch (Exception e)
+        {
+            System.out.println("Failed to create class isntance");
+            e.printStackTrace();
+        }
 
-        newProcess.out = FileOutputStream(newProcessFile);
-    
-        this.processes.add(newProcess);
-   */ }
+        try {
+            String fileName = nextPid();
+            File newProcessFile = new File(fileName);
+            newProcessFile.createNewFile();
+
+            ProcessIO.writeProcess(newProcess, fileName);
+            processIDs.add(fileName); 
+        } catch (Exception e)
+        {
+            System.out.println("Failed to make file for process");
+            e.printStackTrace();
+        }
+    }
 
     private void balanceProcesses()
     { 
@@ -97,12 +111,12 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
         }
     }
 
-    private Integer nextPid() {
+    private String nextPid() {
         for(int i = 0; i <= Integer.MAX_VALUE; i++) {
             if(processIDs.contains(Integer.toString(i)) == false)
-                return (new Integer(i));
+                return (Integer.toString(i));
         }
-        return -1;
+        return Integer.toString(-1);
     }
 
 }
