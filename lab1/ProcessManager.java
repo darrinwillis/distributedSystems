@@ -45,7 +45,45 @@ public class ProcessManager
             if(!seen.contains(pidArray[i]))
             suspendProcess(pidArray[i]);
         }
+        
+        if (!checkingThreads) {
+        	checkingThreads = true;
+        	ThreadChecker thread = new ThreadChecker();
+	        thread.setDaemon(true);
+	        thread.start();
+        }
     }
+    
+    public class ThreadChecker extends Thread {	
+		public void run() {
+	    	Thread t;
+	    	while(true) {
+	            System.out.println("Checking threads");
+	            try {
+	                Thread.sleep(10);
+	            } catch (Exception e) {
+	                e.printStackTrace();
+	            }
+	                
+	            for(int i = 0; i < threads.size(); i++) {
+	                try {
+	                    t = threads.get(i);
+	                    t.join(10);
+	                } catch(Exception e) {
+	                    e.printStackTrace();
+	                    continue;
+	                }
+	                if(!t.isAlive()) {
+	                    String filename = threadMap.get(t);
+	                    ProcessIO.delete(filename); 
+	                    processMap.remove(filename); 
+	                    threads.remove(t);
+	                    threadMap.remove(t);
+	                }
+	            } 
+	    	}
+	    }
+	}
     
     public void suspendProcess(String pid) {
     	MigratableProcess p = processMap.remove(pid);
