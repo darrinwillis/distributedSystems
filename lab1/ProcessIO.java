@@ -4,32 +4,34 @@ import java.util.*;
 
 class ProcessIO{
     public static void writeProcess(MigratableProcess process, String filename){
-	try{   	
-	    TransactionalFileOutputStream out = new TransactionalFileOutputStream(filename, false);
- 	    ObjectOutputStream oos = new ObjectOutputStream(out); 
+	    try{   	
+	        FileOutputStream out = new FileOutputStream(filename, false);
+ 	        ObjectOutputStream oos = new ObjectOutputStream(out); 
 	    		 
-	    oos.writeObject(process);
+	        oos.writeObject(process);
 	    	
-	    oos.close();
-	    out.close();
+	        oos.close();
+	        out.close();
     	} catch (Exception e)	{
-	    System.out.println("Exception: " + e.getMessage());
+	        System.out.println("Error writing process");
+            e.printStackTrace();
         }
     }
 
     public static MigratableProcess readProcess(String filename){
-	try{	
-	    TransactionalFileInputStream in = new TransactionalFileInputStream(filename);
-	    ObjectInputStream ois = new ObjectInputStream(in);
+	    try{	
+	        FileInputStream in = new FileInputStream(filename);
+	        ObjectInputStream ois = new ObjectInputStream(in);
 	    	
-	    MigratableProcess p = (MigratableProcess)ois.readObject();
+	        MigratableProcess p = (MigratableProcess)ois.readObject();
 	    	
-	    ois.close();
-	    in.close();
-	    return p;
+	        ois.close();
+	        in.close();
+	        return p;
     	} catch (Exception e)	{
-	    System.out.println("Exception: " + e.getMessage());
-	    return null;
+	        System.out.println("Error reading process");
+	        e.printStackTrace();
+            return null;
         }
     }
 }

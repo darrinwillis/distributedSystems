@@ -6,6 +6,9 @@ TRANS_DIR = TransactionalIO/
 # Java compiler variable
 JC = javac
 
+# RMI compiler variable
+RMI = rmic
+
 # Any compilation flags
 JFLAGS = -g
 
@@ -22,9 +25,13 @@ CLASSES = \
 		ProcessManagerClient.java \
 		TransactionalFileOutputStream.java \
 		TransactionalFileInputStream.java \
-		ProcessDelegationServer.java
+		ProcessIO.java \
+		ProcessDelegationServer.java \
+		GrepProcess.java
 
 default: classes
+		$(RMI) ProcessManagerClient
+		$(RMI) ProcessDelegationServer
 
 classes: $(CLASSES:.java=.class)
 

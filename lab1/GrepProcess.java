@@ -17,35 +17,35 @@ public class GrepProcess implements MigratableProcess
 
     public GrepProcess(String args[]) throws Exception
     {
-	System.out.println("Starting Constructor");
+	System.out.println("Starting GrepProcess Constructor");
     if (args.length != 3) {
 	    System.out.println("usage: GrepProcess <queryString> <inputFile> <outputFile>");
-	    throw new Exception("Invalid Arguments");
+	    throw new Exception("Invalid Arguments for GrepProcess");
 	}
 		
 	query = args[0];
 	inFile = new TransactionalFileInputStream(args[1]);
 	outFile = new TransactionalFileOutputStream(args[2], false);
 
-	System.out.println("Grep Created");
+	System.out.println("GrepProcess Created");
     }
 
     public void run()
     {
-	System.out.println("Grep Running");
+	System.out.println("GrepProcess Running");
 	PrintStream out = new PrintStream(outFile);
 	DataInputStream in = new DataInputStream(inFile);
 
 	try {
 	    while (!suspending) {
 		String line = in.readLine();
-		System.out.println("Read Line");
+		System.out.println("Grep: Read Line \"" + line + "\"");
 
 		if (line == null) break;
 				
 		if (line.contains(query)) {
 		    out.println(line);
-		    System.out.println("Printed Line");
+		    System.out.println("Grep: Printed Line \"" + line + "\"");
 		}
 				
 		// Make grep take longer so that we don't require extremely large files for interesting results

@@ -87,7 +87,7 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
         }
 
         try {
-            String fileName = nextPid();
+            String fileName = "processes/" + nextPid();
             File newProcessFile = new File(fileName);
             newProcessFile.createNewFile();
 
@@ -97,6 +97,18 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
         {
             System.out.println("Failed to make file for process");
             e.printStackTrace();
+        }
+    }
+
+    private void updateProcessList()
+    {
+        for (int i = 0; i < processIDs.size(); i++)
+        {
+            String fileName = processIDs.get(i);
+            File processFile = new File(fileName);
+            //If the file is deleted, the process is completed
+            if (!processFile.exists())
+                processIDs.remove(i);
         }
     }
 

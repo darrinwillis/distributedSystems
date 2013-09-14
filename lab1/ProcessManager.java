@@ -52,6 +52,7 @@ public class ProcessManager
 	    try {
 		Thread.sleep(10);
 	    } catch (Exception e) {
+            e.printStackTrace();
 	    }
     		
 	    for(int i = 0; i < threads.size(); i++) {
@@ -59,6 +60,7 @@ public class ProcessManager
 		    t = threads.get(i);
 		    t.join(10);
 		} catch(Exception e) {
+            e.printStackTrace();
 		    continue;
 		}
 		if(!t.isAlive()) {
