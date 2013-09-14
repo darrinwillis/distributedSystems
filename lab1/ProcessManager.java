@@ -18,7 +18,7 @@ public class ProcessManager
         
         threads = new LinkedList<Thread>();
         
-        checkingThreads = 0;
+        checkingThreads = false;
     }
     
     public static <T, E> T getKeyByValue(Map<T, E> map, E value) {
@@ -39,41 +39,12 @@ public class ProcessManager
             else
                 runProcess(pids[i]);
         }
-        String[] pidArray = (String[]) processMap.keySet().toArray();
+        String[] pidArray = processMap.keySet().toArray(new String[0]);
 
         for(int i = 0; i < pidArray.length; i++) {
             if(!seen.contains(pidArray[i]))
             suspendProcess(pidArray[i]);
         }
-    }
-    
-    public void checkThreads(){
-    	Thread t;
-    	while(true) {
-            System.out.println("Checking threads");
-            try {
-                Thread.sleep(10);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-                
-            for(int i = 0; i < threads.size(); i++) {
-                try {
-                    t = threads.get(i);
-                    t.join(10);
-                } catch(Exception e) {
-                    e.printStackTrace();
-                    continue;
-                }
-                if(!t.isAlive()) {
-                    String filename = threadMap.get(t);
-                    ProcessIO.delete(filename); 
-                    processMap.remove(filename); 
-                    threads.remove(t);
-                    threadMap.remove(t);
-                }
-            } 
-    	}
     }
     
     public void suspendProcess(String pid) {
