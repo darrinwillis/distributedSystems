@@ -17,7 +17,8 @@ public class GrepProcess implements MigratableProcess
 
     public GrepProcess(String args[]) throws Exception
     {
-	if (args.length != 3) {
+	System.out.println("Starting Constructor");
+    if (args.length != 3) {
 	    System.out.println("usage: GrepProcess <queryString> <inputFile> <outputFile>");
 	    throw new Exception("Invalid Arguments");
 	}

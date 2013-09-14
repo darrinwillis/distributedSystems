@@ -49,7 +49,8 @@ class ProcessManagerClient implements ProcessManagerClientInterface
         if (processes != null)
         {
             System.out.println("Attempting to set list of " + processes.size() + " processes");
-            //processManager.setProcesses((String[]) processes.toArray());
+            //This line allows the runtime class be String[]
+            processManager.setProcesses( processes.toArray(new String[0]));
         }
         else
         {

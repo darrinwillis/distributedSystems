@@ -2,6 +2,7 @@ import java.rmi.*;
 import java.rmi.server.*;
 import java.util.*;
 import java.io.*;
+import java.lang.reflect.*;
 
 class ProcessDelegationServer extends UnicastRemoteObject implements MasterServerInterface
 {
@@ -31,7 +32,9 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
             //for (int i = 0; i < 100; i++)
             //{
                 Class<? extends MigratableProcess> processClass = GrepProcess.class;
-                server.addProcess(processClass);
+                String[] strings = {" ", "README.md", "out.txt"};
+                Object[] arguments = {strings};
+                server.addProcess(processClass, arguments);
             //}
 
             while (true)
@@ -55,14 +58,31 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
         clients.add(newClient);
     }
     
-    private void addProcess(Class<? extends MigratableProcess> processClass)
+    private void addProcess(Class<? extends MigratableProcess> processClass, Object[] args)
     {
         MigratableProcess newProcess = null;
+        Class[] classes = new Class[args.length];
+        for(int i = 0; i < args.length; i++)
+        {
+            classes[i] = args[i].getClass();
+        }
+
+        Constructor<?> constructor = null;
+        try { 
+            constructor = processClass.getConstructor(classes);
+        } catch (NoSuchMethodException e)
+        {
+            Constructor<?>[] constructors = processClass.getConstructors();
+            System.out.println("Possible constructors are: \n" + Arrays.toString( constructors ));
+            System.out.println("Incorrect arguments for class");
+            e.printStackTrace();
+        }
+        
         try {
-            newProcess = processClass.newInstance();
+            newProcess = (MigratableProcess) constructor.newInstance(args);
         } catch (Exception e)
         {
-            System.out.println("Failed to create class isntance");
+            System.out.println("Failed to create class instance");
             e.printStackTrace();
         }
 
