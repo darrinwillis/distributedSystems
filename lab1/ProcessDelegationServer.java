@@ -123,22 +123,24 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
             }
         int avgProcesses = numProcesses / numClients;
         */
-        if (clients.size() > 0)
+        if (processIDs.size() > 0)
         {
-            ProcessManagerClientInterface firstClient = clients.get(0);;
-        
+            if (clients.size() > 0)
+            {
+                ProcessManagerClientInterface firstClient = clients.get(0); 
 
-            try{
-                firstClient.setProcesses(processIDs);
-            } 
-            catch(ConnectException|UnmarshalException e)
-            {
-                System.out.println("Client disconnected");
-                clients.remove(firstClient);
-            } 
-            catch(Exception e)
-            {
-                e.printStackTrace();
+                try{
+                    firstClient.setProcesses(processIDs);
+                } 
+                catch(ConnectException|UnmarshalException e)
+                {
+                    System.out.println("Client disconnected");
+                    clients.remove(firstClient);
+                } 
+                catch(Exception e)
+                {
+                    e.printStackTrace();
+                }
             }
         }
     }

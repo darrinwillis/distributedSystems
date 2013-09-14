@@ -58,7 +58,6 @@ public class ProcessManager
 		public void run() {
 	    	Thread t;
 	    	while(true) {
-	            System.out.println("Checking threads");
 	            try {
 	                Thread.sleep(10);
 	            } catch (Exception e) {
@@ -86,16 +85,19 @@ public class ProcessManager
 	}
     
     public void suspendProcess(String pid) {
-    	MigratableProcess p = processMap.remove(pid);
-    	p.suspend();
-    	ProcessIO.writeProcess(p, pid.toString());
+        MigratableProcess p = processMap.remove(pid);
+        if (p != null)
+        {
+            p.suspend();
+            ProcessIO.writeProcess(p, pid.toString());
+        }
     }
 
     // Requires a unique name for the process; otherwise replaces old process
     public void runProcess(String pid)
     {
-	System.out.println("Running");
-	MigratableProcess process = ProcessIO.readProcess(pid);
+        System.out.println("Running: " + pid);
+        MigratableProcess process = ProcessIO.readProcess(pid);
         processMap.put(pid, process);
         //This must handle the timer TODO
         
@@ -103,7 +105,7 @@ public class ProcessManager
         threads.add(thread);
         threadMap.put(thread,pid);
         	
-	System.out.println("Starting Thread");
+	    System.out.println("Starting Thread");
         thread.start();
     }
 }
