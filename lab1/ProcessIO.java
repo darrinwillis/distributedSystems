@@ -34,4 +34,12 @@ class ProcessIO{
             return null;
         }
     }
+
+    public static void delete(String filename){
+        File fileToDelete = new File(filename);
+        if (fileToDelete.delete())
+            System.out.println("Successfully deleted: " + filename);
+        else
+            System.out.println("Failed to delete: " + filename);   
+    }
 }

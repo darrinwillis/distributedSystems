@@ -9,8 +9,7 @@ public class ProcessManager
     
     private LinkedList<Thread> threads;
     	
-    private static final String MasterServerURL=
-        "some url?";
+    private Boolean checkingThreads; 
 
     public ProcessManager()
     {
@@ -18,6 +17,8 @@ public class ProcessManager
         threadMap = new HashMap<Thread, String>();
         
         threads = new LinkedList<Thread>();
+        
+        checkingThreads = 0;
     }
     
     public static <T, E> T getKeyByValue(Map<T, E> map, E value) {
@@ -30,45 +31,48 @@ public class ProcessManager
     }
 
     public void setProcesses(String[] pids)
-    { 
-	LinkedList<String> seen = new LinkedList<String>();
-    	for(int i = 0; i < pids.length; i++) {
-	    if(processMap.containsKey(pids[i])) 
-		seen.add(pids[i]);
-	    else
-		runProcess(pids[i]);
-    	}
-    	String[] pidArray = (String[]) processMap.keySet().toArray();
+    {
+        LinkedList<String> seen = new LinkedList<String>();
+        for(int i = 0; i < pids.length; i++) {
+            if(processMap.containsKey(pids[i])) 
+                seen.add(pids[i]);
+            else
+                runProcess(pids[i]);
+        }
+        String[] pidArray = (String[]) processMap.keySet().toArray();
 
-    	for(int i = 0; i < pidArray.length; i++) {
-	    if(!seen.contains(pidArray[i]))
-		suspendProcess(pidArray[i]);
-    	}
+        for(int i = 0; i < pidArray.length; i++) {
+            if(!seen.contains(pidArray[i]))
+            suspendProcess(pidArray[i]);
+        }
     }
     
     public void checkThreads(){
     	Thread t;
     	while(true) {
-	    try {
-		Thread.sleep(10);
-	    } catch (Exception e) {
-            e.printStackTrace();
-	    }
-    		
-	    for(int i = 0; i < threads.size(); i++) {
-		try {
-		    t = threads.get(i);
-		    t.join(10);
-		} catch(Exception e) {
-            e.printStackTrace();
-		    continue;
-		}
-		if(!t.isAlive()) {
-		    processMap.remove(threadMap.get(t)); 
-		    threads.remove(t);
-		    threadMap.remove(t);
-		}
-	    } 
+            System.out.println("Checking threads");
+            try {
+                Thread.sleep(10);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+                
+            for(int i = 0; i < threads.size(); i++) {
+                try {
+                    t = threads.get(i);
+                    t.join(10);
+                } catch(Exception e) {
+                    e.printStackTrace();
+                    continue;
+                }
+                if(!t.isAlive()) {
+                    String filename = threadMap.get(t);
+                    ProcessIO.delete(filename); 
+                    processMap.remove(filename); 
+                    threads.remove(t);
+                    threadMap.remove(t);
+                }
+            } 
     	}
     }
     
