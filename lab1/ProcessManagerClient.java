@@ -41,7 +41,7 @@ class ProcessManagerClient implements ProcessManagerClientInterface
 
     public List<String> getProcesses()
     {
-        return null;
+        return processManager.getProcesses();
     }
 
     public void setProcesses(List<String> processes)

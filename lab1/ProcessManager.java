@@ -54,6 +54,11 @@ public class ProcessManager
         }
     }
     
+    public List<String> getProcesses() {
+    	List<String> tmp = new ArrayList<String>();
+    	return tmp.addAll(processMap.keySet()); 	
+    }
+    
     public class ThreadChecker extends Thread {	
 		public void run() {
 	    	Thread t;

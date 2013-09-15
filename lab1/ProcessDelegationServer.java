@@ -9,12 +9,76 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
     private static final String serverName = "processDelegationServer";
     private List<ProcessManagerClientInterface> clients;
     private List<String> processIDs;
-
+    
+	private static final int BALANCE_LEVEL = 2;
+	
     public ProcessDelegationServer() throws RemoteException
     {
         //Any constructor methods   
         clients = new LinkedList<ProcessManagerClientInterface>();
         processIDs = new LinkedList<String>(); 
+    }
+    
+    private class BalanceTimer extends TimerTask {
+        public void run() {
+        	try{
+            	loadBalance();
+        	} catch (Exception e) {
+        		e.printStackTrace();
+        	}
+        }
+    }
+    
+    public void loadBalance() throws RemoteException {
+    	int avg = 0;
+    	int victim = 0;
+    	int current = 0;
+    	String f;
+    	ProcessManagerClientInterface c;
+    	ProcessManagerClientInterface victimC;
+    	List<String> ps;
+    	List<String> victimPs;
+    	int load;
+    	Random r = new Random();
+    	Map.Entry pairs;
+    	
+    	HashMap<ProcessManagerClientInterface,List<String>> files = new HashMap<ProcessManagerClientInterface,List<String>>(); 
+    
+    	for (ProcessManagerClientInterface client : clients) {
+    		files.put(client,client.getProcesses());
+    		avg = avg + client.getProcesses().size();
+    	}
+    	
+    	avg = avg / clients.size(); 
+
+		ProcessManagerClientInterface[] clientList = files.keySet().toArray(new ProcessManagerClientInterface[0]);
+		
+	    for(current = 0; current < clientList.length; current++) {
+	        c = clientList[current];
+	        ps = files.get(c);
+	        load = ps.size();
+	        while(load - BALANCE_LEVEL > avg) {
+	        	do {
+	        		victim = r.nextInt(clientList.length);
+	        	} while(victim == current) ;
+	        	
+	        	victimC = clientList[victim];
+	        	victimPs = files.get(victimC);
+	        	f = ps.remove(0); 
+	        	victimPs.add(f);
+	        	files.put(victimC,victimPs);
+	        	load--;
+	        }
+	        files.put(c,ps); 
+	    }
+
+	    
+	    for(current = 0; current < clientList.length; current++) {
+	        c = clientList[current];
+	        ps = files.get(c);
+	        c.setProcesses(ps);
+	    }
+	    
     }
 
     public static void main (String []args)
