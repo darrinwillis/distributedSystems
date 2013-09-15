@@ -201,20 +201,16 @@ public void loadBalance() throws RemoteException {
 
     private void startProcesses()
     { 
-        double numClients = (double) clients.size();
-        int numProcesses = (int)Math.ceil((double)processIDs.size()/numClients); 
-        List sublist;
 	    ProcessManagerClientInterface current;
         
-        for(int i = 0; i < processIDs.size(); i = i + numProcesses)
+        if(processIDs.size() > 0)
         {
-            for(int c = 0; c < clients.size(); c++)
+            if(clients.size() > 0)
             {
-                current = clients.get(c); 
+                current = clients.get(0); 
 
                 try{
-                	sublist = new LinkedList<String>(processIDs.subList(i,i+numProcesses));
-                    current.setProcesses(sublist);
+                    current.setProcesses(processIDs);
                 } 
                 catch(ConnectException|UnmarshalException e)
                 {
