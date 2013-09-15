@@ -18,8 +18,8 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
     public ProcessDelegationServer() throws RemoteException
     {
         //Any constructor methods   
-        clients = new LinkedList<ProcessManagerClientInterface>();
-        processIDs = new LinkedList<String>(); 
+        clients = new ArrayList<ProcessManagerClientInterface>();
+        processIDs = new ArrayList<String>(); 
 		nextPid = 0;
 		init = new Initialize();
 		initialized = false;
@@ -28,29 +28,36 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
 
 public class Initialize extends Thread {
 	public void run() {
-		ProcessManagerClientInterface first;
-        if(processIDs.size() > 0)
-        {
-            if(clients.size() > 0)
-            {
-                first = clients.get(0); 
-
-                try{
-                    first.setProcesses(processIDs);
-					System.out.println("First Client Set");
-				} 
-                catch(ConnectException|UnmarshalException e)
-                {
-                    System.out.println("Client disconnected");
-                    clients.remove(first);
-                } 
-                catch(Exception e)
-                {
-                    e.printStackTrace();
-                }
-            }
-        }
+		try{
+			assignProcesses();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
+}
+
+public void assignProcesses() throws RemoteException {
+	List<String> currentPs = new ArrayList<String>(); 
+	for(ProcessManagerClientInterface client : clients) {
+		currentPs.addAll(client.getProcesses());
+	}
+	List<String> add = new ArrayList<String>(processIDs);
+	add.removeAll(currentPs);
+	if(clients.size() > 0) {
+        try{
+			clients.get(0).setProcesses(processIDs);
+			System.out.println("First Client Set");
+		} 
+        catch(ConnectException|UnmarshalException e)
+        {
+            System.out.println("Client disconnected");
+            clients.remove(0);
+        } 
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+	}		
 }
 		
 public void loadBalance() throws RemoteException {
@@ -109,7 +116,6 @@ public void loadBalance() throws RemoteException {
 	    }
 	    files.put(c,ps); 
 	}
-
 	    
 	for(current = 0; current < clientList.length; current++) {
 	    // TODO: needs some sort of try/catch
@@ -143,6 +149,7 @@ public void loadBalance() throws RemoteException {
             {
                 server.loadBalance();	
 				server.updateProcessList();
+				server.assignProcesses();
                 Thread.sleep(1000);
             }
 
