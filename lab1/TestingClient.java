@@ -11,10 +11,11 @@ class TestingClient
         {
             System.setSecurityManager (new RMISecurityManager());
             MasterServerInterface processMaster = (MasterServerInterface) Naming.lookup(masterServerURL);
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 10; i++)
             {
                 Class<GrepProcess> processClass = GrepProcess.class;
-                String[] strings = {" ", "ProcessDelegationServer.java", "out.txt"};
+                String outputFile = "out/" + i + ".txt";
+                String[] strings = {" ", "ProcessDelegationServer.java", outputFile};
                 Object[] arguments = {strings};
                 try {
                     processMaster.addProcess(processClass, arguments);
