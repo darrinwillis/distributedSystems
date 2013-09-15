@@ -10,6 +10,8 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
     private volatile List<ProcessManagerClientInterface> clients;
     private volatile List<String> processIDs;
     public int nextPid;
+	private static Initialize init;
+	private boolean initialized;
     
 	private static final int BALANCE_LEVEL = 2;
 	
@@ -18,19 +20,39 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
         //Any constructor methods   
         clients = new LinkedList<ProcessManagerClientInterface>();
         processIDs = new LinkedList<String>(); 
-	nextPid = 0;
+		nextPid = 0;
+		init = new Initialize();
+		initialized = false;
     }
     
-    private class BalanceTimer extends TimerTask {
-        public void run() {
-        	try{
-            	loadBalance();
-        	} catch (Exception e) {
-        		e.printStackTrace();
-        	}
-}
-}
 
+public class Initialize extends Thread {
+	public void run() {
+		ProcessManagerClientInterface first;
+        if(processIDs.size() > 0)
+        {
+            if(clients.size() > 0)
+            {
+                first = clients.get(0); 
+
+                try{
+                    first.setProcesses(processIDs);
+					System.out.println("First Client Set");
+				} 
+                catch(ConnectException|UnmarshalException e)
+                {
+                    System.out.println("Client disconnected");
+                    clients.remove(first);
+                } 
+                catch(Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+	}
+}
+		
 public void loadBalance() throws RemoteException {
     int avg = 0;
     int victim = 0;
@@ -43,7 +65,7 @@ public void loadBalance() throws RemoteException {
     int load;
     Random r = new Random();
     Map.Entry pairs;
-    
+	
     HashMap<ProcessManagerClientInterface,List<String>> files = new HashMap<ProcessManagerClientInterface,List<String>>(); 
 
     for (ProcessManagerClientInterface client : clients) {
@@ -62,41 +84,41 @@ public void loadBalance() throws RemoteException {
         }
 	}
 	    
-	    if (clients.size() != 0) 
-		    avg = avg / clients.size();
-		else
-		    avg = 0;
-
-		ProcessManagerClientInterface[] clientList = files.keySet().toArray(new ProcessManagerClientInterface[0]);
+	if (clients.size() != 0) 
+		avg = avg / clients.size();
+	else
+		avg = 0;
+	
+	ProcessManagerClientInterface[] clientList = files.keySet().toArray(new ProcessManagerClientInterface[0]);
 		
-	    for(current = 0; current < clientList.length; current++) {
-	        c = clientList[current];
-	        ps = files.get(c);
-	        load = ps.size();
-	        while(load - BALANCE_LEVEL > avg) {
-	        	do {
-	        		victim = r.nextInt(clientList.length);
-	        	} while(victim == current) ;
+	for(current = 0; current < clientList.length; current++) {
+	    c = clientList[current];
+	    ps = files.get(c);
+	    load = ps.size();
+	    while(load - BALANCE_LEVEL > avg) {
+	        do {
+	        	victim = r.nextInt(clientList.length);
+	        } while(victim == current) ;
 	        	
-	        	victimC = clientList[victim];
-	        	victimPs = files.get(victimC);
-	        	f = ps.remove(0); 
-	        	victimPs.add(f);
-	        	files.put(victimC,victimPs);
-	        	load--;
-	        }
-	        files.put(c,ps); 
+	        victimC = clientList[victim];
+	        victimPs = files.get(victimC);
+	        f = ps.remove(0); 
+	        victimPs.add(f);
+	        files.put(victimC,victimPs);
+	        load--;
 	    }
+	    files.put(c,ps); 
+	}
 
 	    
-	    for(current = 0; current < clientList.length; current++) {
-	        // TODO: needs some sort of try/catch
-            c = clientList[current];
-	        ps = files.get(c);
-	        c.setProcesses(ps);
-	    }
+	for(current = 0; current < clientList.length; current++) {
+	    // TODO: needs some sort of try/catch
+        c = clientList[current];
+	    ps = files.get(c);
+	    c.setProcesses(ps);
+	}
 	    
-    }
+}
 
     public static void main (String []args)
     {
@@ -110,19 +132,17 @@ public void loadBalance() throws RemoteException {
 
             System.out.println("Process Delegation Server Ready");
         
-            for(int i = 0; i < 1000; i++) {
+            for(int i = 0; i < 10; i++) {
                 Class<? extends MigratableProcess> processClass = GrepProcess.class;
-                String[] strings = {" ", "ProccessDelegationServer.java", "out.txt"};
+                String[] strings = {"1", "in.txt", "out.txt"};
                 Object[] arguments = {strings};
                 server.addProcess(processClass, arguments);
 	    	}
-		    server.startProcesses();
+			
             while (true)
             {
-		        server.updateProcessList();
-                //DO SOME LOAD BALANCING
-
-                server.loadBalance();		
+                server.loadBalance();	
+				server.updateProcessList();
                 Thread.sleep(1000);
             }
 
@@ -138,6 +158,15 @@ public void loadBalance() throws RemoteException {
         System.out.println("Client Connected");
 
         clients.add(newClient);
+		if(!initialized) {
+			try{
+				init.start();
+				init.join();
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+			initialized = true;
+		}
     }
     
     private void addProcess(Class<? extends MigratableProcess> processClass, Object[] args)
@@ -198,33 +227,7 @@ public void loadBalance() throws RemoteException {
             }
         }
     }
-
-    private void startProcesses()
-    { 
-	    ProcessManagerClientInterface current;
-        
-        if(processIDs.size() > 0)
-        {
-            if(clients.size() > 0)
-            {
-                current = clients.get(0); 
-
-                try{
-                    current.setProcesses(processIDs);
-                } 
-                catch(ConnectException|UnmarshalException e)
-                {
-                    System.out.println("Client disconnected");
-                    clients.remove(current);
-                } 
-                catch(Exception e)
-                {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
+	
     private String nextPid() {
         for(int i = 0; i <= Integer.MAX_VALUE; i++) {
             if(processIDs.contains(Integer.toString(i)) == false)
