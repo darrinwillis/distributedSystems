@@ -10,39 +10,35 @@ import java.io.*;
 
 public class TransactionalFileOutputStream extends java.io.OutputStream implements java.io.Serializable {
 	String file;
-	public int index;
-	public boolean append;
+	public long index;
 	
-    public TransactionalFileOutputStream(String path, boolean b) {
+    public TransactionalFileOutputStream(String path, boolean append) {
     	file = path;
-    	index = 0;
-    	append = b;
+    	File f = new File(path);
+    	if (append) 
+    		index = f.length();
+    	else
+    		index = 0;
     }
-    public void write(int b) {
-    	try{
-    		OutputStream out = new FileOutputStream(file);
-    		out.write(b);
-    		out.close();
-    	} catch(Exception e) {
-    		System.out.println("Exception: " + e.getMessage());
-    	}
+    public void write(int b) throws IOException {
+    	RandomAccessFile out = new RandomAccessFile(file,"rws");
+    	out.seek(index);
+    	out.write(b);
+    	out.close();	
+    	index++;
     }
-    public void write(byte[] b,int off,int len) {
-    	try{
-    		OutputStream out = new FileOutputStream(file);
-    		out.write(b,off,len);
-    		out.close();
-    	} catch(Exception e) {
-    		System.out.println("Exception: " + e.getMessage());
-    	}
+    public void write(byte[] b,int off,int len) throws IOException {
+    	RandomAccessFile out = new RandomAccessFile(file,"rws");
+    	out.seek(index);
+    	out.write(b,off,len);
+    	out.close();
+    	index = index + len;
     }
-    public void write(byte[] b) {
-    	try{
-    		OutputStream out = new FileOutputStream(file);
-    		out.write(b);
-    		out.close();
-    	} catch(Exception e) {
-    		System.out.println("Exception: " + e.getMessage());
-    	}
+    public void write(byte[] b) throws IOException {
+		RandomAccessFile out = new RandomAccessFile(file,"rws");
+    	out.seek(index);
+    	out.write(b);
+    	out.close();
+    	index = index + b.length;
     }
 }

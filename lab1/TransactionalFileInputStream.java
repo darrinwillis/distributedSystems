@@ -22,55 +22,44 @@ public class TransactionalFileInputStream extends java.io.InputStream implements
     	index = i;
     }
     
-    public int read() {
-    	int i = -1;
-    	try{
-    		FileInputStream in = new FileInputStream(file);
-	    	in.skip(index);
-	    	i = in.read();
-	    	in.close(); 
-    	} catch(Exception e) {
-    		System.out.println("Exception: " + e.getMessage());
-    	} 
+    public long skip(long i) {
+    	index = index + i;
+    	return i;
+    }
+    public int read() throws IOException {
+    	FileInputStream in = new FileInputStream(file);
+	    in.skip(index);
+	    int i = in.read();
+	    in.close(); 
 
     	if(i >= 0)
-    		index = index + 1;
+    		index++;
     		
     	return i; 
     }
     
-   	public int read(byte[] b, int off, int len) {
-   		int i = -1;
-    	try{
-    		FileInputStream in = new FileInputStream(file);
-	    	in.skip(index);
-	    	i = in.read(b,off,len);
-	    	in.close(); 
-    	} catch(Exception e) {
-    		System.out.println("Exception: " + e.getMessage());
-    	} 
+   	public int read(byte[] b, int off, int len) throws IOException {
+   		FileInputStream in = new FileInputStream(file);
+	    in.skip(index);
+	    int i = in.read(b,off,len);
+	    in.close(); 
 
     	if(i >= 0)
-    		index = index + 1;
+    		index = index + i;
     		
-    	return i; 
+    	return i;
    	}
    	
-   	public int read(byte[] b) {
-		int i = -1;
-    	try{
-    		FileInputStream in = new FileInputStream(file);
-	    	in.skip(index);
-	    	i = in.read(b);
-	    	in.close(); 
-    	} catch(Exception e) {
-    		System.out.println("Exception: " + e.getMessage());
-    	} 
+   	public int read(byte[] b) throws IOException {
+		FileInputStream in = new FileInputStream(file);
+	    in.skip(index);
+	    int i = in.read(b);
+	    in.close(); 
 
     	if(i >= 0)
-    		index = index + 1;
+    		index = index + i;
     		
-    	return i;   		
+    	return i; 		
    	}
    
 }
