@@ -9,9 +9,9 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
     private static final String serverName = "processDelegationServer";
     private volatile List<ProcessManagerClientInterface> clients;
     private volatile List<String> processIDs;
+	private HashMap<ProcessManagerClientInterface,List<String>> files;
+	
     public int nextPid;
-	private static Initialize init;
-	private boolean initialized;
     
 	private static final int BALANCE_LEVEL = 2;
 	
@@ -21,111 +21,92 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
         clients = new ArrayList<ProcessManagerClientInterface>();
         processIDs = new ArrayList<String>(); 
 		nextPid = 0;
-		init = new Initialize();
-		initialized = false;
+		files = new HashMap<ProcessManagerClientInterface,List<String>>(); 
     }
     
-
-public class Initialize extends Thread {
-	public void run() {
-		try{
-			assignProcesses();
-		} catch (Exception e) {
-			e.printStackTrace();
+	// Assigns unassigned processes in processIDs to first client
+	public void assignProcesses() throws RemoteException {
+		// Get current processes 
+		List<String> currentPs = new ArrayList<String>(); 
+		for(ProcessManagerClientInterface client : clients) {
+			currentPs.addAll(client.getProcesses());
 		}
-	}
-}
-
-public void assignProcesses() throws RemoteException {
-	List<String> currentPs = new ArrayList<String>(); 
-	for(ProcessManagerClientInterface client : clients) {
-		currentPs.addAll(client.getProcesses());
-	}
-	List<String> add = new ArrayList<String>(processIDs);
-	add.removeAll(currentPs);
-	if(clients.size() > 0) {
-        try{
-			clients.get(0).setProcesses(processIDs);
-			System.out.println("First Client Set");
-		} 
-        catch(ConnectException|UnmarshalException e)
-        {
-            System.out.println("Client disconnected");
-            clients.remove(0);
-        } 
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-	}		
-}
 		
-public void loadBalance() throws RemoteException {
-    int avg = 0;
-    int victim = 0;
-    int current = 0;
-    String f;
-    ProcessManagerClientInterface c;
-    ProcessManagerClientInterface victimC;
-    List<String> ps;
-    List<String> victimPs;
-    int load;
-    Random r = new Random();
-    Map.Entry pairs;
-	
-    HashMap<ProcessManagerClientInterface,List<String>> files = new HashMap<ProcessManagerClientInterface,List<String>>(); 
-
-    for (ProcessManagerClientInterface client : clients) {
-        //Attempts to add client, recognizes a disconnection if it occurs
-        try{
-            files.put(client,client.getProcesses());
-            avg = avg + client.getProcesses().size();
-        } catch(ConnectException|UnmarshalException e)
-        {
-            System.out.println("Client disconnected");
-            clients.remove(current);
-        } 
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
+		// Find unassigned ones and send them to first client 
+		List<String> add = new ArrayList<String>(processIDs);
+		add.removeAll(currentPs);
+		if(processIDs.size() > 0 && clients.size() > 0) {
+			try{
+				clients.get(0).setProcesses(processIDs);
+				System.out.println("First Client Set");
+			} 
+			catch(ConnectException|UnmarshalException e)
+			{
+				System.out.println("Client disconnected");
+				clients.remove(0);
+			} 
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+		}		
 	}
-	    
-	if (clients.size() != 0) 
-		avg = avg / clients.size();
-	else
-		avg = 0;
-	
-	ProcessManagerClientInterface[] clientList = files.keySet().toArray(new ProcessManagerClientInterface[0]);
+
+	// balances load between clients 
+	public void loadBalance() throws RemoteException {
+		// victim is the client that takes on additional load
+		int avg = 0; 
+		int victim = 0;
+		int current = 0;
+		String f;
+		ProcessManagerClientInterface victimC;
+		List<String> ps;
+		List<String> victimPs;
+		int load;
+		Random r = new Random(); 
 		
-	for(current = 0; current < clientList.length; current++) {
-	    c = clientList[current];
-	    ps = files.get(c);
-	    load = ps.size();
-	    while(load - BALANCE_LEVEL > avg) {
-	        do {
-	        	victim = r.nextInt(clientList.length);
-	        } while(victim == current) ;
-	        	
-	        victimC = clientList[victim];
-	        victimPs = files.get(victimC);
-	        f = ps.remove(0); 
-	        victimPs.add(f);
-	        files.put(victimC,victimPs);
-	        load--;
-	    }
-	    files.put(c,ps); 
+		//calculate average and update hashmap
+		for (ProcessManagerClientInterface client : clients) {
+			files.put(client,client.getProcesses());
+			avg = avg + client.getProcesses().size();
+		}
+			
+		if (clients.size() != 0) 
+			avg = avg / clients.size();
+		else
+			avg = 0;
+		
+		//balance the load of clients by getting a process from an overloaded client and sending it to a random other one
+		for(ProcessManagerClientInterface c : clients) {
+			ps = files.get(c);
+			load = ps.size();
+			while(load - BALANCE_LEVEL > avg) {
+				//designate victim
+				do {
+					victim = r.nextInt(clients.size());
+				} while(victim == current) ;
+				
+				//move process
+				victimC = clients.get(victim);
+				victimPs = files.get(victimC);
+				f = ps.remove(0); 
+				victimPs.add(f);
+				files.put(victimC,victimPs);
+				load--;
+			}
+			files.put(c,ps);
+			current++; 
+		}
+			
+		//set all changes
+		for(ProcessManagerClientInterface c : clients) {
+			// TODO: needs some sort of try/catch
+			ps = files.get(c);
+			c.setProcesses(ps);
+		}
+			
 	}
-	    
-	for(current = 0; current < clientList.length; current++) {
-	    // TODO: needs some sort of try/catch
-        c = clientList[current];
-	    ps = files.get(c);
-	    c.setProcesses(ps);
-	}
-	    
-}
-
+	
     public static void main (String []args)
     {
         try
@@ -141,16 +122,16 @@ public void loadBalance() throws RemoteException {
             for(int i = 0; i < 10; i++) {
                 Class<? extends MigratableProcess> processClass = GrepProcess.class;
                 String outputFileName = "out/" + i + ".txt";
-                String[] strings = {"", "ProcessDelegationServer.java", outputFileName};
+                String[] strings = {"1", "in.txt", outputFileName};
                 Object[] arguments = {strings};
                 server.addProcess(processClass, arguments);
 	    	}
 			
             while (true)
             {
+				server.assignProcesses();
                 server.loadBalance();	
 				server.updateProcessList();
-				server.assignProcesses();
                 Thread.sleep(1000);
             }
 
@@ -164,17 +145,10 @@ public void loadBalance() throws RemoteException {
     public void register(ProcessManagerClientInterface newClient) throws RemoteException
     {
         System.out.println("Client Connected");
-
+		
         clients.add(newClient);
-		if(!initialized) {
-			try{
-				init.start();
-				init.join();
-			} catch(Exception e) {
-				e.printStackTrace();
-			}
-			initialized = true;
-		}
+		System.out.println("Current processes " + processIDs.size()); 
+		System.out.println("Current clients " + clients.size()); 
     }
     
     public void addProcess(Class<? extends MigratableProcess> processClass, Object[] args)
@@ -235,13 +209,4 @@ public void loadBalance() throws RemoteException {
             }
         }
     }
-	
-    private String nextPid() {
-        for(int i = 0; i <= Integer.MAX_VALUE; i++) {
-            if(processIDs.contains(Integer.toString(i)) == false)
-                return (Integer.toString(i));
-        }
-        return Integer.toString(-1);
-    }
-
 }
