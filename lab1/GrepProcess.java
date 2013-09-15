@@ -37,7 +37,8 @@ public class GrepProcess implements MigratableProcess
 	DataInputStream in = new DataInputStream(inFile);
 
 	try {
-	    while (!suspending) {
+	    System.out.println("Starting read");
+        while (!suspending) {
 		String line = in.readLine();
 		System.out.println("Grep: Read Line \"" + line + "\"");
 
@@ -56,7 +57,7 @@ public class GrepProcess implements MigratableProcess
 		}
 	    }
 	} catch (EOFException e) {
-	    //End of File
+        //End of File
 	} catch (IOException e) {
 	    System.out.println ("GrepProcess: Error: " + e);
 	}

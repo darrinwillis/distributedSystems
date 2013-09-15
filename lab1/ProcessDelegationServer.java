@@ -49,6 +49,7 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
     		avg = avg + client.getProcesses().size();
     	}
     	
+
     	avg = avg / clients.size(); 
 
 		ProcessManagerClientInterface[] clientList = files.keySet().toArray(new ProcessManagerClientInterface[0]);
@@ -93,18 +94,19 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
 
             System.out.println("Process Delegation Server Ready");
         
-            //for (int i = 0; i < 100; i++)
-            //{
+            for (int i = 0; i < 100; i++)
+            {
                 Class<? extends MigratableProcess> processClass = GrepProcess.class;
-                String[] strings = {" ", "README.md", "out.txt"};
+                String[] strings = {" ", "ProcessDelegationServer.java", "out.txt"};
                 Object[] arguments = {strings};
                 server.addProcess(processClass, arguments);
-            //}
+            }
 
             while (true)
             {
                 //DO SOME LOAD BALANCING
-                server.balanceProcesses();
+                server.updateProcessList();
+                server.loadBalance();
                 Thread.sleep(1000);
             }
 

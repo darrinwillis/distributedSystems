@@ -43,7 +43,10 @@ public class ProcessManager
 
         for(int i = 0; i < pidArray.length; i++) {
             if(!seen.contains(pidArray[i]))
-            suspendProcess(pidArray[i]);
+            {
+                suspendProcess(pidArray[i]);
+                System.out.println("Suspending process" + pidArray[i]);
+            }
         }
         
         if (!checkingThreads) {
@@ -63,7 +66,8 @@ public class ProcessManager
     public class ThreadChecker extends Thread {	
 		public void run() {
 	    	Thread t;
-	    	while(true) {
+            Boolean b = false;
+	    	while(b) {
 	            try {
 	                Thread.sleep(10);
 	            } catch (Exception e) {
@@ -79,7 +83,8 @@ public class ProcessManager
 	                    continue;
 	                }
 	                if(!t.isAlive()) {
-	                    String filename = threadMap.get(t);
+                        String filename = threadMap.get(t);
+	                    System.out.println("Deleting " + filename);
 	                    ProcessIO.delete(filename); 
 	                    processMap.remove(filename); 
 	                    threads.remove(t);
