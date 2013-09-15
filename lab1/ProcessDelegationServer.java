@@ -47,12 +47,18 @@ public void loadBalance() throws RemoteException {
     HashMap<ProcessManagerClientInterface,List<String>> files = new HashMap<ProcessManagerClientInterface,List<String>>(); 
 
     for (ProcessManagerClientInterface client : clients) {
+        //Attempts to add client, recognizes a disconnection if it occurs
         try{
             files.put(client,client.getProcesses());
             avg = avg + client.getProcesses().size();
-        } catch (ConnectException e)
+        } catch(ConnectException|UnmarshalException e)
         {
-            System.out.println("Client Disconnected");
+            System.out.println("Client disconnected");
+            clients.remove(current);
+        } 
+        catch(Exception e)
+        {
+            e.printStackTrace();
         }
     }
     
