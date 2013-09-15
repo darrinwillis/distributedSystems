@@ -115,15 +115,14 @@ public void loadBalance() throws RemoteException {
                 String[] strings = {" ", "ProccessDelegationServer.java", "out.txt"};
                 Object[] arguments = {strings};
                 server.addProcess(processClass, arguments);
-	    }
-
+	    	}
+		    server.startProcesses();
             while (true)
             {
 		        server.updateProcessList();
                 //DO SOME LOAD BALANCING
-		        server.startProcesses();
-                server.loadBalance();
-		
+
+                server.loadBalance();		
                 Thread.sleep(1000);
             }
 
