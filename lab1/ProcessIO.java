@@ -30,7 +30,6 @@ class ProcessIO{
 	        return p;
     	} catch (Exception e)	{
 	        System.out.println("Error reading process");
-	        e.printStackTrace();
             return null;
         }
     }
