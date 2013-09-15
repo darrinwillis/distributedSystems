@@ -18,9 +18,9 @@ class ProcessManagerClient implements ProcessManagerClientInterface
             System.setSecurityManager (new RMISecurityManager());
             MasterServerInterface processMaster = (MasterServerInterface) Naming.lookup(masterServerURL);
 
-            ProcessManager processManager = new ProcessManager();
+            processManager = new ProcessManager();
             System.out.println("Exporting Object");
-            UnicastRemoteObject.exportObject(this);
+            UnicastRemoteObject.exportObject(this,15440);
             System.out.println("Registering with Server");
             processMaster.register(this);
             System.out.println("Registered with Server");
@@ -46,11 +46,11 @@ class ProcessManagerClient implements ProcessManagerClientInterface
 
     public void setProcesses(List<String> processes)
     {
-        if (processes != null)
+        if (processes != null && processes.size() > 0)
         {
             System.out.println("Attempting to set list of " + processes.size() + " processes");
             //This line allows the runtime class be String[]
-            processManager.setProcesses( processes.toArray(new String[0]));
+            processManager.setProcesses(processes);
         }
         else
         {
