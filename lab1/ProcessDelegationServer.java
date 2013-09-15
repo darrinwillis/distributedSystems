@@ -115,15 +115,14 @@ public void loadBalance() throws RemoteException {
                 String[] strings = {" ", "ProccessDelegationServer.java", "out.txt"};
                 Object[] arguments = {strings};
                 server.addProcess(processClass, arguments);
-	    }
-
+	    	}
+		    server.startProcesses();
             while (true)
             {
 		        server.updateProcessList();
                 //DO SOME LOAD BALANCING
-		        server.startProcesses();
-                server.loadBalance();
-		
+
+                server.loadBalance();		
                 Thread.sleep(1000);
             }
 
@@ -202,19 +201,16 @@ public void loadBalance() throws RemoteException {
 
     private void startProcesses()
     { 
-        double numClients = (double) clients.size();
-        int numProcesses = (int)Math.ceil((double)processIDs.size()/numClients); 
-        	
 	    ProcessManagerClientInterface current;
         
-        for(int i = 0; i < processIDs.size(); i = i + numProcesses)
+        if(processIDs.size() > 0)
         {
-            for(int c = 0; c < clients.size(); c++)
+            if(clients.size() > 0)
             {
-                current = clients.get(c); 
+                current = clients.get(0); 
 
                 try{
-                    current.setProcesses(processIDs.subList(i,i+numProcesses));
+                    current.setProcesses(processIDs);
                 } 
                 catch(ConnectException|UnmarshalException e)
                 {
