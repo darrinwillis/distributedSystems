@@ -26,15 +26,15 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
     }
     
 
-public class Initialize extends Thread {
-	public void run() {
-		try{
-			assignProcesses();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-}
+    public class Initialize extends Thread {
+        public void run() {
+            try{
+                assignProcesses();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
 public void assignProcesses() throws RemoteException {
 	List<String> currentPs = new ArrayList<String>(); 
