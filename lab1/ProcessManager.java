@@ -30,24 +30,24 @@ public class ProcessManager
 	return null;
     }
 
-    public void setProcesses(String[] pids)
+    public void setProcesses(List<String> pids)
     {
-        LinkedList<String> seen = new LinkedList<String>();
-        for(int i = 0; i < pids.length; i++) {
-            if(processMap.containsKey(pids[i])) 
-                seen.add(pids[i]);
-            else
-                runProcess(pids[i]);
-        }
-        String[] pidArray = processMap.keySet().toArray(new String[0]);
+	System.out.println("Process Manager: Set Process");
+        List<String> original = new ArrayList<String>();
+	List<String> selected = new ArrayList<String>(pids);
+	original.addAll(processMap.keySet());
 
-        for(int i = 0; i < pidArray.length; i++) {
-            if(!seen.contains(pidArray[i]))
-            {
-                suspendProcess(pidArray[i]);
-                System.out.println("Suspending process" + pidArray[i]);
-            }
-        }
+        ArrayList<String> add = new ArrayList<String>(selected);
+	add.removeAll(original);
+	for(String s : add) {
+	    runProcess(s);
+	}   
+
+	ArrayList<String> remove = new ArrayList<String>(original);
+	remove.removeAll(selected);
+	for(String s : remove) {
+	    suspendProcess(s);
+	}
         
         if (!checkingThreads) {
         	checkingThreads = true;
@@ -65,6 +65,7 @@ public class ProcessManager
     
     public class ThreadChecker extends Thread {	
 		public void run() {
+		System.out.println("Starting ThreadChecker");
 	    	Thread t;
             Boolean b = false;
 	    	while(b) {
@@ -83,8 +84,9 @@ public class ProcessManager
 	                    continue;
 	                }
 	                if(!t.isAlive()) {
-                        String filename = threadMap.get(t);
-	                    System.out.println("Deleting " + filename);
+	                    String filename = threadMap.get(t);
+			    System.out.println("Killed " + filename);
+>>>>>>> c8107f7921716942c37be4411f84c01d53a89e13
 	                    ProcessIO.delete(filename); 
 	                    processMap.remove(filename); 
 	                    threads.remove(t);
@@ -96,6 +98,7 @@ public class ProcessManager
 	}
     
     public void suspendProcess(String pid) {
+	System.out.println("suspendProcess " + pid);
         MigratableProcess p = processMap.remove(pid);
         if (p != null)
         {
@@ -107,7 +110,7 @@ public class ProcessManager
     // Requires a unique name for the process; otherwise replaces old process
     public void runProcess(String pid)
     {
-        System.out.println("Running: " + pid);
+        System.out.println("runProcess: " + pid);
         MigratableProcess process = ProcessIO.readProcess(pid);
         processMap.put(pid, process);
         //This must handle the timer TODO
@@ -116,7 +119,6 @@ public class ProcessManager
         threads.add(thread);
         threadMap.put(thread,pid);
         	
-	    System.out.println("Starting Thread");
         thread.start();
     }
 }
