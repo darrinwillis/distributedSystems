@@ -110,7 +110,7 @@ public void loadBalance() throws RemoteException {
 
             System.out.println("Process Delegation Server Ready");
         
-            for(int i = 0; i < 1000; i++) {
+            for(int i = 0; i < 0; i++) {
                 Class<? extends MigratableProcess> processClass = GrepProcess.class;
                 String[] strings = {" ", "ProccessDelegationServer.java", "out.txt"};
                 Object[] arguments = {strings};
@@ -141,7 +141,7 @@ public void loadBalance() throws RemoteException {
         clients.add(newClient);
     }
     
-    private void addProcess(Class<? extends MigratableProcess> processClass, Object[] args)
+    public void addProcess(Class<? extends MigratableProcess> processClass, Object[] args)
     {
         MigratableProcess newProcess = null;
         Class[] classes = new Class[args.length];

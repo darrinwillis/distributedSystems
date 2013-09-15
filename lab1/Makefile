@@ -27,6 +27,7 @@ CLASSES = \
 		TransactionalFileInputStream.java \
 		ProcessIO.java \
 		ProcessDelegationServer.java \
+		TestingClient.java \
 		GrepProcess.java
 
 default: classes
