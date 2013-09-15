@@ -54,14 +54,14 @@ public void loadBalance() throws RemoteException {
         {
             System.out.println("Client Disconnected");
         }
-    }
-    
-    if (clients.size() != 0) 
-	    avg = avg / clients.size();
-	else
-	    avg = 0;
+	}
+	    
+	    if (clients.size() != 0) 
+		    avg = avg / clients.size();
+		else
+		    avg = 0;
 
-	ProcessManagerClientInterface[] clientList = files.keySet().toArray(new ProcessManagerClientInterface[0]);
+		ProcessManagerClientInterface[] clientList = files.keySet().toArray(new ProcessManagerClientInterface[0]);
 		
 	    for(current = 0; current < clientList.length; current++) {
 	        c = clientList[current];
@@ -165,12 +165,12 @@ public void loadBalance() throws RemoteException {
 
         try {
             String fileName = "processes/" + nextPid;
-	    nextPid++;
+	    	nextPid++;
             File newProcessFile = new File(fileName);
             newProcessFile.createNewFile();
 
             ProcessIO.writeProcess(newProcess, fileName);
-	    System.out.println("Process Written " +  fileName);
+	    	System.out.println("Process Written " +  fileName);
             processIDs.add(fileName); 
         } catch (Exception e)
         {
@@ -196,17 +196,19 @@ public void loadBalance() throws RemoteException {
 
     private void startProcesses()
     { 
-        int numClients = clients.size();
+        double numClients = (double) clients.size();
+        int numProcesses = (int)Math.ceil((double)processIDs.size()/numClients); 
+        	
 	    ProcessManagerClientInterface current;
         
-        if(processIDs.size() > 0)
+        for(int i = 0; i < processIDs.size(); i = i + numProcesses)
         {
-            if (clients.size() > 0)
+            for(int c = 0; c < clients.size(); c++)
             {
-                current = clients.get(0); 
+                current = clients.get(c); 
 
                 try{
-                    current.setProcesses(processIDs);
+                    current.setProcesses(processIDs.subList(i,i+numProcesses));
                 } 
                 catch(ConnectException|UnmarshalException e)
                 {
