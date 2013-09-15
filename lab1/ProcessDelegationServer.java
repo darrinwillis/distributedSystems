@@ -7,8 +7,8 @@ import java.lang.reflect.*;
 class ProcessDelegationServer extends UnicastRemoteObject implements MasterServerInterface
 {
     private static final String serverName = "processDelegationServer";
-    private List<ProcessManagerClientInterface> clients;
-    private List<String> processIDs;
+    private volatile List<ProcessManagerClientInterface> clients;
+    private volatile List<String> processIDs;
     public int nextPid;
     
 	private static final int BALANCE_LEVEL = 2;
@@ -47,11 +47,16 @@ public void loadBalance() throws RemoteException {
     HashMap<ProcessManagerClientInterface,List<String>> files = new HashMap<ProcessManagerClientInterface,List<String>>(); 
 
     for (ProcessManagerClientInterface client : clients) {
-        files.put(client,client.getProcesses());
-        avg = avg + client.getProcesses().size();
+        try{
+            files.put(client,client.getProcesses());
+            avg = avg + client.getProcesses().size();
+        } catch (ConnectException e)
+        {
+            System.out.println("Client Disconnected");
+        }
     }
     
-    	if (clients.size() != 0) 
+    if (clients.size() != 0) 
 	    avg = avg / clients.size();
 	else
 	    avg = 0;
@@ -79,7 +84,8 @@ public void loadBalance() throws RemoteException {
 
 	    
 	    for(current = 0; current < clientList.length; current++) {
-	        c = clientList[current];
+	        // TODO: needs some sort of try/catch
+            c = clientList[current];
 	        ps = files.get(c);
 	        c.setProcesses(ps);
 	    }
@@ -98,18 +104,18 @@ public void loadBalance() throws RemoteException {
 
             System.out.println("Process Delegation Server Ready");
         
-            for(int i = 0; i < 100; i++) {
+            for(int i = 0; i < 1000; i++) {
                 Class<? extends MigratableProcess> processClass = GrepProcess.class;
-                String[] strings = {"1", "in.txt", "out.txt"};
+                String[] strings = {" ", "ProccessDelegationServer.java", "out.txt"};
                 Object[] arguments = {strings};
                 server.addProcess(processClass, arguments);
 	    }
 
             while (true)
             {
-		server.updateProcessList();
+		        server.updateProcessList();
                 //DO SOME LOAD BALANCING
-		server.startProcesses();
+		        server.startProcesses();
                 server.loadBalance();
 		
                 Thread.sleep(1000);
@@ -181,14 +187,17 @@ public void loadBalance() throws RemoteException {
             File processFile = new File(fileName);
             //If the file is deleted, the process is completed
             if (!processFile.exists())
+            {
+                System.out.println("Removing " + fileName);
                 processIDs.remove(i);
+            }
         }
     }
 
     private void startProcesses()
     { 
         int numClients = clients.size();
-	ProcessManagerClientInterface current;
+	    ProcessManagerClientInterface current;
         
         if(processIDs.size() > 0)
         {

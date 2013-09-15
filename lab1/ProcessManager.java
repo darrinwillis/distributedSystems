@@ -1,11 +1,12 @@
 import java.rmi.*;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.*;
 
 public class ProcessManager
 {
-    private HashMap<String, MigratableProcess> processMap;
-    private HashMap<Thread, String> threadMap;
+    private ConcurrentHashMap<String, MigratableProcess> processMap;
+    private ConcurrentHashMap<Thread, String> threadMap;
     
     private LinkedList<Thread> threads;
     	
@@ -13,8 +14,8 @@ public class ProcessManager
 
     public ProcessManager()
     {
-        processMap = new HashMap<String, MigratableProcess>();
-        threadMap = new HashMap<Thread, String>();
+        processMap = new ConcurrentHashMap<String, MigratableProcess>();
+        threadMap = new ConcurrentHashMap<Thread, String>();
         
         threads = new LinkedList<Thread>();
         
@@ -67,7 +68,7 @@ public class ProcessManager
 		public void run() {
 		System.out.println("Starting ThreadChecker");
 	    	Thread t;
-            Boolean b = false;
+            Boolean b = true;
 	    	while(b) {
 	            try {
 	                Thread.sleep(10);
@@ -85,8 +86,7 @@ public class ProcessManager
 	                }
 	                if(!t.isAlive()) {
 	                    String filename = threadMap.get(t);
-			    System.out.println("Killed " + filename);
->>>>>>> c8107f7921716942c37be4411f84c01d53a89e13
+			            System.out.println("Killed " + filename);
 	                    ProcessIO.delete(filename); 
 	                    processMap.remove(filename); 
 	                    threads.remove(t);
@@ -112,13 +112,16 @@ public class ProcessManager
     {
         System.out.println("runProcess: " + pid);
         MigratableProcess process = ProcessIO.readProcess(pid);
-        processMap.put(pid, process);
-        //This must handle the timer TODO
-        
-        Thread thread = new Thread(process);
-        threads.add(thread);
-        threadMap.put(thread,pid);
-        	
-        thread.start();
+        if (process != null)
+        {
+            processMap.put(pid, process);
+            //This must handle the timer TODO
+            
+            Thread thread = new Thread(process);
+            threads.add(thread);
+            threadMap.put(thread,pid);
+                
+            thread.start();
+        }
     }
 }
