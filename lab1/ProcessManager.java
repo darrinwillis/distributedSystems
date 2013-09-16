@@ -5,10 +5,10 @@ import java.util.concurrent.*;
 
 public class ProcessManager
 {
-    private ConcurrentHashMap<String, MigratableProcess> processMap;
-    private ConcurrentHashMap<Thread, String> threadMap;
+    private ConcurrentHashMap<String, MigratableProcess> processMap; //map process name to process
+    private ConcurrentHashMap<Thread, String> threadMap; //map process thread to process name
     
-    private LinkedList<Thread> threads;
+    private LinkedList<Thread> threads; //active threads
     	
     private Boolean checkingThreads; 
 
@@ -21,35 +21,29 @@ public class ProcessManager
         
         checkingThreads = false;
     }
-    
-    public static <T, E> T getKeyByValue(Map<T, E> map, E value) {
-	for (Map.Entry<T, E> entry : map.entrySet()) {
-	    if (value.equals(entry.getValue())) {
-		return entry.getKey();
-	    }
-	}
-	return null;
-    }
-
+	
+	// take a list of processes and syncs with current processes
     public void setProcesses(List<String> pids)
     {
-	System.out.println("Process Manager: Set Process");
         List<String> original = new ArrayList<String>();
-	List<String> selected = new ArrayList<String>(pids);
-	original.addAll(processMap.keySet());
-
+		List<String> selected = new ArrayList<String>(pids);
+		original.addAll(processMap.keySet());
+		
+		// run all new processes given by pids
         ArrayList<String> add = new ArrayList<String>(selected);
-	add.removeAll(original);
-	for(String s : add) {
-	    runProcess(s);
-	}   
-
-	ArrayList<String> remove = new ArrayList<String>(original);
-	remove.removeAll(selected);
-	for(String s : remove) {
-	    suspendProcess(s);
-	}
+		add.removeAll(original);
+		for(String s : add) {
+	    	runProcess(s);
+		}   
+		
+		// suspend processes not included in pids
+		ArrayList<String> remove = new ArrayList<String>(original);
+		remove.removeAll(selected);
+		for(String s : remove) {
+		    suspendProcess(s);
+		}
         
+        // run a thread checker in the background that checks for dead threads
         if (!checkingThreads) {
         	checkingThreads = true;
         	ThreadChecker thread = new ThreadChecker();
@@ -58,15 +52,16 @@ public class ProcessManager
         }
     }
     
+    // return running processes  
     public List<String> getProcesses() {
     	List<String> tmp = new ArrayList<String>();
     	tmp.addAll(processMap.keySet()); 	
     	return tmp;
     }
     
+    // Constantly checks for threads that have died
     public class ThreadChecker extends Thread {	
 		public void run() {
-		System.out.println("Starting ThreadChecker");
 	    	Thread t;
             Boolean b = true;
 	    	while(b) {
@@ -85,6 +80,7 @@ public class ProcessManager
 	                    continue;
 	                }
 	                if(!t.isAlive()) {
+	                	// remove all occurences of dead thread
 	                    String filename = threadMap.get(t);
 			            System.out.println("Killed " + filename);
 	                    ProcessIO.delete(filename); 
@@ -97,6 +93,7 @@ public class ProcessManager
 	    }
 	}
     
+    // suspend process and write it to output stream for migrating
     public void suspendProcess(String pid) {
 	System.out.println("suspendProcess " + pid);
         MigratableProcess p = processMap.remove(pid);
@@ -106,8 +103,8 @@ public class ProcessManager
             ProcessIO.writeProcess(p, pid.toString());
         }
     }
-
-    // Requires a unique name for the process; otherwise replaces old process
+	
+	// open suspendded process from input stream and start a thread for it
     public void runProcess(String pid)
     {
         System.out.println("runProcess: " + pid);
@@ -115,7 +112,6 @@ public class ProcessManager
         if (process != null)
         {
             processMap.put(pid, process);
-            //This must handle the timer TODO
             
             Thread thread = new Thread(process);
             threads.add(thread);

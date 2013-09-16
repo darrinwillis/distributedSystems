@@ -3,13 +3,14 @@ import java.rmi.server.*;
 import java.util.*;
 import java.io.*;
 import java.lang.reflect.*;
+import java.util.concurrent.*;
 
 class ProcessDelegationServer extends UnicastRemoteObject implements MasterServerInterface
 {
     private static final String serverName = "processDelegationServer";
     private volatile List<ProcessManagerClientInterface> clients;
     private volatile List<String> processIDs;
-	private HashMap<ProcessManagerClientInterface,List<String>> files;
+	private ConcurrentHashMap<ProcessManagerClientInterface,List<String>> files;
 	
     public int nextPid;
     
@@ -23,7 +24,7 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
         processIDs = new ArrayList<String>(); 
 		nextPid = 0;
 		running = false;
-		files = new HashMap<ProcessManagerClientInterface,List<String>>(); 
+		files = new ConcurrentHashMap<ProcessManagerClientInterface,List<String>>(); 
     }
     
 	// Assigns unassigned processes in processIDs to first client
