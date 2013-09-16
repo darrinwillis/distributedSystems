@@ -45,10 +45,7 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
 					e.printStackTrace();
 				}
 			}
-		} catch(ConcurrentModificationException e)
-				{
-					
-				} 
+		} catch(ConcurrentModificationException e) { } 
 		
 		// Find unassigned ones and send them to first client 
 		List<String> add = new ArrayList<String>(processIDs);
@@ -175,7 +172,8 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
         }
 		System.out.println("Main End");
     }
-
+	
+	// register a client
     public void register(ProcessManagerClientInterface newClient) throws RemoteException
     {
         System.out.println("Client Connected");
@@ -186,8 +184,10 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
 		System.out.println("Current clients " + clients.size()); 
     }
     
+    // adds a process to processIDs and write it to an output stream
     public void addProcess(Class<? extends MigratableProcess> processClass, Object[] args)
     {
+    	// set up process constructor
         MigratableProcess newProcess = null;
         Class[] classes = new Class[args.length];
         for(int i = 0; i < args.length; i++)
@@ -213,13 +213,16 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
             System.out.println("Failed to create class instance");
             e.printStackTrace();
         }
-
+		
+	
         try {
+        	// create file associated with process
             String fileName = "processes/" + nextPid;
 	    	nextPid++;
             File newProcessFile = new File(fileName);
             newProcessFile.createNewFile();
-
+			
+			// write process to output stream
             ProcessIO.writeProcess(newProcess, fileName);
 	    	System.out.println("Process Written " +  fileName);
             processIDs.add(fileName); 
