@@ -10,7 +10,7 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
     private static final String serverName = "processDelegationServer";
     private volatile List<ProcessManagerClientInterface> clients;
     private volatile List<String> processIDs;
-	private ConcurrentHashMap<ProcessManagerClientInterface,List<String>> files;
+	private HashMap<ProcessManagerClientInterface,List<String>> files;
 	
     public int nextPid;
     
@@ -24,7 +24,7 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
         processIDs = new ArrayList<String>(); 
 		nextPid = 0;
 		running = false;
-		files = new ConcurrentHashMap<ProcessManagerClientInterface,List<String>>(); 
+		files = new HashMap<ProcessManagerClientInterface,List<String>>(); 
     }
     
 	// Assigns unassigned processes in processIDs to first client
@@ -161,14 +161,7 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
             Naming.rebind (serverName, server);
 
             System.out.println("Process Delegation Server Ready");
-        
-            for(int i = 0; i < 50; i++) {
-                Class<? extends MigratableProcess> processClass = GrepProcess.class;
-                String outputFileName = "out/" + i + ".txt";
-                String[] strings = {"1", "in.txt", outputFileName};
-                Object[] arguments = {strings};
-                server.addProcess(processClass, arguments);
-	    	}
+            
 			while(true) {
 				server.assignProcesses();
 				server.loadBalance();	
@@ -188,6 +181,7 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
         System.out.println("Client Connected");
 		
         clients.add(newClient);
+        
 		System.out.println("Current processes " + processIDs.size()); 
 		System.out.println("Current clients " + clients.size()); 
     }
@@ -236,6 +230,7 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
         }
     }
 
+	// updates processIDs to reflect finished procesess 
     private void updateProcessList()
     {
         for (int i = 0; i < processIDs.size(); i++)
