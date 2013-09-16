@@ -9,9 +9,10 @@ import java.io.*;
 
 public class TransactionalFileInputStream extends java.io.InputStream implements java.io.Serializable {
 
-	String file;
-	long index;
-	
+    String file;
+    long index;
+    private static final long serialVersionUID = 123456789;
+
     public TransactionalFileInputStream(String path) {
     	file = path;
     	index = 0;
@@ -45,7 +46,7 @@ public class TransactionalFileInputStream extends java.io.InputStream implements
 	    in.close(); 
 
     	if(i >= 0)
-    		index = index + i;
+    		index = off + i;
     		
     	return i;
    	}

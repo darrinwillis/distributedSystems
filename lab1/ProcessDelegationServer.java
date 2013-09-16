@@ -52,10 +52,12 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
 		// Find unassigned ones and send them to first client 
 		List<String> add = new ArrayList<String>(processIDs);
 		add.removeAll(currentPs);
-		if(processIDs.size() > 0 && clients.size() > 0) {
+		if(add.size() > 0 && processIDs.size() > 0 && clients.size() > 0) {
+			ProcessManagerClientInterface first = clients.get(0);
 			try{
-				clients.get(0).setProcesses(processIDs);
-				System.out.println("First Client Set");
+				add.addAll(first.getProcesses());
+				first.setProcesses(add);
+				System.out.println("Added " + add.size() + " processes to first client");
 			} 
 			catch(ConnectException|UnmarshalException e)
 			{
@@ -159,7 +161,7 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
 
             System.out.println("Process Delegation Server Ready");
         
-            for(int i = 0; i < 10; i++) {
+            for(int i = 0; i < 50; i++) {
                 Class<? extends MigratableProcess> processClass = GrepProcess.class;
                 String outputFileName = "out/" + i + ".txt";
                 String[] strings = {"1", "in.txt", outputFileName};

@@ -12,6 +12,7 @@ public class TransactionalFileOutputStream extends java.io.OutputStream implemen
 	String file;
 	public long index;
 	
+    private static final long serialVersionUID = 987654321;
     public TransactionalFileOutputStream(String path, boolean append) {
     	file = path;
     	File f = new File(path);
@@ -32,7 +33,7 @@ public class TransactionalFileOutputStream extends java.io.OutputStream implemen
     	out.seek(index);
     	out.write(b,off,len);
     	out.close();
-    	index = index + len;
+    	index = off + len;
     }
     public void write(byte[] b) throws IOException {
 		RandomAccessFile out = new RandomAccessFile(file,"rws");
