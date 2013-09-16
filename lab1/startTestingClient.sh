@@ -1,2 +1,2 @@
 #!/bin/bash
-java -Djava.security.policy=client.policy TestingClient
+java -Djava.security.policy=client.policy TestingClient $1

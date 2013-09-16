@@ -1,8 +1,14 @@
+/* This is an abstraction of process writing to handle it for both
+ * the client and the server.
+ */
+
 import java.rmi.*;
 import java.io.*;
 import java.util.*;
 
 class ProcessIO{
+    
+    // Writes a process to file
     public static void writeProcess(MigratableProcess process, String filename){
 	    try{   	
 	        FileOutputStream out = new FileOutputStream(filename, false);
@@ -18,6 +24,7 @@ class ProcessIO{
         }
     }
 
+    // Reads a process from a file
     public static MigratableProcess readProcess(String filename){
 	    try{	
 	        FileInputStream in = new FileInputStream(filename);
@@ -34,6 +41,7 @@ class ProcessIO{
         }
     }
 
+    // Deletes a file
     public static void delete(String filename){
         File fileToDelete = new File(filename);
         if (fileToDelete.delete())

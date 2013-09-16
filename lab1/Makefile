@@ -9,6 +9,9 @@ JC = javac
 # RMI compiler variable
 RMI = rmic
 
+# ECHO
+ECHO = (echo)
+
 # Any compilation flags
 JFLAGS = -g
 
@@ -31,10 +34,16 @@ CLASSES = \
 		GrepProcess.java
 
 default: classes
-		$(RMI) ProcessManagerClient
-		$(RMI) ProcessDelegationServer
+		@$(RMI) ProcessManagerClient
+		@$(RMI) ProcessDelegationServer
+		@echo "Run with :"
+		@echo "./startServer.sh"
+		@echo "./startClient.sh rmi://server.url.here.com"
+		@echo "./startTestingClient.sh rmi://server.url.here.com"
+
 
 classes: $(CLASSES:.java=.class)
 
 clean:
-	find . -type f -name "*.class" -delete
+	@find . -type f -name "*.class" -delete
+	@echo "All clean!"
