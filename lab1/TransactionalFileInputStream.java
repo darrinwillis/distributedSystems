@@ -23,10 +23,6 @@ public class TransactionalFileInputStream extends java.io.InputStream implements
     	index = i;
     }
     
-    public long skip(long i) {
-    	index = index + i;
-    	return i;
-    }
     public int read() throws IOException {
     	FileInputStream in = new FileInputStream(file);
 	    in.skip(index);
@@ -46,7 +42,7 @@ public class TransactionalFileInputStream extends java.io.InputStream implements
 	    in.close(); 
 
     	if(i >= 0)
-    		index = off + i;
+    		index = index + i;
     		
     	return i;
    	}
