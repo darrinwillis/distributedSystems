@@ -1,7 +1,4 @@
-1
-1
-1
- java.rmi.*;
+import java.rmi.*;
 import java.rmi.server.*;
 import java.util.*;
 import java.io.*;
@@ -13,6 +10,7 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
 	private HashMap<ProcessManagerClientInterface,List<String>> files;
     public int nextPid;
     
+	private boolean running;
 	private static final int BALANCE_LEVEL = 2;
     public ProcessDelegationServer() throws RemoteException
     {
@@ -20,14 +18,22 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
         clients = new ArrayList<ProcessManagerClientInterface>();
         processIDs = new ArrayList<String>(); 
 		nextPid = 0;
+		running = false;
 		files = new HashMap<ProcessManagerClientInterface,List<String>>(); 
     }
     
 	// Assigns unassigned processes in processIDs to first client
-	public void assignProcesses() throws RemoteException {
+	public void assignProcesses() {
 		// Get current processes 
 		List<String> currentPs = new ArrayList<String>(); 
-		for(ProcessManagerClientInterface client : clients) {
+			for(ProcessManagerClientInterface client : clients) {
+				try {
+				} catch(ConnectException|UnmarshalException e)
+					System.out.println("Client disconnected");
+				} 
+				catch(Exception e)
+		} catch(ConcurrentModificationException e)
+				} 
 		// Find unassigned ones and send them to first client 
 		List<String> add = new ArrayList<String>(processIDs);
 		if(processIDs.size() > 0 && clients.size() > 0) {
@@ -42,15 +48,7 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
 		// victim is the client that takes on additional load
 		int avg = 0; 
 		int victim = 0;
-		int current = 0;
-		String f;
-		ProcessManagerClientInterface victimC;
-		List<String> ps;
-		List<String> victimPs;
-		int load;
-		Random r = new Random(); 
-		//calculate average and update hashmap
-		for (ProcessManagerClientInterface client : clients) {
+agerClientInterface client : clients) {
 			avg = avg + client.getProcesses().size();
 		if (clients.size() != 0) 
 			avg = avg / clients.size();

@@ -13,6 +13,7 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
 	
     public int nextPid;
     
+	private boolean running;
 	private static final int BALANCE_LEVEL = 2;
 	
     public ProcessDelegationServer() throws RemoteException
@@ -21,16 +22,32 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
         clients = new ArrayList<ProcessManagerClientInterface>();
         processIDs = new ArrayList<String>(); 
 		nextPid = 0;
+		running = false;
 		files = new HashMap<ProcessManagerClientInterface,List<String>>(); 
     }
     
 	// Assigns unassigned processes in processIDs to first client
-	public void assignProcesses() throws RemoteException {
+	public void assignProcesses() {
 		// Get current processes 
 		List<String> currentPs = new ArrayList<String>(); 
-		for(ProcessManagerClientInterface client : clients) {
-			currentPs.addAll(client.getProcesses());
-		}
+		try{
+			for(ProcessManagerClientInterface client : clients) {
+				try {
+					currentPs.addAll(client.getProcesses());
+				} catch(ConnectException|UnmarshalException e)
+				{
+					System.out.println("Client disconnected");
+					clients.remove(client);
+				} 
+				catch(Exception e)
+				{
+					e.printStackTrace();
+				}
+			}
+		} catch(ConcurrentModificationException e)
+				{
+					
+				} 
 		
 		// Find unassigned ones and send them to first client 
 		List<String> add = new ArrayList<String>(processIDs);
@@ -67,8 +84,18 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
 		
 		//calculate average and update hashmap
 		for (ProcessManagerClientInterface client : clients) {
-			files.put(client,client.getProcesses());
-			avg = avg + client.getProcesses().size();
+			try {
+				files.put(client,client.getProcesses());
+				avg = avg + client.getProcesses().size();
+			} catch(ConnectException|UnmarshalException e)
+			{
+				System.out.println("Client disconnected");
+				clients.remove(client);
+			} 
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
 		}
 			
 		if (clients.size() != 0) 
@@ -77,42 +104,55 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
 			avg = 0;
 		
 		//balance the load of clients by getting a process from an overloaded client and sending it to a random other one
-		for(ProcessManagerClientInterface c : clients) {
-			ps = files.get(c);
-			load = ps.size();
-			while(load - BALANCE_LEVEL > avg) {
-				//designate victim
-				do {
-					victim = r.nextInt(clients.size());
-				} while(victim == current) ;
-				
-				//move process
-				victimC = clients.get(victim);
-				victimPs = files.get(victimC);
-				f = ps.remove(0); 
-				victimPs.add(f);
-				files.put(victimC,victimPs);
-				load--;
+		for(ProcessManagerClientInterface client : clients) {
+			try { 
+				ps = files.get(client);
+				load = ps.size();
+				while(load - BALANCE_LEVEL > avg) {
+					//designate victim
+					do {
+						victim = r.nextInt(clients.size());
+					} while(victim == current) ;
+					
+					//move process
+					victimC = clients.get(victim);
+					victimPs = files.get(victimC);
+					f = ps.remove(0); 
+					victimPs.add(f);
+					files.put(victimC,victimPs);
+					load--;
+				}
+				files.put(client,ps);
+				current++; 
+			} 
+			catch(Exception e)
+			{
+				e.printStackTrace();
 			}
-			files.put(c,ps);
-			current++; 
 		}
 			
 		//set all changes
-		for(ProcessManagerClientInterface c : clients) {
-			// TODO: needs some sort of try/catch
-			ps = files.get(c);
-			c.setProcesses(ps);
+		for(ProcessManagerClientInterface client : clients) {
+			try {
+				ps = files.get(client);
+				client.setProcesses(ps);
+			} catch(ConnectException|UnmarshalException e)
+			{
+				System.out.println("Client disconnected");
+				clients.remove(client);
+			} 
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
 		}
 			
 	}
-	
     public static void main (String []args)
     {
         try
         {
             //Server Stuff
-
             ProcessDelegationServer server = new ProcessDelegationServer();
 
             Naming.rebind (serverName, server);
@@ -126,20 +166,18 @@ class ProcessDelegationServer extends UnicastRemoteObject implements MasterServe
                 Object[] arguments = {strings};
                 server.addProcess(processClass, arguments);
 	    	}
-			
-            while (true)
-            {
+			while(true) {
 				server.assignProcesses();
-                server.loadBalance();	
+				server.loadBalance();	
 				server.updateProcessList();
-                Thread.sleep(1000);
-            }
-
+				Thread.sleep(1000);
+			}
         }
         catch (Exception e)
         {
             e.printStackTrace();
         }
+		System.out.println("Main End");
     }
 
     public void register(ProcessManagerClientInterface newClient) throws RemoteException
