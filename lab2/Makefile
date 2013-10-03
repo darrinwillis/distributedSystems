@@ -20,8 +20,9 @@ JFLAGS = -g
 		$(JC) $(JFLAGS) $*.java
 
 CLASSES = \
-		PLACEHOLDER.java \
-		PLACEHOLDER.java
+		440Remote.java \
+		RemoteObjectReference.java \
+		RMIMessage.java
 
 default: classes
 		@echo "Project Built"
