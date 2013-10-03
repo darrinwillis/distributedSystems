@@ -5,12 +5,14 @@ import java.lang.*;
 public class RemoteObjectReference implements Serializable {
     public InetAddress adr;
     public int key;
+    public int port;
     public String name;
 
-    public RemoteObjectReference(InetAddress i, int k, String n) {
+    public RemoteObjectReference(InetAddress i, int p, int k, String n) {
         adr = i;
         key = k;
         name = n;
+	port = p;
     }
 
     public Object localise() {
