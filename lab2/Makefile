@@ -1,7 +1,4 @@
-# A makefile for lab1
-
-# Transactional IO Directory
-TRANS_DIR = TransactionalIO/ 
+# A makefile for lab2
 
 # Java compiler variable
 JC = javac
@@ -20,15 +17,23 @@ JFLAGS = -g
 		$(JC) $(JFLAGS) $*.java
 
 CLASSES = \
-		440Remote.java \
+		Remote440.java \
 		RemoteObjectReference.java \
 		RMIMessage.java
 
-default: classes
+TESTS = \
+		tests/PrintingObject.java \
+		tests/RMIMessageTestingClient.java \
+		tests/RMIMessageTestingServer.java
+
+default: classes \
+		 tests
 		@echo "Project Built"
 
 
-classes: $(CLASSES:.java=.class)
+classes: 	$(CLASSES:.java=.class)
+
+tests:		$(TESTS:.java=.class)
 
 clean:
 	@find . -type f -name "*.class" -delete
