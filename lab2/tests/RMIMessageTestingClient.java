@@ -1,7 +1,6 @@
 import java.lang.reflect.*;
 import java.io.*;
 import java.net.*;
-import lab2.*;
 
 class RMIMessageTestingClient
 {
@@ -11,16 +10,20 @@ class RMIMessageTestingClient
 
     public static void main(String[] args)
     {
-        String s = "The sent message";
-        Socket sock = new Socket(hostname, port);
+	try{
+	    String s = "The sent message";
+	    Socket sock = new Socket(hostname, port);
 
-        InputStream in = sock.getInputStream();
+	    InputStream in = sock.getInputStream();
 
-        Class theClass = Class.forName("PrintingObject");
-        RemoteObjectReference ref = new RemoteObjectReference(sock.getInetAddress(), sock.getPort(), 0, theClass.toString());
+	    Class theClass = Class.forName("PrintingObject");
+	    RemoteObjectReference ref = new RemoteObjectReference(sock.getInetAddress(), sock.getPort(), 0, theClass.toString());
         
-        Method method = theClass.getMethod(methodName, String.class);
+	    Method method = theClass.getMethod(methodName, String.class);
 
-        RMIMessage(ref, method, s);
+	    new RMIMessage(ref, method, s);
+	} catch (Exception e) {
+	    e.printStackTrace();
+	}
     }
 }

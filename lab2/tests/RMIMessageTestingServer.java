@@ -1,3 +1,5 @@
+import java.lang.reflect.*;
+import java.io.*;
 import java.net.*;
 
 public class RMIMessageTestingServer
@@ -9,20 +11,20 @@ public class RMIMessageTestingServer
     {
         ServerSocket serverSock = new ServerSocket(port);
         printObj = new PrintingObject();
-        clientSock = serverSock.accept();
+        Socket clientSock = serverSock.accept();
 
         InputStream in = clientSock.getInputStream();
         OutputStream out = clientSock.getOutputStream();
 
-        ObjectInputStream objIn = ObjectInputStream(in);
+        ObjectInputStream objIn = new ObjectInputStream(in);
 
         Object readObject = objIn.readObject();
         Class<?> objClass = readObject.getClass();
-        if (objClass.equals(RMIMessage.class))
+        if (objClass.equals(Class.forName("RMIMessage")))
         {
             System.out.println("Message received");
             RMIMessage message = (RMIMessage)readObject;
-            message.method.invoke(printObj, message.args[0]);
+            message.method.invoke(printObj, message.args);
         }
     }
 }
