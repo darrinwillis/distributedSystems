@@ -12,13 +12,10 @@ class RMIMessageTestingClient
     {
 	try{
 	    String s = "The sent message";
-	    Socket sock = new Socket(hostname, port);
-
-	    InputStream in = sock.getInputStream();
 
 	    Class theClass = Class.forName("PrintingObject");
-	    RemoteObjectReference ref = new RemoteObjectReference(sock.getInetAddress(), sock.getPort(), 0, theClass.toString());
-        
+	    RemoteObjectReference ref = new RemoteObjectReference(InetAddress.getByName(hostname), port, 0, theClass.toString());
+       
 	    Method method = theClass.getMethod(methodName, String.class);
 
 	    new RMIMessage(ref, method, s);

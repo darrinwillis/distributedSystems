@@ -22,9 +22,9 @@ CLASSES = \
 		RMIMessage.java
 
 TESTS = \
-		tests/PrintingObject.java \
-		tests/RMIMessageTestingClient.java \
-		tests/RMIMessageTestingServer.java
+		PrintingObject.java \
+		RMIMessageTestingClient.java \
+		RMIMessageTestingServer.java
 
 default: classes \
 		 tests
