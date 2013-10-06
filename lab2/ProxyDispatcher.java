@@ -45,7 +45,6 @@ public class ProxyDispatcher {
 		
         // Handles any exceptions thrown by this object and fowards
         // them to the client
-        Object returnValue = null;
         try{
             returnValue = m.invoke(callee, msg.args);
 		} catch (Exception e)
