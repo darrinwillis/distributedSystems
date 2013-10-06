@@ -45,7 +45,7 @@ public class RMIMessage implements Serializable{
         return returnObject;
     }
 
-    private void send()
+    public void send()
     {
         try{
             //Write out this message to the host specified by the remote ref
