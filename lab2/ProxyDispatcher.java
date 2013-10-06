@@ -11,24 +11,30 @@ public class ProxyDispatcher {
     
 
     public ProxyDispatcher(int p, InetAddress a) {
-	try {
-	    Socket soc = new Socket(a, p);
-
-	    InputStream inStream = soc.getInputStream();
-	    in = new ObjectInputStream(inStream);
-	
-	    OutputStream outStream = soc.getOutputStream();
-	    out = new ObjectOutputStream(outStream);
-        } catch(Exception e) {
-	    e.printStackTrace();
-	}
-
 	objList = new HashMap<String,Object>();
     }
 
     public void addObj(String name,Object o) {
 	objList.put(name,o);
     }
+
+    public void start(){
+	try {
+	    ServerSocket serverSock = new ServerSocket(p);
+	    Socket soc = serverSock.accept();
+
+	    InputStream inStream = soc.getInputStream();
+	    in = new ObjectInputStream(inStream);
+	
+	    OutputStream outStream = soc.getOutputStream();
+	    out = new ObjectOutputStream(outStream);
+	    
+	    executeMessage();
+        } catch(Exception e) {
+	    e.printStackTrace();
+	}
+    }
+    
     
     public void executeMessage(){
 	Object o = null;
