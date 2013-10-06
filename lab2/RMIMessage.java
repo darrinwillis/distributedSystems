@@ -35,7 +35,7 @@ public class RMIMessage implements Serializable{
         return null;
     }
 
-    private void send()
+    public void send()
     {
         try{
             Socket comSock = new Socket(remoteObject.adr, remoteObject.port);
