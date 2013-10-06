@@ -19,7 +19,7 @@ public class ProxyDispatcher {
 	
 	    OutputStream outStream = soc.getOutputStream();
 	    out = new ObjectOutputStream(outStream);
-	} catch(Exception e) {
+        } catch(Exception e) {
 	    e.printStackTrace();
 	}
 
@@ -42,8 +42,23 @@ public class ProxyDispatcher {
 		msg = (RMIMessage)o;
 		m = msg.getMethod();
 		callee = objList.get(msg.remoteObject.name);
-		returnValue = m.invoke(callee, msg.args);
-		out.writeObject(returnValue);
+		
+        // Handles any exceptions thrown by this object and fowards
+        // them to the client
+        Object returnValue = null;
+        try{
+            returnValue = m.invoke(callee, msg.args);
+		} catch (Exception e)
+        {
+            Throwable cause = e;
+            if (e.getClass() == InvocationTargetException.class)
+                cause = e.getCause();
+
+            //Returns a wrapped Throwable to clientside
+            returnValue = new RMIException(cause);
+        }
+        
+        out.writeObject(returnValue);
 		out.flush();
 	    }
 	} catch(Exception e) {
