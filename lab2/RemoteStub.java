@@ -13,12 +13,8 @@ public abstract class RemoteStub implements Remote440 {
     public RemoteObjectReference ror;
     
     protected Object methodCall(Method m, Object[] args) {
-    	try {
-	    RMIMessage msg = new RMIMessage(ror,m,args);
+	RMIMessage msg = new RMIMessage(ror,m,args);
     	
-	    return msg.getReturn();
-	} catch(Exception e) {
-	    e.printStackTrace();
-	}
+	return msg.getReturn();
     }
 }

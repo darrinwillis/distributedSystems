@@ -39,33 +39,33 @@ public class ProxyDispatcher {
 	try {
 	    o = in.readObject(); //get message sent by stub 
 	    if(o.getClass().getName().equals("RMIMessage")) {
-<<<<<<< HEAD
+       
 		msg = (RMIMessage)o; 
 		m = msg.getMethod(); //get method from message 
 		callee = objList.get(msg.remoteObject.name); //find object associated with reference
 		returnValue = m.invoke(callee, msg.args); //invoke local method call
 		out.writeObject(returnValue);//send return value back to stub
-=======
+	      
 		msg = (RMIMessage)o;
 		m = msg.getMethod();
 		callee = objList.get(msg.remoteObject.name);
 		
-        // Handles any exceptions thrown by this object and fowards
-        // them to the client
-        try{
-            returnValue = m.invoke(callee, msg.args);
+		// Handles any exceptions thrown by this object and fowards
+		// them to the client
+		try{
+		    returnValue = m.invoke(callee, msg.args);
 		} catch (Exception e)
-        {
-            Throwable cause = e;
-            if (e.getClass() == InvocationTargetException.class)
-                cause = e.getCause();
+		    {
+			Throwable cause = e;
+			if (e.getClass() == InvocationTargetException.class)
+			    cause = e.getCause();
 
-            //Returns a wrapped Throwable to clientside
-            returnValue = new RMIException(cause);
-        }
+			//Returns a wrapped Throwable to clientside
+			returnValue = new RMIException(cause);
+		    }
         
-        out.writeObject(returnValue);
->>>>>>> 3c90e4c7b269f28e161bf9cd2b771631f13eb5b9
+		out.writeObject(returnValue);
+   
 		out.flush();
 	    }
 	} catch(Exception e) {
