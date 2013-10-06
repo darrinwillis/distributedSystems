@@ -40,8 +40,15 @@ public class RMIMessage implements Serializable{
         return null;
     }
 
-    public Object getReturn()
+    public Object getReturn() throws Throwable
     {
+        if (this.returnObject.getClass() == RMIException.class)
+        {
+            RMIException re = (RMIException)returnObject;
+            Throwable e = re.theException;
+            throw e;
+        }
+        
         return returnObject;
     }
 

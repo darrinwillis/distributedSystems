@@ -14,12 +14,13 @@ JFLAGS = -g
 
 .SUFFIXES: .java .class
 .java.class:
-		$(JC) $(JFLAGS) $*.java
+		@$(JC) $(JFLAGS) $*.java
 
 CLASSES = \
 		Remote440.java \
 		RemoteObjectReference.java \
-		RMIMessage.java
+		RMIMessage.java \
+		RMIException.java
 
 TESTS = \
 		PrintingObject.java \

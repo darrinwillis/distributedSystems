@@ -11,7 +11,7 @@ class RMIMessageTestingClient
     public static void main(String[] args)
     {
         try{
-            String s = "The sent message";
+            String s = "The sent message is cool";
 
             Class theClass = Class.forName("PrintingObject");
 
@@ -26,8 +26,15 @@ class RMIMessageTestingClient
             Object returnObj = theMessage.getReturn();
 
             if ((returnObj != null) && (returnObj.getClass() == String.class))
+            {
                 System.out.println(returnObj);
-        } catch (Exception e) {
+                if (returnObj == "This is the intended return value")
+                {
+                    System.out.println("RMI Message normal case test passed");
+                }
+            }
+
+        } catch (Throwable e) {
             e.printStackTrace();
         }
     }
