@@ -8,10 +8,15 @@ public class ProxyDispatcher {
     public HashMap<String,Object> objList; //maps object names to actual objects
     public ObjectInputStream in; 
     public ObjectOutputStream out;
+    public int port;
+    public InetAddress adr; 
     
+    public static int BACKLOG = 10;
 
     public ProxyDispatcher(int p, InetAddress a) {
 	objList = new HashMap<String,Object>();
+	port = p;
+	adr = a;
     }
 
     public void addObj(String name,Object o) {
@@ -20,7 +25,7 @@ public class ProxyDispatcher {
 
     public void start(){
 	try {
-	    ServerSocket serverSock = new ServerSocket(p);
+	    ServerSocket serverSock = new ServerSocket(port,BACKLOG,adr);
 	    Socket soc = serverSock.accept();
 
 	    InputStream inStream = soc.getInputStream();
