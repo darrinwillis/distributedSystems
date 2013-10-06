@@ -5,8 +5,8 @@ import java.io.*;
 import java.net.*;
 
 public class ProxyDispatcher {
-    public HashMap<String,Object> objList;
-    public ObjectInputStream in;
+    public HashMap<String,Object> objList; //maps object names to actual objects
+    public ObjectInputStream in; 
     public ObjectOutputStream out;
     
 
@@ -37,13 +37,13 @@ public class ProxyDispatcher {
 	Object callee; 
 	Object returnValue = null;
 	try {
-	    o = in.readObject();
+	    o = in.readObject(); //get message sent by stub 
 	    if(o.getClass().getName().equals("RMIMessage")) {
-		msg = (RMIMessage)o;
-		m = msg.getMethod();
-		callee = objList.get(msg.remoteObject.name);
-		returnValue = m.invoke(callee, msg.args);
-		out.writeObject(returnValue);
+		msg = (RMIMessage)o; 
+		m = msg.getMethod(); //get method from message 
+		callee = objList.get(msg.remoteObject.name); //find object associated with reference
+		returnValue = m.invoke(callee, msg.args); //invoke local method call
+		out.writeObject(returnValue);//send return value back to stub
 		out.flush();
 	    }
 	} catch(Exception e) {
