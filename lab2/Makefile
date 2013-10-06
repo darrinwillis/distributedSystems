@@ -20,7 +20,8 @@ CLASSES = \
 		Remote440.java \
 		RemoteObjectReference.java \
 		RMIMessage.java \
-		RMIException.java
+		RMIException.java \
+		ProxyDispatcher.java 
 
 TESTS = \
 		PrintingObject.java \
