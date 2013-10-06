@@ -16,8 +16,6 @@ public class RMIMessageTestingServer
             Socket clientSock = serverSock.accept();
 
             InputStream in = clientSock.getInputStream();
-            OutputStream out = clientSock.getOutputStream();
-
             
             ObjectInputStream objIn= new ObjectInputStream(in);
             
@@ -27,7 +25,15 @@ public class RMIMessageTestingServer
             {
                 System.out.println("Message received");
                 RMIMessage message = (RMIMessage)readObject;
-                message.getMethod().invoke(printObj, message.args);
+                Object returnObj = message.getMethod().invoke(printObj, message.args);
+                if (returnObj != null)
+                {
+                    OutputStream out = clientSock.getOutputStream();
+                    ObjectOutputStream objOut = new ObjectOutputStream(out);
+
+                    System.out.println("Writing out return obj: " + returnObj);
+                    objOut.writeObject(returnObj);
+                }
             }
         } catch (Exception e)
         {

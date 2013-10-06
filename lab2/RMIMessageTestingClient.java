@@ -10,17 +10,25 @@ class RMIMessageTestingClient
 
     public static void main(String[] args)
     {
-	try{
-	    String s = "The sent message";
+        try{
+            String s = "The sent message";
 
-	    Class theClass = Class.forName("PrintingObject");
-	    RemoteObjectReference ref = new RemoteObjectReference(InetAddress.getByName(hostname), port, 0, theClass.toString());
-       
-	    Method method = theClass.getMethod(methodName, String.class);
+            Class theClass = Class.forName("PrintingObject");
 
-	    new RMIMessage(ref, method, s);
-	} catch (Exception e) {
-	    e.printStackTrace();
-	}
+            RemoteObjectReference ref = new RemoteObjectReference(InetAddress.getByName(hostname), port, 0, theClass.toString());
+           
+            Class[] argClasses = {String.class, int.class};
+
+            Method method = theClass.getMethod(methodName, argClasses);
+
+            Object[] remoteArgs = {s, 5};
+            RMIMessage theMessage = new RMIMessage(ref, method, remoteArgs);
+            Object returnObj = theMessage.getReturn();
+
+            if ((returnObj != null) && (returnObj.getClass() == String.class))
+                System.out.println(returnObj);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
