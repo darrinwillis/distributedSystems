@@ -1,4 +1,6 @@
-public class PrintingObject
+import java.rmi.*;
+
+public class PrintingObject implements Remote
 {
     public PrintingObject() {}
 

@@ -9,26 +9,34 @@ public class RemoteObjectReference implements Serializable {
     public int port;
     public String name;
 
-    public RemoteObjectReference(InetAddress i, int p, int k, String n) {
-        adr = i;
+    private static final long serialVersionUID = 1702994469;
+
+    public RemoteObjectReference(InetAddress inet, int port, int k, String name) {
+        adr = inet;
         key = k;
-        name = n;
-	port = p;
+        this.name = name;
+	    this.port = port;
     }
 
-    public Object localise() {
+    public Remote440 localize() {
 	String stubName = name + "_stub";
 	Object stub = null;
 		
 	try {
-	    Class c = Class.forName(stubName);
+	    Class<?> c = Class.forName(stubName);
 	    stub = c.newInstance();
+
+        if (stub.getClass() != RemoteStub.class)
+        {
+            System.out.println("Stub class not found");
+            return null;
+        }
 
 	} catch (Exception e) {
 	    e.printStackTrace();
 	}
 		
-	return stub;
+	return ((Remote440)stub);
     }
     
 }

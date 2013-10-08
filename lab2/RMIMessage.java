@@ -11,6 +11,8 @@ public class RMIMessage implements Serializable{
     private String methodName;
     private Class<?>[] argumentClasses;
     private Object returnObject;
+    private static final long serialVersionUID = 489617729;
+
 
     public RemoteObjectReference remoteObject;
     public Object[] args;

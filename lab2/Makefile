@@ -10,7 +10,7 @@ RMI = rmic
 ECHO = (echo)
 
 # Any compilation flags
-JFLAGS = -g
+JFLAGS = -g -Xlint
 
 .SUFFIXES: .java .class
 .java.class:
@@ -21,7 +21,10 @@ CLASSES = \
 		RemoteObjectReference.java \
 		RMIMessage.java \
 		RMIException.java \
-		ProxyDispatcher.java 
+		RemoteStub.java \
+		ProxyDispatcher.java \
+		RegistryServer.java \
+		Communicate.java 
 
 TESTS = \
 		PrintingObject.java \
