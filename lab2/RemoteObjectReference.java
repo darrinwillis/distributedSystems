@@ -1,4 +1,4 @@
-
+import java.util.*;
 import java.net.InetAddress;
 import java.io.*;
 import java.lang.*;
@@ -25,13 +25,15 @@ public class RemoteObjectReference implements Serializable {
 	Object stub = null;
 		
 	try {
-	    System.out.println("Looking for class " + stubName);
-        Class<?> c = Class.forName(stubName);
+	    System.out.println("Looking for class \"" + stubName + "\"");
+        Class c = Class.forName(stubName);
 	    stub = c.newInstance();
 
-        if (stub.getClass() != RemoteStub.class)
+        if (!(stub instanceof RemoteStub))
         {
-            System.out.println("Stub class not found");
+            System.out.println("Stub class is " + stub.getClass() + " not remotestub");
+            System.out.println("Interfaces are " + Arrays.toString(stub.getClass().getInterfaces()));
+            System.out.println("superclass is " + stub.getClass().getSuperclass());
             return null;
         }
 

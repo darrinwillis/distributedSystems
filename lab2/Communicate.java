@@ -65,7 +65,7 @@ public class Communicate
         try{
             //Contact RMIRegistry and give it this remote object, returning a ROR
             InetAddress myAddress = InetAddress.getLocalHost();
-            String className = object.getClass().toString();
+            String className = object.getClass().getName();
             RemoteObjectReference ror = new 
                 RemoteObjectReference(myAddress, objectPort, key, className);
             
