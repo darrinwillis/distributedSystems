@@ -1,6 +1,6 @@
 import java.rmi.*;
 
-public class PrintingObject implements Remote
+public class PrintingObject implements Remote440
 {
     public PrintingObject() {}
 
@@ -19,7 +19,8 @@ public class PrintingObject implements Remote
         {
             System.out.println(s);
         }
-        int k = 1/0;
+        int z = 0;
+        int k = 1/z;
         return "This is the intended return value";
     }
 }

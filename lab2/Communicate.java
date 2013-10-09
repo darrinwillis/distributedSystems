@@ -28,6 +28,11 @@ public class Communicate
                 objOut.writeObject(key);
                 
                 readObject = objIn.readObject();
+                if (readObject == null)
+                {
+                    System.out.println("Read in null");
+                    return null;
+                }
                 readClass = readObject.getClass();
             
             } catch (IOException e)
@@ -60,9 +65,9 @@ public class Communicate
         try{
             //Contact RMIRegistry and give it this remote object, returning a ROR
             InetAddress myAddress = InetAddress.getLocalHost();
-            int keyInt = 666; //what is this?
+            String className = object.getClass().toString();
             RemoteObjectReference ror = new 
-                RemoteObjectReference(myAddress, objectPort, keyInt, key);
+                RemoteObjectReference(myAddress, objectPort, key, className);
             
             Socket sock = new Socket(registryURL, registryPort);
 

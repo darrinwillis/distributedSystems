@@ -53,8 +53,12 @@ public class RegistryServer
                 if (objClass == String.class)
                 {
                     String objString = (String)readObject;
+                    System.out.println("Looking up "+ objString);
                     RemoteObjectReference ror = lookup.get(objString);
-                    
+                    if (ror == null)
+                        System.out.println(objString + " not found.");
+                    else
+                        System.out.println(objString + " found\nWriting out " + objString);
                     //If this is null, null will be written
                     objOut.writeObject(ror);
                 }
@@ -62,7 +66,8 @@ public class RegistryServer
                 else if (objClass == RemoteObjectReference.class)
                 {
                     RemoteObjectReference ror = (RemoteObjectReference)readObject;
-                    String key = ror.name;
+                    System.out.println("Putting in " + ror.key);
+                    String key = ror.key;
                     lookup.put(key, ror);
                 }
                 

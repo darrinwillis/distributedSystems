@@ -10,7 +10,7 @@ RMI = rmic
 ECHO = (echo)
 
 # Any compilation flags
-JFLAGS = -g -Xlint
+JFLAGS = -g
 
 .SUFFIXES: .java .class
 .java.class:
@@ -28,8 +28,10 @@ CLASSES = \
 
 TESTS = \
 		PrintingObject.java \
+		PrintingObject_stub.java \
 		RMIMessageTestingClient.java \
-		RMIMessageTestingServer.java
+		RMIMessageTestingServer.java \
+		CommunicateTest.java
 
 default: classes \
 		 tests
