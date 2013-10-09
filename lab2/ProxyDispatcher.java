@@ -27,6 +27,7 @@ public class ProxyDispatcher {
 	try {
 	    ServerSocket serverSock = new ServerSocket(port,BACKLOG,adr);
 	    Socket soc = serverSock.accept();
+	    System.out.println("client connected");
 
 	    InputStream inStream = soc.getInputStream();
 	    in = new ObjectInputStream(inStream);
@@ -65,15 +66,14 @@ public class ProxyDispatcher {
 		// them to the client
 		try{
 		    returnValue = m.invoke(callee, msg.args);
-		} catch (Exception e)
-		    {
-			Throwable cause = e;
-			if (e.getClass() == InvocationTargetException.class)
-			    cause = e.getCause();
+		} catch (Exception e) {
+		    Throwable cause = e;
+		    if (e.getClass() == InvocationTargetException.class)
+			cause = e.getCause();
 
-			//Returns a wrapped Throwable to clientside
-			returnValue = new RMIException(cause);
-		    }
+		    //Returns a wrapped Throwable to clientside
+		    returnValue = new RMIException(cause);
+		}
         
 		out.writeObject(returnValue);
    
