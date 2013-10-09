@@ -2,6 +2,7 @@ import java.util.*;
 import java.net.InetAddress;
 import java.io.*;
 import java.lang.*;
+import java.lang.reflect.*;
 
 public class RemoteObjectReference implements Serializable {
     public InetAddress adr;
@@ -26,8 +27,9 @@ public class RemoteObjectReference implements Serializable {
 		
 	try {
 	    System.out.println("Looking for class \"" + stubName + "\"");
-        Class c = Class.forName(stubName);
-	    stub = c.newInstance();
+        Class<?> c = Class.forName(stubName);
+        Constructor <RemoteStub> construct = (Constructor<RemoteStub>)c.getConstructor(RemoteObjectReference.class);
+        stub = construct.newInstance(this);
 
         if (!(stub instanceof RemoteStub))
         {

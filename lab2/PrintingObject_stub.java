@@ -3,7 +3,9 @@ import java.lang.reflect.*;
 
 public class PrintingObject_stub extends RemoteStub implements PrintingObjectInterface
 {
-    public PrintingObject_stub() {}
+    public PrintingObject_stub(RemoteObjectReference ref) {
+        super(ref);
+        }
 
     public String printThis(String s, int i) throws Remote440Exception
     {
