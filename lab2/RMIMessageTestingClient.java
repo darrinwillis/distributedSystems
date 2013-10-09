@@ -15,7 +15,7 @@ class RMIMessageTestingClient
 
             Class theClass = Class.forName("PrintingObject");
 
-            RemoteObjectReference ref = new RemoteObjectReference(InetAddress.getByName(hostname), port, 0, theClass.toString());
+            RemoteObjectReference ref = new RemoteObjectReference(InetAddress.getByName(hostname), port, "", theClass.toString());
            
             Class[] argClasses = {String.class, int.class};
 
