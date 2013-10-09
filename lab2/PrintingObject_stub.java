@@ -1,11 +1,11 @@
 import java.rmi.*;
 import java.lang.reflect.*;
 
-public class PrintingObject_stub extends RemoteStub implements Remote440
+public class PrintingObject_stub extends RemoteStub implements PrintingObjectInterface
 {
     public PrintingObject_stub() {}
 
-    public String printThis(String s, int i) throws Throwable
+    public String printThis(String s, int i) throws Remote440Exception
     {
         Object[] args = {s, i};
         String name = "printThis";
@@ -19,7 +19,7 @@ public class PrintingObject_stub extends RemoteStub implements Remote440
         return (String) methodCall(m, args);
     }
 
-    public String printThisException(String s, int i) throws Throwable
+    public String printThisException(String s, int i) throws Remote440Exception 
     {
         Object[] args = {s, i};
         String name = "printThisException";

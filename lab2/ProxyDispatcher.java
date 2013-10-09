@@ -72,7 +72,7 @@ public class ProxyDispatcher {
 			    cause = e.getCause();
 
 			//Returns a wrapped Throwable to clientside
-			returnValue = new RMIException(cause);
+			returnValue = new Remote440Exception(cause);
 		    }
         
 		out.writeObject(returnValue);

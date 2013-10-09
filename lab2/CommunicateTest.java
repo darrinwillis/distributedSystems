@@ -8,7 +8,7 @@ public class CommunicateTest
         PrintingObject po = new PrintingObject();
         Communicate.rebind("printing", po);
         System.out.println("obj bound on registry");
-        PrintingObject obj = (PrintingObject)Communicate.lookup("printing");
+        PrintingObjectInterface obj = (PrintingObjectInterface)Communicate.lookup("printing");
         obj.printThis(testString, 5);
     }
 }

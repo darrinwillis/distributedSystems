@@ -20,7 +20,7 @@ CLASSES = \
 		Remote440.java \
 		RemoteObjectReference.java \
 		RMIMessage.java \
-		RMIException.java \
+		Remote440Exception.java \
 		RemoteStub.java \
 		ProxyDispatcher.java \
 		RegistryServer.java \
