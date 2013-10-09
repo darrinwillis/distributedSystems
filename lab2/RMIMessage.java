@@ -60,6 +60,7 @@ public class RMIMessage implements Serializable{
             //If there is a return value, read it from input
             if (this.getMethod().getReturnType() != Void.TYPE)
             {
+		System.out.println("Found Return");
                 InputStream inStream = comSock.getInputStream();
                 ObjectInputStream objIn = new ObjectInputStream(inStream);
                 //Attempt to read the object

@@ -11,6 +11,10 @@ Sends a message to the server and receive a response.
 
 public abstract class RemoteStub implements Remote440{
     public RemoteObjectReference ror;
+
+    protected RemoteStub(RemoteObjectReference r) {
+	ror = r;
+    }
     
     protected Object methodCall(Method m, Object[] args) throws Remote440Exception{
         RMIMessage msg = new RMIMessage(ror,m,args);
