@@ -1,3 +1,8 @@
+import java.lang.*;
+import java.lang.reflect.*;
+import java.io.*;
+import java.net.*;
+
 public class CommunicateTest
 {
 
@@ -9,8 +14,10 @@ public class CommunicateTest
         Communicate.rebind("printing", po);
         System.out.println("obj bound on registry");
         PrintingObjectInterface obj = (PrintingObjectInterface)Communicate.lookup("printing");
+  
+	System.out.println("Calling Method");
         try{
-            obj.printThis(testString, 5);
+            obj.printThisException(testString, 10);
         } catch (Exception e)
         {
             e.printStackTrace();

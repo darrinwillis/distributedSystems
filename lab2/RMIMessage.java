@@ -8,7 +8,7 @@ public class RMIMessage implements Serializable{
     
     //Methods are not serializable, so the same info is given in strings
     private Class<?> theClass;
-    private String methodName;
+    private String methName;
     private Class<?>[] argumentClasses;
     private Object returnObject;
     private static final long serialVersionUID = 489617729;
@@ -22,7 +22,8 @@ public class RMIMessage implements Serializable{
     public RMIMessage(RemoteObjectReference object, Method method, Object[] args)
     {
         this.theClass = method.getDeclaringClass();
-        this.methodName = method.getName();
+        this.methName = method.getName();
+	System.out.println(methName);
         this.argumentClasses = method.getParameterTypes();
         this.remoteObject = object;
         this.args = args;
@@ -32,8 +33,8 @@ public class RMIMessage implements Serializable{
     //Builds a Method from private objects, in effect making Methods serializable
     public Method getMethod()
     {
-        try{
-            Method meth = theClass.getMethod(methodName, argumentClasses);
+	try{
+            Method meth = theClass.getMethod(methName, argumentClasses);
             return meth;
         } catch (Exception e)
         {
@@ -58,7 +59,7 @@ public class RMIMessage implements Serializable{
             objOut.flush();
 
             //If there is a return value, read it from input
-            if (this.getMethod().getReturnType() != Void.TYPE)
+            if (getMethod().getReturnType() != Void.TYPE)
             {
 		System.out.println("Found Return");
                 InputStream inStream = comSock.getInputStream();
@@ -71,7 +72,9 @@ public class RMIMessage implements Serializable{
                 } catch (ClassNotFoundException e)
                 {
                     System.out.println("Class is not on client");
-                }
+                } catch (Exception e) {
+		    e.printStackTrace();
+		}
                 
                 this.returnObject = inputObj;
             }

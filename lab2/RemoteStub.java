@@ -20,7 +20,7 @@ public abstract class RemoteStub implements Remote440{
         RMIMessage msg = new RMIMessage(ror,m,args);
         
         Object returnObj =  msg.getReturn();
-        if (returnObj.getClass() == Remote440Exception.class)
+        if (returnObj != null & returnObj.getClass() == Remote440Exception.class)
         {
             Remote440Exception re = (Remote440Exception)returnObj;
             throw re;
