@@ -18,7 +18,7 @@ public class RemoteObjectReference implements Serializable {
         this.adr = inet;
         this.key = key;
         this.name = name;
-	    this.port = port;
+	this.port = port;
     }
 
     public Remote440 localize() {
@@ -27,17 +27,18 @@ public class RemoteObjectReference implements Serializable {
 		
 	try {
 	    System.out.println("Looking for class \"" + stubName + "\"");
-        Class<?> c = Class.forName(stubName);
-        Constructor <RemoteStub> construct = (Constructor<RemoteStub>)c.getConstructor(RemoteObjectReference.class);
-        stub = construct.newInstance(this);
+	    Class<?> c = Class.forName(stubName);
+	    Constructor <RemoteStub> construct = (Constructor<RemoteStub>)c.getConstructor(RemoteObjectReference.class);
+	    stub = construct.newInstance(this);
+	    System.out.println("Stub Created");
 
-        if (!(stub instanceof RemoteStub))
-        {
-            System.out.println("Stub class is " + stub.getClass() + " not remotestub");
-            System.out.println("Interfaces are " + Arrays.toString(stub.getClass().getInterfaces()));
-            System.out.println("superclass is " + stub.getClass().getSuperclass());
-            return null;
-        }
+	    if (!(stub instanceof RemoteStub))
+		{
+		    System.out.println("Stub class is " + stub.getClass() + " not remotestub");
+		    System.out.println("Interfaces are " + Arrays.toString(stub.getClass().getInterfaces()));
+		    System.out.println("superclass is " + stub.getClass().getSuperclass());
+		    return null;
+		}
 
 	} catch (Exception e) {
 	    e.printStackTrace();
