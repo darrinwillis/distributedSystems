@@ -31,7 +31,9 @@ TESTS = \
 		PrintingObject_stub.java \
 		RMIMessageTestingClient.java \
 		RMIMessageTestingServer.java \
-		CommunicateTest.java
+		CommunicateTest.java \
+		TestClient.java \
+		TestServer.java 
 
 default: classes \
 		 tests
