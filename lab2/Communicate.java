@@ -12,8 +12,6 @@ public class Communicate
 
     static {
 	pd = new ProxyDispatcher(objectPort);
-	p = new ProxyThread(pd);
-	p.start();
     }
     
     public static class ProxyThread extends Thread {
