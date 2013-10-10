@@ -4,43 +4,51 @@ import java.util.*;
 
 public class Communicate
 {
-    private static String registryURL = "unix12.andrew.cmu.edu";
-    private static int registryPort = 15044;
+    private static String defaultRegistryURL = "unix12.andrew.cmu.edu";
+    private static int defaultRegistryPort = 15044;
     private static int objectPort = 15880;
     public static ProxyDispatcher pd;
     public static ProxyThread p;
+    private static Boolean proxyExists;
 
     static {
-	pd = new ProxyDispatcher(objectPort);
+        proxyExists = false;
     }
     
     public static class ProxyThread extends Thread {
-	ProxyDispatcher pd;
-	public ProxyThread(ProxyDispatcher p) {
-	    pd = p;
-	}
-	public void run() {
-	    try{
-		ServerSocket serverSock = new ServerSocket(pd.port,pd.BACKLOG,pd.adr);
-		Socket soc = serverSock.accept();
-		System.out.println("client connected");
+        ProxyDispatcher pd;
+        public ProxyThread(ProxyDispatcher p) {
+            pd = p;
+        }
+        public void run() {
+            try{
+                ServerSocket serverSock = new ServerSocket(pd.port,pd.BACKLOG,pd.adr);
+                Socket soc = serverSock.accept();
+                System.out.println("client connected");
 
-		InputStream inStream = soc.getInputStream();
-		pd.in = new ObjectInputStream(inStream);
-	
-		OutputStream outStream = soc.getOutputStream();
-		pd.out = new ObjectOutputStream(outStream);
-	    
-		pd.executeMessage();
-	    } catch(Exception e) {
-		e.printStackTrace();
-	    }
-	}
+                InputStream inStream = soc.getInputStream();
+                pd.in = new ObjectInputStream(inStream);
+            
+                OutputStream outStream = soc.getOutputStream();
+                pd.out = new ObjectOutputStream(outStream);
+                
+                pd.executeMessage();
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public static Remote440 lookup(String key)
     {
+        return lookup(defaultRegistryURL, defaultRegistryPort, key);
+    }
+
+    public static Remote440 lookup(String url, int port, String key)
+    {
         //Open registry connection
+        String registryURL = url;
+        int registryPort = port;
         
         Object readObject = null;
         Class<?> readClass = null;
@@ -92,9 +100,19 @@ public class Communicate
 
     public static void rebind(String key, Remote440 object)
     {
-	pd.addObj(key,object);
-	try{
-            //Contact RMIRegistry and give it this remote object, returning a ROR
+        rebind(defaultRegistryURL, defaultRegistryPort, key, object);
+    }
+
+    public static void rebind(String url, int port, String key, Remote440 object)
+    {
+        String registryURL = url;
+        int registryPort = port;
+        if (!proxyExists)
+            pd = new ProxyDispatcher(objectPort);
+        pd.addObj(key,object);
+        try{
+            //Contact RMIRegistry and give it this remote object
+            //returning a ROR
             InetAddress myAddress = InetAddress.getLocalHost();
             String className = object.getClass().getName();
             RemoteObjectReference ror = new 
@@ -117,5 +135,6 @@ public class Communicate
         {
             e.printStackTrace();
         }
+        
     }
 }
