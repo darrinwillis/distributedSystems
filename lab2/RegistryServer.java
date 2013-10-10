@@ -3,6 +3,11 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 
+
+/*
+ * This server acts as a central lookup table for anyone using
+ * this RMI framework
+ */
 public class RegistryServer
 {
     private static int defaultPort = 15044;
@@ -80,6 +85,9 @@ public class RegistryServer
 
     }
 
+    /* Starts the server at either the given port
+     * or the well known default port
+     */
     public static void main(String[] args)
     {
         int port = defaultPort;
