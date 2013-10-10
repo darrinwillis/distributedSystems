@@ -32,19 +32,22 @@ public class ProxyDispatcher {
 	    pd = p;
 	}
 	public void run() {
-	    try{
+	    try {
 		ServerSocket serverSock = new ServerSocket(pd.port,pd.BACKLOG,pd.adr);
-		Socket soc = serverSock.accept();
-		System.out.println("client connected");
+		while(true) {
+		    Socket soc = serverSock.accept();
+		    System.out.println("client connected");
 
-		InputStream inStream = soc.getInputStream();
-		pd.in = new ObjectInputStream(inStream);
+		    InputStream inStream = soc.getInputStream();
+		    pd.in = new ObjectInputStream(inStream);
 	
-		OutputStream outStream = soc.getOutputStream();
-		pd.out = new ObjectOutputStream(outStream);
+		    OutputStream outStream = soc.getOutputStream();
+		    pd.out = new ObjectOutputStream(outStream);
 	    
-		pd.executeMessage();
-	    } catch(Exception e) {
+		    pd.executeMessage();
+		}
+	    }
+	    catch(Exception e) {
 		e.printStackTrace();
 	    }
 	}

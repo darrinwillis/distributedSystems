@@ -2,6 +2,7 @@ import java.rmi.*;
 
 public class PrintingObject implements PrintingObjectInterface
 {
+    public int counter;
     public PrintingObject() {}
 
     public String printThis(String s, int i) throws Remote440Exception
@@ -10,7 +11,8 @@ public class PrintingObject implements PrintingObjectInterface
         {
             System.out.println(s);
         }
-        return "This is the intended return value";
+	counter++;
+        return ("Called " + counter + " Times");
     }
 
     public String printThisException(String s, int i) throws Remote440Exception
