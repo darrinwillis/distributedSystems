@@ -1,4 +1,3 @@
-import java.rmi.*;
 import java.lang.reflect.*;
 
 public class PrintingObject_stub extends RemoteStub implements PrintingObjectInterface
