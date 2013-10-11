@@ -9,9 +9,16 @@ public class TestServer
 
     public static void main(String[] args)
     {
+        String registryURL = "unix12.andrew.cmu.edu";
+        int port = 15444;
+        if (args.length == 2)
+        {
+            registryURL = args[0];
+            port = Integer.parseInt(args[1]);
+        }
         PrintingObject po1 = new PrintingObject();
-        Communicate.rebind("printing1", po1);
+        Communicate.rebind(registryURL, port, "printing1", po1);
         PrintingObject po2 = new PrintingObject();
-        Communicate.rebind("printing2", po2);
+        Communicate.rebind(registryURL, port, "printing2", po2);
     }
 }

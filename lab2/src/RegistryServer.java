@@ -101,11 +101,11 @@ public class RegistryServer
         int port = defaultPort;
         if (args.length > 0)
         {
-            Integer givenPort = Integer.getInteger(args[0]);
+            Integer givenPort = Integer.parseInt(args[0]);
             if (givenPort == null)
             {
                 System.out.println("Invalid port number: " + args[0] + 
-                "; using defailt port.");
+                "; using default port.");
             }
             else
             {
