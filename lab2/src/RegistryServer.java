@@ -75,6 +75,14 @@ public class RegistryServer
                     String key = ror.key;
                     lookup.put(key, ror);
                 }
+                //Sending any integer results in the collection being
+                //sent back
+                else if (objClass == Integer.class)
+                {
+                    Set<String> set = lookup.keySet(); 
+                    System.out.println("Returning collection");
+                    objOut.writeObject(set);
+                }
                 
                 clientSock.close();
             } catch (IOException e)
@@ -108,14 +116,4 @@ public class RegistryServer
         new RegistryServer(port);
 
     }
-
-    //Here for potentially serializing the lookup/put process
-    public class LookupThread extends Thread
-    {
-        public void run()
-        {
-            
-        }
-    }
-
 }

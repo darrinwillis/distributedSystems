@@ -55,23 +55,7 @@ public class Communicate
         try {
             
             try {
-                Socket sock = new Socket(registryURL, registryPort);
-
-                OutputStream out = sock.getOutputStream();
-                ObjectOutputStream objOut = new ObjectOutputStream(out);
-
-                InputStream in = sock.getInputStream();
-                ObjectInputStream objIn = new ObjectInputStream(in);
-
-                //Retrieve the ROR from registry
-                objOut.writeObject(key);
-                
-                readObject = objIn.readObject();
-                if (readObject == null)
-                {
-                    System.out.println("Read in null");
-                    return null;
-                }
+                readObject = writeToServer(registryURL, registryPort, key);
                 readClass = readObject.getClass();
             
             } catch (IOException e)
@@ -139,4 +123,80 @@ public class Communicate
         }
         
     }
+
+    public static Set<String> list()
+    {
+        return list(defaultRegistryURL, defaultRegistryPort);
+    }
+
+    public static Set<String> list(String url, int port)
+    {
+        String registryURL = url;
+        int registryPort = port;
+        
+        Object readObject = null;
+        Class<?> readClass = null;
+
+        try {
+            try {
+                readObject = writeToServer(registryURL, registryPort, new Integer(1));
+                readClass = readObject.getClass();
+            
+            } catch (IOException e)
+            {
+                System.out.println("Failed to interface with registry server");
+                e.printStackTrace();
+                return null;
+            }
+
+            if (readClass == Set.class)
+            {
+                return ((Set<String>)readObject);
+            }
+
+            else
+            {
+                System.out.println("Returned non-Set class: " + readClass);
+                return null;
+            }
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+
+    private static Object writeToServer(Object request) throws IOException, UnknownHostException, ClassNotFoundException
+    {
+        return writeToServer(defaultRegistryURL, defaultRegistryPort, request);
+    }
+
+    private static Object writeToServer(String url, int port, Object request) throws IOException, UnknownHostException, ClassNotFoundException
+    {
+        Socket sock = new Socket(url, port);
+
+        Object readObject = null;
+
+        OutputStream out = sock.getOutputStream();
+        ObjectOutputStream objOut = new ObjectOutputStream(out);
+
+        InputStream in = sock.getInputStream();
+        ObjectInputStream objIn = new ObjectInputStream(in);
+
+        //Retrieve the ROR from registry
+        objOut.writeObject(request);
+        
+        readObject = objIn.readObject();
+        if (readObject == null)
+        {
+            System.out.println("Read in null");
+            return null;
+        }
+        
+        return readObject; 
+    }
+
+
+
 }
