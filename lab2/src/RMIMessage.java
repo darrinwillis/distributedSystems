@@ -23,7 +23,6 @@ public class RMIMessage implements Serializable{
     {
         this.theClass = method.getDeclaringClass();
         this.methName = method.getName();
-	System.out.println(methName);
         this.argumentClasses = method.getParameterTypes();
         this.remoteObject = object;
         this.args = args;
@@ -61,7 +60,6 @@ public class RMIMessage implements Serializable{
             //If there is a return value, read it from input
             if (getMethod().getReturnType() != Void.TYPE)
             {
-		System.out.println("Found Return");
                 InputStream inStream = comSock.getInputStream();
                 ObjectInputStream objIn = new ObjectInputStream(inStream);
                 //Attempt to read the object

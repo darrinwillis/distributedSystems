@@ -5,9 +5,22 @@ public class PrintingObject_stub extends RemoteStub implements PrintingObjectInt
 {
     public PrintingObject_stub(RemoteObjectReference ref) {
         super(ref);
+    }
+    
+    public int getCounter() throws Remote440Exception {
+	Object[] args = {};
+        String name = "getCounter";
+        Method m = null;
+        try{
+            m = PrintingObject.class.getMethod(name);
+        } catch(NoSuchMethodException e)
+        {
+            System.out.println("No such Method");
         }
+        return (int) methodCall(m, args);
+    }
 
-    public String printThis(String s, int i) throws Remote440Exception
+    public int printThis(String s, int i) throws Remote440Exception
     {
         Object[] args = {s, i};
         String name = "printThis";
@@ -18,7 +31,7 @@ public class PrintingObject_stub extends RemoteStub implements PrintingObjectInt
         {
             System.out.println("No such Method");
         }
-        return (String) methodCall(m, args);
+        return (int) methodCall(m, args);
     }
 
     public String printThisException(String s, int i) throws Remote440Exception 

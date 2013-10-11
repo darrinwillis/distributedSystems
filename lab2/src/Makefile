@@ -33,7 +33,8 @@ TESTS = \
 		RMIMessageTestingServer.java \
 		CommunicateTest.java \
 		TestClient.java \
-		TestServer.java 
+		TestServer.java \
+		TestConcurrent.java 
 
 default: classes \
 		 tests

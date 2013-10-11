@@ -70,7 +70,7 @@ public class ProxyDispatcher {
 		msg = (RMIMessage)o;
 		m = msg.getMethod();
 		callee = objList.get(msg.remoteObject.key);
-		System.out.println(callee);
+
 		// Handles any exceptions thrown by this object and fowards
 		// them to the client
 		try{

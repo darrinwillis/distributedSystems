@@ -5,7 +5,7 @@ import java.util.*;
 public class Communicate
 {
     private static String defaultRegistryURL = "unix12.andrew.cmu.edu";
-    private static int defaultRegistryPort = 15044;
+    private static int defaultRegistryPort = 15444;
     private static int objectPort = 15880;
     public static ProxyDispatcher pd;
     public static ProxyThread p;
@@ -107,8 +107,10 @@ public class Communicate
     {
         String registryURL = url;
         int registryPort = port;
-        if (!proxyExists)
+        if (!proxyExists) {
             pd = new ProxyDispatcher(objectPort);
+	    proxyExists = true;
+	}
         pd.addObj(key,object);
         try{
             //Contact RMIRegistry and give it this remote object

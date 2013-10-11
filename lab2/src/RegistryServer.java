@@ -10,7 +10,7 @@ import java.util.concurrent.*;
  */
 public class RegistryServer
 {
-    private static int defaultPort = 15044;
+    private static int defaultPort = 15444;
     private static AbstractMap<String, RemoteObjectReference> lookup;
     
     private ServerSocket serverSock;
