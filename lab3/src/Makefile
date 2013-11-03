@@ -25,7 +25,8 @@ CLASSES = \
                 RMIInputStreamImpl.java \
 		RMIOutputStream.java \
                 RMIInputStream.java \
-		RMIPipe.java
+		RMIPipe.java \
+		TestClient.java 
 
 default: classes 
 		@echo "Project Built"

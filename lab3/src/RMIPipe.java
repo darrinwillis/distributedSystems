@@ -23,8 +23,7 @@ public class RMIPipe implements Serializable {
     }
     public int getKey() {
         if (!isOutputRegistration)
-            throw new IllegalArgumentException(
-					       "not an OutputStream registration");
+            throw new IllegalArgumentException("not an OutputStream registration");
         return key;
     }
     protected void finalize() {

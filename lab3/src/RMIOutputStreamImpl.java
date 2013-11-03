@@ -1,3 +1,4 @@
+import java.rmi.*;
 import java.rmi.server.*;
 import java.io.*;
 
@@ -6,8 +7,7 @@ public class RMIOutputStreamImpl implements RMIOutputStreamInterf {
     private OutputStream out;
     private RMIPipe pipe;
 
-    public RMIOutputStreamImpl(OutputStream out) throws 
-	IOException {
+    public RMIOutputStreamImpl(OutputStream out) throws IOException {
         this.out = out;
         this.pipe = new RMIPipe(out);
 	UnicastRemoteObject.exportObject(this, 1099);
@@ -16,15 +16,14 @@ public class RMIOutputStreamImpl implements RMIOutputStreamInterf {
     public void write(int b) throws IOException {
         out.write(b);
     }
-    public void write(byte[] b, int off, int len) throws 
-	IOException {
+    public void write(byte[] b, int off, int len) throws IOException {
         out.write(b, off, len);
     }
     public void close() throws IOException {
         out.close();
     }
     
-    public int getPipeKey() {
+    public int getPipeKey() throws IOException{
 	return pipe.getKey();
     }
   

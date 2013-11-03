@@ -12,6 +12,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     private static final String configFileName = "fileConfig.txt";
     private static int registryPort;
     private static String serverRegistryKey;
+    private static final String serverName = "MasterServer";
 
 
     public MasterServer() throws RemoteException
@@ -99,7 +100,16 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     public void addNewFile(String filename) throws RemoteException
     {
         //Distribute the file among nodes
+	System.out.println("adding file " + filename);
         return;
+    }
+    public OutputStream getOutputStream(File f) throws IOException {
+	return new RMIOutputStream(new RMIOutputStreamImpl(new 
+							   FileOutputStream(f)));
+    }
+    public InputStream getInputStream(File f) throws IOException {
+	return new RMIInputStream(new RMIInputStreamImpl(new 
+							 FileInputStream(f)));
     }
     
     public static void main(String[] args) throws Exception
