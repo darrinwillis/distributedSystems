@@ -17,8 +17,8 @@ JFLAGS = -g
 		@$(JC) $(JFLAGS) $*.java
 
 CLASSES = \
-		sample.java \
-		replacethis.java 
+		MasterFileServerInterface.java \
+		MasterServer.java 
 
 default: classes 
 		@echo "Project Built"
