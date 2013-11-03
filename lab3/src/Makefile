@@ -18,7 +18,14 @@ JFLAGS = -g
 
 CLASSES = \
 		MasterFileServerInterface.java \
-		MasterServer.java 
+		MasterServer.java \
+		RMIOutputStreamInterf.java \
+		RMIInputStreamInterf.java \
+		RMIOutputStreamImpl.java \
+                RMIInputStreamImpl.java \
+		RMIOutputStream.java \
+                RMIInputStream.java \
+		RMIPipe.java
 
 default: classes 
 		@echo "Project Built"
