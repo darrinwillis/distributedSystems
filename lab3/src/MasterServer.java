@@ -29,7 +29,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             prop.load(new FileInputStream(configFileName));
         } catch (FileNotFoundException e) {
             System.out.println("No config file found named: " + configFileName);
-            prop = generateConfigFile(); 
+            prop = Config.generateConfigFile(); 
         } catch (IOException e)
         {
             e.printStackTrace();
@@ -46,25 +46,6 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         return;
     }
 
-    private Properties generateConfigFile()
-    {
-        Properties prop = new Properties();
-
-        try{
-            //Set default values for properties
-            prop.setProperty("registryPort", "1099");
-            prop.setProperty("serverRegistryKey", "masterServer");
-
-            //Save properties to config file
-            prop.store(new FileOutputStream(configFileName), null);
-
-            System.out.println("New config file created: " + configFileName);
-        } catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-        return prop;
-    }
 
     // This allows the server to be reached by any nodes or users
     public void start() throws RemoteException

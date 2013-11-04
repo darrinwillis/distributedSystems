@@ -10,7 +10,7 @@ public class RMIOutputStreamImpl implements RMIOutputStreamInterf {
     public RMIOutputStreamImpl(OutputStream out) throws IOException {
         this.out = out;
         this.pipe = new RMIPipe(out);
-	UnicastRemoteObject.exportObject(this, 1099);
+        UnicastRemoteObject.exportObject(this, 1099);
     }
     
     public void write(int b) throws IOException {
@@ -24,11 +24,11 @@ public class RMIOutputStreamImpl implements RMIOutputStreamInterf {
     }
     
     public int getPipeKey() throws IOException{
-	return pipe.getKey();
+        return pipe.getKey();
     }
   
     public void transfer(RMIPipe pipe) throws IOException {
-	// nothing more to do here
-	// pipe has been serialized and that's all we want
+        // nothing more to do here
+        // pipe has been serialized and that's all we want
     }
 }

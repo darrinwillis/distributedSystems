@@ -3,6 +3,7 @@ import java.io.*;
 public class RMIOutputStream extends OutputStream implements 
 						      Serializable {
     private RMIOutputStreamInterf out;
+    
 
     public RMIOutputStream(RMIOutputStreamImpl out) {
         this.out = out;
