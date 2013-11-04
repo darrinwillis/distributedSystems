@@ -19,6 +19,7 @@ JFLAGS = -g
 CLASSES = \
 		FileServerInterface.java \
 		MasterFileServerInterface.java \
+		Config.java \
 		MasterServer.java \
 		RMIOutputStreamInterf.java \
 		RMIInputStreamInterf.java \
