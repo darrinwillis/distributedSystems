@@ -5,7 +5,7 @@ public class TestClient {
     public static void main(String[] args) throws Exception {
         
         String url = "rmi://unix12.andrew.cmu.edu/masterServer";
-        MasterFileServerInterface server = (MasterFileServerInterface) Naming.lookup(url);
+        FileServerInterface server = (FileServerInterface) Naming.lookup(url);
         server.addNewFile("hello");
         
         File testFile = new File("out.txt");

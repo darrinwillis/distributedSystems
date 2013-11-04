@@ -57,11 +57,11 @@ public class FileIO {
 	out.close();
     }
     
-    public static void upload(MasterFileServerInterface server, File src, 
+    public static void upload(FileServerInterface server, File src, 
 			      File dest) throws IOException {
         copy (new FileInputStream(src), server.getOutputStream(dest));
     }
-    public static void download(MasterFileServerInterface server, File src, 
+    public static void download(FileServerInterface server, File src, 
 				File dest) throws IOException {
         copy (server.getInputStream(src), new FileOutputStream(dest));
     }

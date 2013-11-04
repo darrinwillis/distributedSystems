@@ -1,4 +1,0 @@
-#Sun Nov 03 23:13:05 EST 2013
-registryPort=1099
-serverRegistryKey=masterServer
-BUF_SIZE=65536
