@@ -17,14 +17,15 @@ JFLAGS = -g
 		@$(JC) $(JFLAGS) $*.java
 
 CLASSES = \
+		FileServerInterface.java \
 		MasterFileServerInterface.java \
 		MasterServer.java \
 		RMIOutputStreamInterf.java \
 		RMIInputStreamInterf.java \
 		RMIOutputStreamImpl.java \
-                RMIInputStreamImpl.java \
+        RMIInputStreamImpl.java \
 		RMIOutputStream.java \
-                RMIInputStream.java \
+        RMIInputStream.java \
 		RMIPipe.java \
 		TestClient.java 
 

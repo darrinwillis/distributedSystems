@@ -16,7 +16,7 @@ public class RMIInputStreamImpl implements RMIInputStreamInterf {
         return in.read();
     }
     public byte[] readBytes(int len) throws IOException, 
-					    RemoteException {
+            RemoteException {
         if (b == null || b.length != len)
             b = new byte[len];
             
@@ -34,7 +34,7 @@ public class RMIInputStreamImpl implements RMIInputStreamInterf {
             return b;
     }
     public RMIPipe transfer(int key) throws IOException, 
-					    RemoteException {
-	return new RMIPipe(key, in);
+                                RemoteException {
+    return new RMIPipe(key, in);
     }
 }

@@ -70,8 +70,10 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     public void start() throws RemoteException
     {
         try{
-            rmiRegistry = LocateRegistry.createRegistry(registryPort);
+            System.out.println("\nGet registry 1st returns" + LocateRegistry.getRegistry());
+            rmiRegistry = LocateRegistry.getRegistry(registryPort);
             rmiRegistry.bind(serverRegistryKey, this);
+            System.out.println("Get registry 2nd returns" + LocateRegistry.getRegistry());
             System.out.println("Server started");
         } catch (Exception e)
         {
@@ -100,16 +102,16 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     public void addNewFile(String filename) throws RemoteException
     {
         //Distribute the file among nodes
-	System.out.println("adding file " + filename);
+        System.out.println("adding file " + filename);
         return;
     }
     public OutputStream getOutputStream(File f) throws IOException {
-	return new RMIOutputStream(new RMIOutputStreamImpl(new 
-							   FileOutputStream(f)));
+        return new RMIOutputStream(new RMIOutputStreamImpl(new 
+                                        FileOutputStream(f)));
     }
     public InputStream getInputStream(File f) throws IOException {
-	return new RMIInputStream(new RMIInputStreamImpl(new 
-							 FileInputStream(f)));
+        return new RMIInputStream(new RMIInputStreamImpl(new 
+                                        FileInputStream(f)));
     }
     
     public static void main(String[] args) throws Exception
