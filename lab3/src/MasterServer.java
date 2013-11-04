@@ -51,10 +51,8 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     public void start() throws RemoteException
     {
         try{
-            System.out.println("\nGet registry 1st returns" + LocateRegistry.getRegistry());
-            rmiRegistry = LocateRegistry.getRegistry(registryPort);
+            rmiRegistry = LocateRegistry.createRegistry(registryPort);
             rmiRegistry.bind(serverRegistryKey, this);
-            System.out.println("Get registry 2nd returns" + LocateRegistry.getRegistry());
             System.out.println("Server started");
         } catch (Exception e)
         {
