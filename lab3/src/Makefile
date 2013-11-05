@@ -21,6 +21,7 @@ CLASSES = \
 		MasterFileServerInterface.java \
 		Config.java \
 		MasterServer.java \
+		NodeServer.java \
 		RMIOutputStreamInterf.java \
 		RMIInputStreamInterf.java \
 		RMIOutputStreamImpl.java \

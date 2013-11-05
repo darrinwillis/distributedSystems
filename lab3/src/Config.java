@@ -14,7 +14,8 @@ public class Config {
         }
         return (prop.containsKey("registryPort") &&
             prop.containsKey("masterServerRegistryKey") &&
-            prop.containsKey("BUF_SIZE"));
+            prop.containsKey("BUF_SIZE") &&
+            prop.containsKey("nodePort"));
     }
 
     public static Properties generateConfigFile() {
@@ -25,6 +26,7 @@ public class Config {
             prop.setProperty("registryPort", "1099");
             prop.setProperty("masterServerRegistryKey", "masterServer");
             prop.setProperty("BUF_SIZE", "65536"); 
+            prop.setProperty("nodePort", "1098");
 
             //Save properties to config file
             prop.store(new FileOutputStream(configFileName), null);

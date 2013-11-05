@@ -14,10 +14,13 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     private static String masterServerRegistryKey;
     private static final String serverName = "MasterServer";
 
+    //Instance variables
+    private volatile List<FileServerInterface> fileNodes;
 
     public MasterServer() throws RemoteException
     {
         parseFile(configFileName);
+        this.fileNodes = new ArrayList<FileServerInterface>();
     }
     
     // This parses constants in the format
@@ -98,6 +101,12 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         {
             e.printStackTrace();
         }
+    }
+  
+    public void register(FileServerInterface node)
+    {
+        System.out.println("New Client connected");
+        fileNodes.add(node);
     }
    
     //Adds a new file to the distributed file system
