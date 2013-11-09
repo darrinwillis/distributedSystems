@@ -31,7 +31,11 @@ CLASSES = \
 	RMIInputStream.java \
 	RMIPipe.java \
 	FileIO.java \
-	TestClient.java 
+	TestClient.java \
+	Job.java \
+	Task.java \
+	ReduceTask.java \
+	MapTask.java  
 
 default: classes 
 		@echo "Project Built"

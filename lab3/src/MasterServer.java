@@ -16,13 +16,21 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
 
     //Instance variables
     private volatile List<FileServerInterface> fileNodes;
+    private int currentJid;
+
 
     public MasterServer() throws RemoteException
     {
         parseFile(configFileName);
+	this.currentJid = 0;
         this.fileNodes = new ArrayList<FileServerInterface>();
     }
     
+    public void newJob(Job j) {
+	int jid = currentJid++;
+    }	
+	    
+	    
     // This parses constants in the format
     // key=value from fileConfig.txt
     private void parseFile(String filename)
