@@ -4,9 +4,11 @@
 import java.rmi.*;
 import java.io.*;
 
-public interface MasterFileServerInterface extends Remote, FileServerInterface
+public interface MasterFileServerInterface extends FileServerInterface
 {
     // Adds
-    void addNewFile(String filename) throws RemoteException;
+    void addNewFile(String filename, FileServerInterface host) throws RemoteException;
+    void register(FileServerInterface node) throws RemoteException;
+    void stop() throws RemoteException;
 }
 

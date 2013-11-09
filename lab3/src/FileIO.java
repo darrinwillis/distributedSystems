@@ -6,10 +6,10 @@ public class FileIO {
     
     public static int BUF_SIZE;
     
-    private static final String configFileName = "fileConfig.txt";
+    private static final String configFileName = Config.configFileName;
 
     static {
-	parseFile(configFileName);
+        parseFile(configFileName);
     }
     private static void parseFile(String filename)
     {
@@ -49,12 +49,12 @@ public class FileIO {
         }
         System.out.println("using byte[] read/write");
         byte[] b = new byte[BUF_SIZE];
-	int len;
-	while ((len = in.read(b)) >= 0) {
-	    out.write(b, 0, len);
-	}
-	in.close();
-	out.close();
+	    int len;
+	    while ((len = in.read(b)) >= 0) {
+            out.write(b, 0, len);
+        }
+        in.close();
+        out.close();
     }
     
     public static void upload(FileServerInterface server, File src, 

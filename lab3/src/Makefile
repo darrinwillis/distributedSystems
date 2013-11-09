@@ -14,21 +14,24 @@ JFLAGS = -g
 
 .SUFFIXES: .java .class
 .java.class:
-		@$(JC) $(JFLAGS) $*.java
+	@$(JC) $(JFLAGS) $*.java
 
 CLASSES = \
-		FileServerInterface.java \
-		MasterFileServerInterface.java \
-		MasterServer.java \
-		RMIOutputStreamInterf.java \
-		RMIInputStreamInterf.java \
-		RMIOutputStreamImpl.java \
-        RMIInputStreamImpl.java \
-		RMIOutputStream.java \
-        RMIInputStream.java \
-		RMIPipe.java \
-		TestClient.java \
-		FileIO.java
+	FileServerInterface.java \
+	MasterFileServerInterface.java \
+	Config.java \
+	Monitor.java \
+	MasterServer.java \
+	NodeServer.java \
+	RMIOutputStreamInterf.java \
+	RMIInputStreamInterf.java \
+	RMIOutputStreamImpl.java \
+	RMIInputStreamImpl.java \
+	RMIOutputStream.java \
+	RMIInputStream.java \
+	RMIPipe.java \
+	FileIO.java \
+	TestClient.java 
 
 default: classes 
 		@echo "Project Built"

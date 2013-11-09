@@ -6,7 +6,6 @@ public class TestClient {
         
         String url = "rmi://unix12.andrew.cmu.edu/masterServer";
         MasterFileServerInterface server = (MasterFileServerInterface) Naming.lookup(url);
-        server.addNewFile("hello");
         
         File testFile = new File("out.txt");
         
