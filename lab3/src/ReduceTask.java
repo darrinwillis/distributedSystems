@@ -8,12 +8,7 @@ public class ReduceTask implements Serializable, Task {
     private List<String> inputFiles;
     private Job job;
     private String outputFile;
-    private char status;
-        
-    public static final char RUNNING = 'r';
-    public static final char DONE = 'd';
-    public static final char FAILED = 'f';
-    public static final char NOT_STARTED = 'n';
+    private Status status;
         
     public ReduceTask(int taskId, int jobId, List<String> i, Job j,
                       String o) {
@@ -22,7 +17,7 @@ public class ReduceTask implements Serializable, Task {
         this.inputFiles = i;
         this.job = j;
         this.outputFile = o;
-        this.status = NOT_STARTED;
+        this.status = Status.NONE;
     }
         
     public int getTaskId() {
@@ -55,10 +50,10 @@ public class ReduceTask implements Serializable, Task {
     public void setOutputFile(String outputFile) {
         this.outputFile = outputFile;
     }
-    public char getStatus() {
+    public Status getStatus() {
         return status;
     }
-    public void setStatus(char status) {
+    public void setStatus(Status status) {
         this.status = status;
     }
         

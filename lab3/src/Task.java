@@ -7,8 +7,8 @@ public interface Task {
     public void setJobId(int jid);
     public Job getJob();
     public void setJob(Job job);
-    public char getStatus();
-    public void setStatus(char status);
+    public Status getStatus();
+    public void setStatus(Status status);
         
     public String getOutputFile();
 }

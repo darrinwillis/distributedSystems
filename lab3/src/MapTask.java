@@ -7,12 +7,7 @@ public class MapTask implements Serializable, Task{
     private FilePartition partition;
     private Job job;
     private String outputFile;
-    private char status;
-        
-    public static final char RUNNING = 'r';
-    public static final char DONE = 'd';
-    public static final char FAILED = 'f';
-    public static final char NOT_STARTED = 'n';
+    private Status status;
         
     public MapTask(int t, int ji, FilePartition p, Job j,
                    String o) {
@@ -21,7 +16,7 @@ public class MapTask implements Serializable, Task{
         this.partition = p;
         this.job = j;
         this.outputFile = o;
-        this.status = NOT_STARTED;
+        this.status = Status.NONE;
     }
         
     public int getTaskId() {
@@ -54,10 +49,10 @@ public class MapTask implements Serializable, Task{
     public void setOutputFile(String outputFile) {
         this.outputFile = outputFile;
     }
-    public char getStatus() {
+    public Status getStatus() {
         return status;
     }
-    public void setStatus(char status) {
+    public void setStatus(Status status) {
         this.status = status;
     }
 
