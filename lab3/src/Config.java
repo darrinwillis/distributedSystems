@@ -12,10 +12,12 @@ public class Config {
             e.printStackTrace();
             return false;
         }
-        return (prop.containsKey("registryPort") &&
-            prop.containsKey("masterServerRegistryKey") &&
+        return (prop.containsKey("REGISTRY_PORT") &&
+            prop.containsKey("REGISTRY_HOST") &&
+            prop.containsKey("MASTER_SERVER_REGISTRY_KEY") &&
             prop.containsKey("BUF_SIZE") &&
-            prop.containsKey("nodePort"));
+            prop.containsKey("NODE_PORT") &&
+            prop.containsKey("NODE0"));
     }
 
     public static Properties generateConfigFile() {
@@ -23,10 +25,12 @@ public class Config {
 
         try{
             //Set default values for properties
-            prop.setProperty("registryPort", "1099");
-            prop.setProperty("masterServerRegistryKey", "masterServer");
+            prop.setProperty("REGISTRY_HOST", "unix12.andrew.cmu.edu");
+            prop.setProperty("REGISTRY_PORT", "1099");
+            prop.setProperty("MASTER_SERVER_REGISTRY_KEY", "masterServer");
             prop.setProperty("BUF_SIZE", "65536"); 
-            prop.setProperty("nodePort", "1098");
+            prop.setProperty("NODE_PORT", "1098");
+            prop.setProperty("NODE0", "unix2.andrew.cmu.edu");
 
             //Save properties to config file
             prop.store(new FileOutputStream(configFileName), null);

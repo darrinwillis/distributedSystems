@@ -3,6 +3,7 @@ import java.rmi.server.*;
 import java.rmi.registry.*;
 import java.util.*;
 import java.io.*;
+import java.net.*;
 
 public class NodeServer extends UnicastRemoteObject implements FileServerInterface
 {
@@ -10,17 +11,25 @@ public class NodeServer extends UnicastRemoteObject implements FileServerInterfa
 
     //Info from Config file
     private static final String configFileName = Config.configFileName;
+    private String registryHost;
     private int registryPort;
     private String masterServerRegistryKey;
     private int nodePort;
 
     //instance variables
+    private String name;
     private MasterFileServerInterface masterServer;
 
 
     public NodeServer() throws RemoteException
     {
         parseFile(configFileName);
+        try{
+            name = InetAddress.getLocalHost().getHostName();
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
     
     // This parses constants in the format
@@ -46,9 +55,10 @@ public class NodeServer extends UnicastRemoteObject implements FileServerInterfa
 
         try{
             //Load in all config properties
-            registryPort = Integer.parseInt(prop.getProperty("registryPort"));
-            masterServerRegistryKey = prop.getProperty("masterServerRegistryKey");
-            nodePort = Integer.parseInt(prop.getProperty("nodePort"));
+            registryHost = prop.getProperty("REGISTRY_HOST");
+            registryPort = Integer.parseInt(prop.getProperty("REGISTRY_PORT"));
+            masterServerRegistryKey = prop.getProperty("MASTER_SERVER_REGISTRY_KEY");
+            nodePort = Integer.parseInt(prop.getProperty("NODE_PORT"));
 
         } catch (NumberFormatException e) {
             System.out.println("Incorrectly formatted number " + e.getMessage());
@@ -61,12 +71,12 @@ public class NodeServer extends UnicastRemoteObject implements FileServerInterfa
     public void start() throws RemoteException
     {
         try{
-            rmiRegistry = LocateRegistry.getRegistry(registryPort);
+            rmiRegistry = LocateRegistry.getRegistry(registryHost, registryPort);
             masterServer = (MasterFileServerInterface)
                 rmiRegistry.lookup(masterServerRegistryKey);
             //UnicastRemoteObject.exportObject(this, nodePort);
             System.out.println("Node started");
-            masterServer.register(this);
+            masterServer.register(this, this.name);
             System.out.println("Registered with master");
         } catch (Exception e)
         {

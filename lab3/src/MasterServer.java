@@ -3,6 +3,16 @@ import java.rmi.server.*;
 import java.rmi.registry.*;
 import java.util.*;
 import java.io.*;
+import java.net.*;
+
+final class Node
+{
+    String name;
+    FileServerInterface server;
+    boolean isConnected;
+    InetAddress address;
+    int cores;
+}
 
 public class MasterServer extends UnicastRemoteObject implements MasterFileServerInterface
 {
@@ -15,12 +25,12 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     private static final String serverName = "MasterServer";
 
     //Instance variables
-    private volatile List<FileServerInterface> fileNodes;
+    private volatile Hashtable<String, Node> nodes;
 
     public MasterServer() throws RemoteException
     {
+        this.nodes = new Hashtable<String, Node>();
         parseFile(configFileName);
-        this.fileNodes = new ArrayList<FileServerInterface>();
     }
     
     // This parses constants in the format
@@ -46,14 +56,41 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         }
         try{
             //Load in all config properties
-            this.registryPort = Integer.parseInt(prop.getProperty("registryPort"));
-            this.masterServerRegistryKey = prop.getProperty("masterServerRegistryKey");
+            this.registryPort = Integer.parseInt(prop.getProperty("REGISTRY_PORT"));
+            this.masterServerRegistryKey = prop.getProperty("MASTER_SERVER_REGISTRY_KEY");
+
+            String nodeKey = "NODE";
+            int i = 0;
+            //Load in all node addresses
+            do{
+                String nodeName = nodeKey + i;
+                System.out.println("Checking for nodename: " + nodeName);
+                addNode(prop.getProperty(nodeName));
+                i++;
+            } while(prop.containsKey(nodeKey + (i + 1)));
+
         } catch (NumberFormatException e) {
             System.out.println("Incorrectly formatted number " + e.getMessage());
         }
         return;
     }
 
+    private void addNode(String address)
+    {
+        System.out.println("Putting address: " + address);
+        InetAddress newAddress = null;
+        try{
+            newAddress = InetAddress.getByName(address);
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+        Node newNode = new Node();
+        newNode.name = address;
+        newNode.address = newAddress;
+        newNode.server = null;
+        newNode.isConnected = false;
+        this.nodes.put(address, newNode);
+    }
 
     // This allows the server to be reached by any nodes or users
     public void start() throws RemoteException
@@ -62,9 +99,11 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         try{
             rmiRegistry = LocateRegistry.getRegistry(registryPort);
             rmiRegistry.list();
+            System.out.println("Registry server found");
         } catch (RemoteException e) {
             rmiRegistry = LocateRegistry.createRegistry(registryPort);
-        }         System.out.println("Registry server started");
+            System.out.println("Registry server created");
+        }
     
         // Attempt to stop a previous instance of the server
         // TODO: This doesn't seem to work. 
@@ -103,10 +142,25 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         }
     }
   
-    public void register(FileServerInterface node)
+    public void register(FileServerInterface server, String address)
     {
-        System.out.println("New Client connected");
-        fileNodes.add(node);
+        System.out.println("Client connected");
+        Node foundNode = this.nodes.get(address);
+        if (foundNode == null){
+            System.out.println("Unrecognized client; ignoring");
+            return;
+        }
+        if (foundNode.isConnected)
+        {
+            boolean check = (server == foundNode.server);
+            System.out.println(address + " checked in and the check is " + check);
+        }
+        else
+        {
+            System.out.println(address + " is now connected");
+            foundNode.isConnected = true;
+            foundNode.server = server;
+        }
     }
    
     //Adds a new file to the distributed file system
@@ -135,6 +189,21 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         return;
     }
 
+    public String monitorAll()
+    {
+        String s = "###### STATUS REPORT ######\n";
+        Enumeration<Node> enumerate = this.nodes.elements();
+        do {
+            Node each = enumerate.nextElement();
+            System.out.println("The keys are:\n" + this.nodes);
+            s = s.concat("\nReport for: " + each.name);
+            s = s.concat(each.isConnected ? "\n\tConnected" : "\n\tNot Connected");
+            s = s.concat("\n\tInetAddress: " + each.address);
+        } while (enumerate.hasMoreElements());
+        s = s.concat("\n\n######  END  REPORT  ######");
+        return s;
+    }
+
     private void partitionFile(File originalFile)
     {
         return;
@@ -155,3 +224,4 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         server.start();
     }
 }
+
