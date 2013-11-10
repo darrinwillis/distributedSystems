@@ -28,6 +28,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     
     public void newJob(Job j) {
 	int jid = currentJid++;
+	
     }	
 	    
 	    

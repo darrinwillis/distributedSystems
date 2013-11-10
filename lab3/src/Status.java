@@ -1,3 +1,3 @@
 public enum Status {
-    RUN, FAIL, DONE, NONE;
+    DONE, RUNNING, FAILED, NONE;
 }

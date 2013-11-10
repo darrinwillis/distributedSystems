@@ -35,7 +35,8 @@ CLASSES = \
 	Job.java \
 	Task.java \
 	ReduceTask.java \
-	MapTask.java  
+	MapTask.java \
+	SlaveNode.java
 
 default: classes 
 		@echo "Project Built"

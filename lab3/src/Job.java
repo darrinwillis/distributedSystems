@@ -8,8 +8,7 @@ public interface Job extends Serializable {
     public List<String> getInput();
     public String getOutput();
 
-    public int getRecordSize();
-    public String getReduceIdentity();
+    public String getIdentity();
 
     public List<String[]> map(String key, String val);
     public String reduce(String key, List<String> vals, String init);
