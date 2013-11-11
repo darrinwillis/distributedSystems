@@ -47,6 +47,12 @@ public class Monitor {
                     generateScripts();
                     break;
                 }
+                case "stopSystem":
+                {
+                    System.out.println("Stopping system");
+                    stopSystem();
+                    break;
+                }
                 case "startMonitor":
                 {
                     MonitorThread thread = new MonitorThread();
@@ -61,6 +67,7 @@ public class Monitor {
                 case "info":
                 {
                     System.out.println(monitor());
+                    break;
                 }
             }
         } else
@@ -68,7 +75,7 @@ public class Monitor {
         return;
     }
     
-    private static String monitor()
+    private static MasterFileServerInterface getMaster()
     {
         String registryHost = null;
         int registryPort = 0;
@@ -86,12 +93,37 @@ public class Monitor {
                 LocateRegistry.getRegistry(registryHost, registryPort);
             master = (MasterFileServerInterface)
                 rmiRegistry.lookup(masterServerRegistryKey);
-            return master.monitorAll();
+            return master;
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
 
+    }
+
+    private static void stopSystem()
+    {
+        MasterFileServerInterface master = getMaster();
+        try {
+            if (master != null)
+                master.stop();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static String monitor()
+    {
+        MasterFileServerInterface master = getMaster();
+        try {
+            if (master != null)
+                return master.monitorAll();
+            else
+                return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     private static boolean checkConfig()

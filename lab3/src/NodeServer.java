@@ -67,9 +67,7 @@ public class NodeServer extends UnicastRemoteObject implements FileServerInterfa
             masterServer = (MasterFileServerInterface)
                 rmiRegistry.lookup(masterServerRegistryKey);
             //UnicastRemoteObject.exportObject(this, nodePort);
-            System.out.println("Node started");
             masterServer.register(this, this.name);
-            System.out.println("Registered with master");
         } catch (Exception e)
         {
             e.printStackTrace();
@@ -82,6 +80,7 @@ public class NodeServer extends UnicastRemoteObject implements FileServerInterfa
         //This should probably do other things before ending
         //the registry
         try{
+            System.out.println("all items are" + Arrays.toString(rmiRegistry.list()));
             unexportObject(this, true);
             System.out.println("Node stopped");
         } catch (Exception e)
@@ -109,5 +108,7 @@ public class NodeServer extends UnicastRemoteObject implements FileServerInterfa
     {
         NodeServer server = new NodeServer();
         server.start();
+        Thread.sleep(5*1000);
+        //server.stop();
     }
 }

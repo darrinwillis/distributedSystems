@@ -123,11 +123,16 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     // This allows a user to stop the server
     public void stop() throws RemoteException
     {
+        System.out.println("Stopping master");
         //This should probably do other things before ending
         //the registry
         try{
-            rmiRegistry.unbind(masterServerRegistryKey);
+            stopNodes();
+            System.out.println("Unbinding");
+            //rmiRegistry.unbind(masterServerRegistryKey);
+            System.out.println("Unexporting self");
             unexportObject(this, true);
+            System.out.println("Unexporting Registry");
             unexportObject(rmiRegistry, true);
             System.out.println("Server stopped");
         } catch (Exception e)
@@ -136,6 +141,23 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         }
     }
   
+    private void stopNodes() throws RemoteException
+    {
+        Enumeration<Node> enumerate = this.nodes.elements();
+        do {
+            System.out.println("Stopping a node");
+            Node each = enumerate.nextElement();
+            FileServerInterface eachServer = each.server;
+            if (eachServer != null) {
+                System.out.println("Sending a stop message");
+                eachServer.stop();
+                System.out.println("Sent a stop message");
+            }
+        } while (enumerate.hasMoreElements());
+        System.out.println("Done stopping nodes");
+        
+    }
+
     public void register(FileServerInterface server, String address)
     {
         System.out.println("Client connected");
@@ -189,7 +211,6 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         Enumeration<Node> enumerate = this.nodes.elements();
         do {
             Node each = enumerate.nextElement();
-            System.out.println("The keys are:\n" + this.nodes);
             s = s.concat("\nReport for: " + each.name);
             s = s.concat(each.isConnected ? "\n\tConnected" : "\n\tNot Connected");
             s = s.concat("\n\tInetAddress: " + each.address);
