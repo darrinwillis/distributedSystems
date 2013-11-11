@@ -72,7 +72,6 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
 
     private void addNode(String address)
     {
-        System.out.println("Putting address: " + address);
         InetAddress newAddress = null;
         try{
             newAddress = InetAddress.getByName(address);
@@ -184,7 +183,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         return;
     }
 
-    public String monitorAll()
+    public String monitorAll() throws RemoteException
     {
         String s = "###### STATUS REPORT ######\n";
         Enumeration<Node> enumerate = this.nodes.elements();

@@ -36,15 +36,7 @@ public class NodeServer extends UnicastRemoteObject implements FileServerInterfa
     // key=value from fileConfig.txt
     private void parseFile(String filename)
     {
-        Properties prop = new Properties();
-        try{
-            prop.load(new FileInputStream(configFileName));
-        } catch (FileNotFoundException e) {
-            System.out.println("No config file found named: " + configFileName);
-            prop = Config.generateConfigFile(); 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Properties prop = Config.getProp();;
 
         //Check and assure file is formatted correctly
         if (! Config.checkConfigFile())

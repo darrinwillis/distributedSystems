@@ -10,5 +10,6 @@ public interface MasterFileServerInterface extends FileServerInterface
     void addNewFile(String filename, FileServerInterface host) throws RemoteException;
     void register(FileServerInterface node, String address) throws RemoteException;
     void stop() throws RemoteException;
+    String monitorAll() throws RemoteException;
 }
 

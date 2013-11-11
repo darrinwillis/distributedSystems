@@ -4,7 +4,7 @@ import java.util.*;
 public class Config {
     public static final String configFileName = "fileConfig.txt";
 
-    private static Properties getProp()
+    public static Properties getProp()
     {
         Properties prop = new Properties();
         try{
@@ -13,7 +13,10 @@ public class Config {
             e.printStackTrace();
             return null;
         }
-        return prop;
+        if (checkConfigFile(prop))
+            return prop;
+        else
+            return null;
 
     }
 
@@ -30,6 +33,20 @@ public class Config {
             prop.containsKey("NODE0"));
     }
 
+    public static boolean checkConfigFile(Properties prop)
+    {
+        return (prop.containsKey("REGISTRY_PORT") &&
+            prop.containsKey("REGISTRY_HOST") &&
+            prop.containsKey("MASTER_HOST") &&
+            prop.containsKey("MASTER_SERVER_REGISTRY_KEY") &&
+            prop.containsKey("BUF_SIZE") &&
+            prop.containsKey("NODE_PORT") &&
+            prop.containsKey("NODE_SCRIPT_FORMAT") &&
+            prop.containsKey("MASTER_SCRIPT_FORMAT") &&
+            prop.containsKey("NODE0"));
+    
+    }
+
     public static Properties generateConfigFile() {
 	Properties prop = new Properties();
 
@@ -44,6 +61,7 @@ public class Config {
             prop.setProperty("NODE0", "unix2.andrew.cmu.edu");
             prop.setProperty("NODE_SCRIPT_FORMAT", "ssh %s -f 'cd private/15440/distributedSystems/lab3/src/;\njava NodeServer &;exit 1;echo \"Exited\"'");
             prop.setProperty("MASTER_SCRIPT_FORMAT", "ssh %s -f 'cd private/15440/distributedSystems/lab3/src/;\njava Monitor startMaster&;exit 1;echo \"Exited\"'");
+            prop.setProperty("MONITOR_SCRIPT_FORMAT", "ssh %s -f 'cd private/15440/distributedSystems/lab3/src/;\njava Monitor startMonitor&;exit 1;echo \"Exited\"'");
 
             //Save properties to config file
             prop.store(new FileOutputStream(configFileName), null);
@@ -69,7 +87,6 @@ public class Config {
         //Load in all node addresses
         do{
             String nodeName = nodeKey + i;
-            System.out.println("Looking for node " + nodeName);
             addresses.add(prop.getProperty(nodeName));
             i++;
         } while(prop.containsKey(nodeKey + i));
@@ -85,6 +102,12 @@ public class Config {
     public static String getMasterSSHFormatString(){
         Properties prop = getProp();
         String formatString = prop.getProperty("MASTER_SCRIPT_FORMAT");
+        return formatString;
+    }
+    
+    public static String getMonitorFormatString(){
+        Properties prop = getProp();
+        String formatString = prop.getProperty("MONITOR_SCRIPT_FORMAT");
         return formatString;
     }
 }
