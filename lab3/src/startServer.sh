@@ -1,4 +1,5 @@
 #!/bin/bash
 echo "Setting up master server"
-java -Djava.rmi.server.codebase=https://unix.andrew.cmu.edu/usr18/dswillis/private/15440/distributedSystems/lab1 Monitor &
-
+ssh unix2.andrew.cmu.edu -f '
+cd private/15440/distributedSystems/lab3/src/;
+java Monitor &;exit 1; echo "Exited"'

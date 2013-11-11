@@ -59,15 +59,10 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             this.registryPort = Integer.parseInt(prop.getProperty("REGISTRY_PORT"));
             this.masterServerRegistryKey = prop.getProperty("MASTER_SERVER_REGISTRY_KEY");
 
-            String nodeKey = "NODE";
-            int i = 0;
-            //Load in all node addresses
-            do{
-                String nodeName = nodeKey + i;
-                System.out.println("Checking for nodename: " + nodeName);
-                addNode(prop.getProperty(nodeName));
-                i++;
-            } while(prop.containsKey(nodeKey + (i + 1)));
+            ArrayList<String> addresses = Config.getNodeAddresses();
+            Iterator<String> iter = addresses.iterator();
+            while (iter.hasNext())
+                addNode(iter.next());
 
         } catch (NumberFormatException e) {
             System.out.println("Incorrectly formatted number " + e.getMessage());
