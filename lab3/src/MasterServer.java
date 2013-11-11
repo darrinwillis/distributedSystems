@@ -26,13 +26,21 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
 
     //Instance variables
     private volatile Hashtable<String, Node> nodes;
+    private int currentJid;
 
     public MasterServer() throws RemoteException
     {
         this.nodes = new Hashtable<String, Node>();
         parseFile(configFileName);
+	    this.currentJid = 0;
     }
     
+    public void newJob(Job j) {
+	    int jid = currentJid++;
+	
+    }	
+	    
+	    
     // This parses constants in the format
     // key=value from fileConfig.txt
     private void parseFile(String filename)
