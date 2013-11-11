@@ -49,14 +49,24 @@ public class SlaveNode {
 
 	List<String[]> kvs = new LinkedList<String[]>();
 	String line = "";
+	try{
+	    line = f.readLine();
+	} catch (Exception e) {
+	    e.printStackTrace();
+	}
 	int i = 0;
 	int index;
+	String[] kv = new String[2];
 	
 	while(line != null) {
 	    try {
-		line = f.readLine();
 		index = line.indexOf("~");
-		kvs.add(new String[] {line.substring(0,index),line.substring(index+1,line.length())});		 
+		if(index == -1)
+		    break;
+		kv[0] = line.substring(0,index);
+		kv[1] = line.substring(index+1,line.length());
+		kvs.add(kv.clone());
+		line = f.readLine();
 	    } catch(Exception e) {
 		e.printStackTrace();
 	    }
@@ -74,7 +84,9 @@ public class SlaveNode {
 	List<String[]> kvs = new LinkedList<String[]>();
 	
 	for(String s : inputFiles){
+	    System.out.println("File " + s);
 	    for(String[] kv : parseReduceFile(s)){
+		System.out.println(kv[0] + " " + kv[1]);
 		kvs.add(kv);
 	    }
 	}
@@ -83,6 +95,7 @@ public class SlaveNode {
 	
 
     public void doMap(MapTask t){
+	System.out.println("Doing Map");
 	synchronized(tasks) {
 	    tasks.add(t);
 	}
@@ -97,7 +110,7 @@ public class SlaveNode {
 	}
 	String s;
 	try {
-	    FileOutputStream out = new FileOutputStream(new File(j.getOutput()), false);
+	    RandomAccessFile out = new RandomAccessFile(t.getOutputFile(),"rws");
 	
 	    for(String[] kv : outputs) {
 		s = kv[0] + "~" + kv[1] + "\n";
@@ -112,10 +125,10 @@ public class SlaveNode {
 	synchronized(tasks) {
 	    tasks.remove(t);
 	}
-	taskComplete(t);
     }
 		    
     public void doReduce(ReduceTask t){
+	System.out.println("Doing Reduce");
 	synchronized(tasks) {
 	    tasks.add(t);
 	}
@@ -123,13 +136,17 @@ public class SlaveNode {
 	Job j = t.getJob();
 	List<String[]> inputs = parseReduceFiles(t.getInputFiles());
 	HashMap<String, List<String>> kvs = new HashMap<String, List<String>>();
-	
+
 	List<String> vals;
 	for (String[] kv : inputs) {
 	    vals = kvs.get(kv[0]);
+	    if (vals == null)
+		vals = new LinkedList<String>();
 	    vals.add(kv[1]);
 	    kvs.put(kv[0],vals);
 	}
+
+	System.out.println(kvs);
 
 	List<String[]> outputs = new LinkedList<String[]>();
 	
@@ -142,7 +159,7 @@ public class SlaveNode {
 	}
 	String s;
 	try {
-	    FileOutputStream out = new FileOutputStream(new File(j.getOutput()), false);
+	    RandomAccessFile out = new RandomAccessFile(t.getOutputFile(),"rws");
 	    
 	    for(String[] kv : outputs) {
 		s = kv[0] + "~" + kv[1] + "\n";
@@ -156,27 +173,6 @@ public class SlaveNode {
 	}
 	synchronized(tasks) {
 	    tasks.remove(t);
-	}
-	taskComplete(t);
-    }
-    
-    public void taskComplete(Task t) {
-	t.setStatus(Status.DONE);
-	Message m = new Message(MessageType.DONE);
-	m.task = t;
-	try {
-	    Socket soc = new Socket("unix12.andrew.cmu.edu", 15444);
-	    ObjectOutputStream out = new ObjectOutputStream(soc.getOutputStream());
-	    ObjectInputStream in = new ObjectInputStream(soc.getInputStream());
-                        
-	    out.writeObject(m);
-	    out.flush();
-
-	    //wait for the ack
-	    in.readObject();
-	    soc.close();
-	} catch(Exception e) {
-	    e.printStackTrace();
 	}
     }
     
