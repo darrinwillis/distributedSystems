@@ -69,9 +69,10 @@ public class Config {
         //Load in all node addresses
         do{
             String nodeName = nodeKey + i;
+            System.out.println("Looking for node " + nodeName);
             addresses.add(prop.getProperty(nodeName));
             i++;
-        } while(prop.containsKey(nodeKey + (i + 1)));
+        } while(prop.containsKey(nodeKey + i));
         return addresses;
     }
 

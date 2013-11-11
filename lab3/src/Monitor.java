@@ -19,6 +19,8 @@ class MonitorThread extends Thread{
     }
 }
 public class Monitor {
+    private static MasterServer masterServer;
+
     public static void main(String[] args)
     {
         if (checkConfig())
@@ -26,20 +28,27 @@ public class Monitor {
             switch (args[0]){
                 case "startMaster":
                 {
-                        try{
-                            MasterServer server = new MasterServer();
-                            server.start();
-                            //MonitorThread thread = new MonitorThread();
-                            //thread.server = server;
-                            //thread.run();
-                        } catch (Exception e)
-                        {
-                            e.printStackTrace();
-                        }
+                    try{
+                        MasterServer server = new MasterServer();
+                        masterServer = server;
+                        server.start();
+                    } catch (Exception e)
+                    {
+                        e.printStackTrace();
+                    }
+                    break;
                 }
                 case "startSystem":
                 {
                     generateScripts();
+                    break;
+                }
+                case "monitor":
+                {
+                    MonitorThread thread = new MonitorThread();
+                    thread.server = masterServer;
+                    thread.run();
+                    break;
                 }
             }
         } else
@@ -78,7 +87,9 @@ public class Monitor {
             File scriptFile = new File("scripts/masterScript.sh");
             PrintWriter pw = new PrintWriter(scriptFile);
             pw.println("#!/bin/bash");
+            System.out.println("format string is " + masterFormatString);
             pw.format(masterFormatString, Config.getMasterAddress());
+            pw.close();
 
         } catch (Exception e) {
             e.printStackTrace();
