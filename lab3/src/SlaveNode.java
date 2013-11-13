@@ -93,7 +93,6 @@ public class SlaveNode {
 	return kvs;
     }
 	
-
     public void doMap(MapTask t){
 	System.out.println("Doing Map");
 	synchronized(tasks) {

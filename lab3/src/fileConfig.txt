@@ -1,0 +1,11 @@
+#Wed Nov 13 13:31:18 EST 2013
+REGISTRY_HOST=unix3.andrew.cmu.edu
+BUF_SIZE=65536
+REGISTRY_PORT=1099
+NODE0=unix2.andrew.cmu.edu
+NODE_PORT=1098
+MASTER_HOST=unix3.andrew.cmu.edu
+MASTER_SERVER_REGISTRY_KEY=masterServer
+MASTER_SCRIPT_FORMAT=ssh %s -f 'cd private/15440/distributedSystems/lab3/src/;\njava Monitor startMaster&;exit 1;echo "Exited"'
+NODE_SCRIPT_FORMAT=ssh %s -f 'cd private/15440/distributedSystems/lab3/src/;\njava NodeServer &;exit 1;echo "Exited"'
+MONITOR_SCRIPT_FORMAT=ssh %s -f 'cd private/15440/distributedSystems/lab3/src/;\njava Monitor startMonitor&;exit 1;echo "Exited"'
