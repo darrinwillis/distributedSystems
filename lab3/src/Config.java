@@ -80,6 +80,10 @@ public class Config {
         return Long.parseLong(sharedProp.getProperty("FILE_PARTITION_SIZE"));
     }
 
+    public static int getReplicationFactor() throws NumberFormatException {
+        return Integer.parseInt(sharedProp.getProperty("REPLICATION_FACTOR"));
+    }
+
     public static String getMasterAddress() {
         return sharedProp.getProperty("MASTER_HOST");
     }

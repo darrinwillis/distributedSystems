@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.*;
 
 public class DistributedFile {
     private String filename;
@@ -30,9 +31,9 @@ public class DistributedFile {
             for (int k = 0; k < replicationFactor; k++)
             {
                 dups[k].location = null;
-                dups[k].fileName = fileName;
-                dups[k].index = i;
-                dups[k].size = thisSize;
+                dups[k].fileName = filename;
+                dups[k].index = (int)i;
+                dups[k].size = (int)thisSize;
             }
         }
 
@@ -58,7 +59,7 @@ public class DistributedFile {
                         count++;
                 }
             }
-            return (count == 0 && ~empty) ? 1 : count;
+            return (count == 0 && !empty) ? 1 : count;
         } finally {
             is.close();
         }

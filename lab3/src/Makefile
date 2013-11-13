@@ -31,6 +31,7 @@ CLASSES = \
 	RMIInputStream.java \
 	RMIPipe.java \
 	FileIO.java \
+	DistributedFile.java \
 	TestClient.java \
 	Job.java \
 	Task.java \
