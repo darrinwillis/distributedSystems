@@ -3,6 +3,12 @@ import java.util.*;
 
 public class Config {
     public static final String configFileName = "fileConfig.txt";
+    private static Properties sharedProp;
+
+    static{
+        sharedProp = getProp();
+    }
+
 
     public static Properties getProp()
     {
@@ -22,15 +28,7 @@ public class Config {
 
     public static boolean checkConfigFile() {
         Properties prop = getProp();
-        return (prop.containsKey("REGISTRY_PORT") &&
-            prop.containsKey("REGISTRY_HOST") &&
-            prop.containsKey("MASTER_HOST") &&
-            prop.containsKey("MASTER_SERVER_REGISTRY_KEY") &&
-            prop.containsKey("BUF_SIZE") &&
-            prop.containsKey("NODE_PORT") &&
-            prop.containsKey("NODE_SCRIPT_FORMAT") &&
-            prop.containsKey("MASTER_SCRIPT_FORMAT") &&
-            prop.containsKey("NODE0"));
+        return checkConfigFile(prop);
     }
 
     public static boolean checkConfigFile(Properties prop)
@@ -41,6 +39,8 @@ public class Config {
             prop.containsKey("MASTER_SERVER_REGISTRY_KEY") &&
             prop.containsKey("BUF_SIZE") &&
             prop.containsKey("NODE_PORT") &&
+            prop.containsKey("FILE_PARTITION_SIZE") &&
+            prop.containsKey("REPLICATION_FACTOR") &&
             prop.containsKey("NODE_SCRIPT_FORMAT") &&
             prop.containsKey("MASTER_SCRIPT_FORMAT") &&
             prop.containsKey("NODE0"));
@@ -52,8 +52,8 @@ public class Config {
 
         try{
             //Set default values for properties
-            prop.setProperty("REGISTRY_HOST", "unix12.andrew.cmu.edu");
-            prop.setProperty("MASTER_HOST", "unix12.andrew.cmu.edu");
+            prop.setProperty("REGISTRY_HOST", "unix4.andrew.cmu.edu");
+            prop.setProperty("MASTER_HOST", "unix4.andrew.cmu.edu");
             prop.setProperty("REGISTRY_PORT", "1099");
             prop.setProperty("MASTER_SERVER_REGISTRY_KEY", "masterServer");
             prop.setProperty("BUF_SIZE", "65536"); 
@@ -62,6 +62,8 @@ public class Config {
             prop.setProperty("NODE_SCRIPT_FORMAT", "ssh %s -f 'cd private/15440/distributedSystems/lab3/src/;\njava NodeServer &;exit 1;echo \"Exited\"'");
             prop.setProperty("MASTER_SCRIPT_FORMAT", "ssh %s -f 'cd private/15440/distributedSystems/lab3/src/;\njava Monitor startMaster&;exit 1;echo \"Exited\"'");
             prop.setProperty("MONITOR_SCRIPT_FORMAT", "ssh %s -f 'cd private/15440/distributedSystems/lab3/src/;\njava Monitor startMonitor&;exit 1;echo \"Exited\"'");
+            prop.setProperty("FILE_PARTITION_SIZE", "1000");
+            prop.setProperty("REPLICATION_FACTOR", "3");
 
             //Save properties to config file
             prop.store(new FileOutputStream(configFileName), null);
@@ -74,40 +76,39 @@ public class Config {
         return prop;
     }
 
+    public static long getBlockSize() throws NumberFormatException {
+        return Long.parseLong(sharedProp.getProperty("FILE_PARTITION_SIZE"));
+    }
+
     public static String getMasterAddress() {
-        Properties prop = getProp();
-        return prop.getProperty("MASTER_HOST");
+        return sharedProp.getProperty("MASTER_HOST");
     }
 
     public static ArrayList<String> getNodeAddresses(){
-        Properties prop = getProp();
         ArrayList<String> addresses = new ArrayList<String>();
 	    String nodeKey = "NODE";
         int i = 0;
         //Load in all node addresses
         do{
             String nodeName = nodeKey + i;
-            addresses.add(prop.getProperty(nodeName));
+            addresses.add(sharedProp.getProperty(nodeName));
             i++;
-        } while(prop.containsKey(nodeKey + i));
+        } while(sharedProp.containsKey(nodeKey + i));
         return addresses;
     }
 
     public static String getNodeSSHFormatString(){
-        Properties prop = getProp();
-        String formatString = prop.getProperty("NODE_SCRIPT_FORMAT");
+        String formatString = sharedProp.getProperty("NODE_SCRIPT_FORMAT");
         return formatString;
     }
 
     public static String getMasterSSHFormatString(){
-        Properties prop = getProp();
-        String formatString = prop.getProperty("MASTER_SCRIPT_FORMAT");
+        String formatString = sharedProp.getProperty("MASTER_SCRIPT_FORMAT");
         return formatString;
     }
     
     public static String getMonitorFormatString(){
-        Properties prop = getProp();
-        String formatString = prop.getProperty("MONITOR_SCRIPT_FORMAT");
+        String formatString = sharedProp.getProperty("MONITOR_SCRIPT_FORMAT");
         return formatString;
     }
 }

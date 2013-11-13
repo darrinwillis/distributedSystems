@@ -213,6 +213,12 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         return;
     }
 
+    private void partitionFile(File originalFile)
+    {
+
+        return;
+    }
+
     public String monitorAll() throws RemoteException
     {
         String s = "###### STATUS REPORT ######\n";
@@ -225,11 +231,6 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         } while (enumerate.hasMoreElements());
         s = s.concat("\n\n######  END  REPORT  ######");
         return s;
-    }
-
-    private void partitionFile(File originalFile)
-    {
-        return;
     }
 
     public OutputStream getOutputStream(File f) throws IOException {
