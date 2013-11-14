@@ -41,19 +41,20 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
 
     public MasterServer() throws RemoteException
     {
+        System.setProperty("sun.rmi.transport.tcp.responseTimeout", "5000");
         this.nodes = new Hashtable<String, Node>();
-	this.jobs = new LinkedList<Job>();
-	this.tasks = new LinkedList<Task>();
-	this.jobMapsDone = new ConcurrentHashMap<Integer,Integer>();
-	this.jobReducesDone = new ConcurrentHashMap<Integer,Integer>();
-	this.jobKvs = new ConcurrentHashMap<Integer,HashMap<String, List<String>>>();
-	nodeQueue = new LinkedList<Node>(nodes.values());
-	this.isRunning = true;
-	scheduler = new Scheduler();
-	scheduler.start();
+        this.jobs = new LinkedList<Job>();
+        this.tasks = new LinkedList<Task>();
+        this.jobMapsDone = new ConcurrentHashMap<Integer,Integer>();
+        this.jobReducesDone = new ConcurrentHashMap<Integer,Integer>();
+        this.jobKvs = new ConcurrentHashMap<Integer,HashMap<String, List<String>>>();
+        nodeQueue = new LinkedList<Node>(nodes.values());
+        this.isRunning = true;
+        scheduler = new Scheduler();
+        scheduler.start();
 
         parseFile(configFileName);
-	this.currentJid = 0;
+        this.currentJid = 0;
     }
 
     public void putAll(HashMap<String, List<String>> partial, Job j) {
@@ -312,8 +313,11 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             System.out.println("Unexporting Registry");
             unexportObject(rmiRegistry, true);
             System.out.println("Server stopped");
+            this.isRunning = false;
+
         } catch (Exception e)
         {
+            System.out.println("Hit exception");
             e.printStackTrace();
         }
     }
@@ -326,8 +330,13 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             Node each = enumerate.nextElement();
             NodeFileServerInterface eachServer = each.server;
             if (eachServer != null) {
+                System.out.println(System.getProperty("sun.rmi.transport.tcp.responseTimeout"));
                 System.out.println("Sending a stop message");
-                eachServer.stop();
+                try {
+                    eachServer.stop();
+                } catch (RemoteException e) {
+                    System.out.println(each.name + " could not be reached to stop");
+                }
                 System.out.println("Sent a stop message");
             }
         } while (enumerate.hasMoreElements());
@@ -475,6 +484,9 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     public static void main(String[] args) throws Exception
     {
         MasterServer server = new MasterServer();
+        // 10 sec rmi timeout
+        System.setProperty("sun.rmi.transport.tcp.responseTimeout", "5000");
+        System.out.println(System.getProperty("sun.rmi.transport.tcp.responseTimeout"));
         server.start();
     }
 }
