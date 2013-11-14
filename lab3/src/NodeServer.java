@@ -29,12 +29,12 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
 
     public NodeServer() throws RemoteException
     {
-	mapSlots = 10;
-	reduceSlots = 5;
-	taskThreads = new LinkedList<TaskThread>();
-	taskTracker = new TaskTracker();
-	taskTracker.start();
-	isRunning = true;
+        mapSlots = 10;
+        reduceSlots = 5;
+        taskThreads = new LinkedList<TaskThread>();
+        taskTracker = new TaskTracker();
+        taskTracker.start();
+        isRunning = true;
 
         parseFile(configFileName);
         try{
@@ -45,56 +45,56 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
         }
     }
     public boolean isFull() throws RemoteException {
-	return (taskThreads.size() >= mapSlots + reduceSlots); //TODO: Differentiate tasks
+        return (taskThreads.size() >= mapSlots + reduceSlots); //TODO: Differentiate tasks
     }
 
     public void scheduleTask(Task task) throws RemoteException{
-	System.out.println("Recieved Task " + task);
-	TaskThread t = new TaskThread(task);
-	t.start();
-	taskThreads.add(t);
+        System.out.println("Recieved Task " + task);
+        TaskThread t = new TaskThread(task);
+        t.start();
+        taskThreads.add(t);
     }
     public class TaskTracker extends Thread {
-	public void run() {
-	    TaskThread t;
-	    HashMap<String, List<String>> partialKvs;
-	    while(isRunning) {
-		for(int i = 0; i < taskThreads.size(); i++){
-		    try{
-			t = taskThreads.get(i);
-			t.join(10);
-			if(!t.isAlive()) {
-			    taskThreads.remove(t.task);
-			    if (t.task instanceof MapTask) {
-				partialKvs = slave.sort(t.task.getOutputFile());
-				masterServer.finishedMap(t.task,partialKvs);
-			    } else { //reducetask
-				masterServer.finishedReduce(t.task);
-			    }
-			}
-		    } catch(Exception e) {
-			e.printStackTrace();
-			continue;
-		    }
-		}	    
-	    }
-	}
+        public void run() {
+            TaskThread t;
+            HashMap<String, List<String>> partialKvs;
+            while(isRunning) {
+                for(int i = 0; i < taskThreads.size(); i++){
+                    try{
+                        t = taskThreads.get(i);
+                        t.join(10);
+                        if(!t.isAlive()) {
+                            taskThreads.remove(t.task);
+                            if (t.task instanceof MapTask) {
+                                partialKvs = slave.sort(t.task.getOutputFile());
+                                masterServer.finishedMap(t.task,partialKvs);
+                            } else { //reducetask
+                                masterServer.finishedReduce(t.task);
+                            }
+                        }
+                    } catch(Exception e) {
+                        e.printStackTrace();
+                        continue;
+                    }
+                }           
+            }
+        }
     }
 
     public class TaskThread extends Thread {
-	public Task task;
-	
-	public TaskThread(Task t) {
-	    task = t;
-	}
-	public void run() {
-	    if(task instanceof MapTask) 
-		slave.doMap((MapTask)task);
-	    else
-		slave.doReduce((ReduceTask)task);
-	}
+        public Task task;
+        
+        public TaskThread(Task t) {
+            task = t;
+        }
+        public void run() {
+            if(task instanceof MapTask) 
+                slave.doMap((MapTask)task);
+            else
+                slave.doReduce((ReduceTask)task);
+        }
     }
-	    
+            
     
     // This parses constants in the format
     // key=value from fileConfig.txt
@@ -121,7 +121,7 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
         }
         return;
     }
-	
+        
     // This allows the server to be reached by any nodes or users
     public void start() throws RemoteException
     {
@@ -134,45 +134,45 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
             //UnicastRemoteObject.exportObject(this, nodePort);
             masterServer.register(this, this.name);
 
-	    slave = new SlaveNode();
-	    stdin = new BufferedReader(new InputStreamReader(System.in));
-	    System.out.println("start list or quit");
-	    while(isRunning) {
-		String input = stdin.readLine();
-		String[] args = input.split(" ");
-		
-		if (args[0].equals("start")) {
-		    if (args.length < 4) {
-			System.out.println("Format: start (jobclass) (outputfile) (inputfiles)");
-			continue;
-		    }
-		    //Starting a new job
-		    String jobName = args[1];
-		    Job j = (Job) Class.forName(jobName).newInstance();
+            slave = new SlaveNode();
+            stdin = new BufferedReader(new InputStreamReader(System.in));
+            System.out.println("start list or quit");
+            while(isRunning) {
+                String input = stdin.readLine();
+                String[] args = input.split(" ");
+                
+                if (args[0].equals("start")) {
+                    if (args.length < 4) {
+                        System.out.println("Format: start (jobclass) (outputfile) (inputfiles)");
+                        continue;
+                    }
+                    //Starting a new job
+                    String jobName = args[1];
+                    Job j = (Job) Class.forName(jobName).newInstance();
 
-		    j.setOutput(args[2]);
-		    List<String> inputFiles = new ArrayList<String>();
+                    j.setOutput(args[2]);
+                    List<String> inputFiles = new ArrayList<String>();
                                         
-		    for (int i = 3; i < args.length; i++) {
-			inputFiles.add(args[i]);
-		    }
+                    for (int i = 3; i < args.length; i++) {
+                        inputFiles.add(args[i]);
+                    }
 
-		    j.setInput(inputFiles);
+                    j.setInput(inputFiles);
                                         
-		    masterServer.newJob(j);
-		    System.out.println(jobName + " added");
-		} else if (input.equals("list")) {
-		    System.out.println(slave.tasks);
-		}
-		else if (input.equals("quit")) {
-		    stop();
-		}
-	    }
-	    
+                    masterServer.newJob(j);
+                    System.out.println(jobName + " added");
+                } else if (input.equals("list")) {
+                    System.out.println(slave.tasks);
+                }
+                else if (input.equals("quit")) {
+                    stop();
+                }
+            }
+            
         } catch (Exception e)
         {
             e.printStackTrace();
-        }	
+        }       
     }
 
     // This allows a user to stop the server
@@ -184,7 +184,7 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
             System.out.println("all items are" + Arrays.toString(rmiRegistry.list()));
             unexportObject(this, true);
             System.out.println("Node stopped");
-	    isRunning = false; 
+            isRunning = false; 
         } catch (Exception e)
         {
             e.printStackTrace();
@@ -211,7 +211,7 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
     public static void main(String[] args) throws Exception
     {
         NodeServer server = new NodeServer();
-	System.out.println("Starting Server");
+        System.out.println("Starting Server");
         server.start();
     }
 }
