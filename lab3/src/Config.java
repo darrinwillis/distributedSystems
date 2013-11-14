@@ -3,7 +3,7 @@ import java.util.*;
 
 public class Config {
     public static final String configFileName = "fileConfig.txt";
-    private static Properties sharedProp;
+    public static Properties sharedProp;
 
     static{
         sharedProp = getProp();
@@ -82,6 +82,9 @@ public class Config {
 
     public static String getMasterAddress() {
         return sharedProp.getProperty("MASTER_HOST");
+    }
+    public static String getNodePort() {
+	return sharedProp.getProperty("NODE_PORT");
     }
 
     public static ArrayList<String> getNodeAddresses(){

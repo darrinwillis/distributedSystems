@@ -3,11 +3,10 @@ import java.io.Serializable;
 public class MapTask implements Serializable, Task{    
     private int tid;
     private int jid;
-    private int slaveId;
+    private int slaveId; //location of the node
     private FilePartition partition;
     private Job job;
     private String outputFile;
-    private Status status;
         
     public MapTask(int t, int ji, FilePartition p, Job j,
                    String o) {
@@ -16,7 +15,6 @@ public class MapTask implements Serializable, Task{
         this.partition = p;
         this.job = j;
         this.outputFile = o;
-        this.status = Status.NONE;
     }
         
     public int getTaskId() {
@@ -48,19 +46,5 @@ public class MapTask implements Serializable, Task{
     }
     public void setOutputFile(String outputFile) {
         this.outputFile = outputFile;
-    }
-    public Status getStatus() {
-        return status;
-    }
-    public void setStatus(Status status) {
-        this.status = status;
-    }
-
-    public int getSlaveId() {
-        return slaveId;
-    }
-
-    public void setSlaveId(int slaveId) {
-        this.slaveId = slaveId;
     }
 }

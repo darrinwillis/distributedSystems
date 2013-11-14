@@ -10,7 +10,7 @@ public class TestServer {
         try {
 	    ServerSocket ss = new ServerSocket(15444);
 	    Socket slave = ss.accept();
-	    Socket s1 = new Socket("ww109-c3.ww.andrew.cmu.edu",15444);
+	    Socket s1 = new Socket("unix2.andrew.cmu.edu",15444);
 	    Socket s2 = new Socket("unix1.andrew.cmu.edu",15444);
 	    System.out.println("Slave connected");
 

@@ -32,6 +32,8 @@ public class SlaveClient {
 		try {
 		    s = soc.accept();
 		    fromMaster = new ObjectInputStream(s.getInputStream());
+		    toMaster = new ObjectOutputStream(s.getOutputStream());
+
 		    System.out.println("Master Connected, Creating ComThread");
 		    ComThread t = new ComThread(slave,s);
 		    t.start();
@@ -117,11 +119,8 @@ public class SlaveClient {
 	    Socket soc;
 	    Message m;
 	    try {
-		soc = new Socket("unix2.andrew.cmu.edu",15444);
 		m = new Message(MessageType.NEW_JOB);
 		m.job = job;
-
-		toMaster = new ObjectOutputStream(soc.getOutputStream());
 		
 		toMaster.writeObject(m);
 		toMaster.flush();
