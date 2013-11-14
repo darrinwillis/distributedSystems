@@ -28,7 +28,10 @@ public class Config {
 
     public static boolean checkConfigFile() {
         Properties prop = getProp();
-        return checkConfigFile(prop);
+	if (prop != null)
+	    return checkConfigFile(prop);
+	else
+	    return false;
     }
 
     public static boolean checkConfigFile(Properties prop)

@@ -34,6 +34,7 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
 	taskThreads = new LinkedList<TaskThread>();
 	taskTracker = new TaskTracker();
 	taskTracker.start();
+	isRunning = true;
 
         parseFile(configFileName);
         try{
@@ -125,14 +126,16 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
     {
         try{
             rmiRegistry = LocateRegistry.getRegistry(registryHost, registryPort);
+
             masterServer = (MasterFileServerInterface)
                 rmiRegistry.lookup(masterServerRegistryKey);
+
             //UnicastRemoteObject.exportObject(this, nodePort);
             masterServer.register(this, this.name);
-	    
+
 	    slave = new SlaveNode();
 	    stdin = new BufferedReader(new InputStreamReader(System.in));
-
+	    System.out.println("start list or quit");
 	    while(isRunning) {
 		String input = stdin.readLine();
 		String[] args = input.split(" ");
@@ -207,6 +210,7 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
     public static void main(String[] args) throws Exception
     {
         NodeServer server = new NodeServer();
+	System.out.println("Starting Server");
         server.start();
     }
 }

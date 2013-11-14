@@ -12,9 +12,9 @@ chmod +x scripts/*.sh
 echo "Running master script"
 ./scripts/masterScript.sh
 echo "Running node scripts"
-for each in ./scripts/nodeScript*.sh;
-do
-    echo "Starting node: ${each}"
-    bash $each
-done ;
+#for each in ./scripts/nodeScript*.sh;
+#do
+#    echo "Starting node: ${each}"
+#    bash $each
+#done ;
 echo "System is up"

@@ -36,7 +36,8 @@ CLASSES = \
 	Task.java \
 	ReduceTask.java \
 	MapTask.java \
-	SlaveNode.java 
+	SlaveNode.java \
+	WordCount.java 
 
 default: classes 
 		@echo "Project Built"
