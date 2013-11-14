@@ -31,9 +31,12 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     private int currentTid;
     public Queue<Job> jobs;
     public Queue<Task> tasks; 
+    private Queue<Node> nodeQueue;
     public ConcurrentMap<Job,Integer> jobMapsDone;
     public ConcurrentMap<Job,Integer> jobReducesDone;
-    public ConcurrentMap<Job,HashMap<String, List<String>>> jobKvs;       
+    public ConcurrentMap<Job,HashMap<String, List<String>>> jobKvs;
+    private Scheduler scheduler;
+    private boolean isRunning;
 
     public MasterServer() throws RemoteException
     {
@@ -43,6 +46,11 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
 	this.jobMapsDone = new ConcurrentHashMap<Job,Integer>();
 	this.jobReducesDone = new ConcurrentHashMap<Job,Integer>();
 	this.jobKvs = new ConcurrentHashMap<Job,HashMap<String, List<String>>>();
+	nodeQueue = new LinkedList<Node>(nodes.values());
+	this.isRunning = true;
+	scheduler = new Scheduler();
+	scheduler.start();
+
         parseFile(configFileName);
 	this.currentJid = 0;
     }
@@ -83,6 +91,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     
     public void newJob(Job j) {
 	try {
+	    System.out.println("Recieved Job " + j);
 	    int jid = currentJid++;
 	    j.setJid(jid);
 	    jobs.add(j);
@@ -96,6 +105,8 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
 		MapTask m = new MapTask(i,jid,f,j,"out" + i); 
 		tasks.add(m);
 	    }
+	    System.out.println("Finished Adding Map Tasks");
+	    System.out.println(tasks);
 	} catch(Exception e) {
 	    e.printStackTrace();
 	}
@@ -158,22 +169,28 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     }
 
     public class Scheduler extends Thread {
-	private Queue<Node> nodeQueue;
 
 	public Scheduler() {
-	    nodeQueue = new LinkedList<Node>(nodes.values());
+	    System.out.println("Scheduler started");
 	}
 
 	public void run() {
-	    try{
-		if(nodeQueue.element().server.isFull()) {
-		    nodeQueue.add(nodeQueue.remove());
-		} else {
-		    Node n = nodeQueue.remove();
-		    n.server.scheduleTask(tasks.remove()); //TODO: schedule based on node location
+	    while(isRunning) {
+		try{
+		    while(nodeQueue.size() > 0 && tasks.size() > 0) {
+			System.out.println("Running");
+			if(nodeQueue.element().server.isFull()) {
+			    nodeQueue.add(nodeQueue.remove());
+			} else {
+			    Node n = nodeQueue.remove();
+			    System.out.println("Starting task on node " + n);
+			    n.server.scheduleTask(tasks.remove()); //TODO: schedule based on node location
+			    System.out.println("Scheduled Task");
+			}
+		    }
+		} catch(Exception e) {
+		    e.printStackTrace();
 		}
-	    } catch(Exception e) {
-		e.printStackTrace();
 	    }
 	}
     }	
@@ -264,6 +281,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         }
         System.out.println("Registry port is: " + registryPort);
         System.out.println("masterServerRegistryKey is: " + masterServerRegistryKey);
+	
     }
 
     // This allows a user to stop the server
@@ -322,6 +340,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             System.out.println(address + " is now connected");
             foundNode.isConnected = true;
             foundNode.server = server;
+	    nodeQueue.add(foundNode);
         }
     }
    
