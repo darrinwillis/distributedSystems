@@ -12,6 +12,7 @@ final class Node
     boolean isConnected;
     InetAddress address;
     int cores;
+    ArrayList<FilePartition> files;
 }
 
 public class MasterServer extends UnicastRemoteObject implements MasterFileServerInterface
@@ -91,6 +92,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         newNode.address = newAddress;
         newNode.server = null;
         newNode.isConnected = false;
+        newNode.files = new ArrayList<FilePartition>();
         this.nodes.put(address, newNode);
     }
 
@@ -207,6 +209,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
                 e.printStackTrace();
             }
         }
+        System.out.println("downloaded " + filename + " from remote host");
         // Partition the files and send it to nodes
         partitionFile(newFile);
 
@@ -215,10 +218,50 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
 
     private void partitionFile(File originalFile)
     {
-
+        DistributedFile dfile = null;
+        try{
+            dfile = new DistributedFile(originalFile);
+            //Add nodes to all of the parts of dfile
+            dfile = allocateFile(dfile);
+            //Send relevant partitions to all nodes
+            commit(dfile);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return;
     }
 
+    private DistributedFile allocateFile(DistributedFile dfile)
+    {
+        ListIterator<FilePartition[]> iter = dfile.getBlocks().listIterator();
+        Enumeration<Node> nodeEnum = this.nodes.elements();
+        // TODO: THIS SHOULD BE DYNAMIC
+        Node singleNode = nodeEnum.nextElement();
+        while (iter.hasNext()) {
+            FilePartition[] block = iter.next();
+            // TODO: THIS SHOULD BE DYNAMIC
+            block[0].location = singleNode;
+        }
+        return dfile;
+    }
+
+    private void commit(DistributedFile dfile) throws IOException
+    {
+        ListIterator<FilePartition[]> iter = dfile.getBlocks().listIterator();
+        while (iter.hasNext()) {
+            FilePartition[] eachBlock = iter.next();
+            for (FilePartition eachPartition : eachBlock)
+            {
+                Node destination = eachPartition.location;
+                destination.files.add(eachPartition);
+                FileServerInterface server = destination.server;
+                File partitionFile = new File(eachPartition.getFileName());
+                FileIO.upload(server, partitionFile, partitionFile);
+            }
+        }
+    }
+
+    //Prints out a status report of the whole system
     public String monitorAll() throws RemoteException
     {
         String s = "###### STATUS REPORT ######\n";
@@ -228,6 +271,13 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             s = s.concat("\nReport for: " + each.name);
             s = s.concat(each.isConnected ? "\n\tConnected" : "\n\tNot Connected");
             s = s.concat("\n\tInetAddress: " + each.address);
+            s = s.concat("\n\tFiles are:\n");
+            ListIterator<FilePartition> iter = each.files.listIterator();
+            while (iter.hasNext()) {
+                FilePartition fp = iter.next();
+                s = s + "\n\t\t" + fp.getFileName() + " part " + fp.getIndex() 
+                    + " size: " + fp.getSize() + "\n";
+            }
         } while (enumerate.hasMoreElements());
         s = s.concat("\n\n######  END  REPORT  ######");
         return s;

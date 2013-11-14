@@ -13,30 +13,82 @@ public class DistributedFile {
 
     //Returns simple datastructure without making any files
     //Requires this file to exist
-    public DistributedFile(File file, String filename) throws IOException
+    public DistributedFile(File file) throws IOException
     {
-        long blockSize = Config.getBlockSize();
+        this.filename = file.getName();
+        this.blocks = new ArrayList<FilePartition[]>();
+        int blockSize = Config.getBlockSize();
         int replicationFactor = Config.getReplicationFactor();
         long fileLength = lineCount(file);
-        long numBlocks = fileLength / blockSize;
-        long remainderSize = fileLength % blockSize;
+        int numBlocks = (int)(fileLength / blockSize);
+        int remainderSize = (int)(fileLength % blockSize);
         if (remainderSize > 0)
             numBlocks++;
-        for (long i = 0; i < numBlocks; i+= blockSize)
+        File[] splitFiles = new File[numBlocks];
+        for (int i = 0; i < numBlocks; i+= blockSize)
         {
             FilePartition[] dups = new FilePartition[replicationFactor];
-            String blockName = filename + "p" + i + ".dist";
-            long thisSize = (i == numBlocks - 1) && (remainderSize > 0)
+            // Names the file so it is stored locally
+            String blockName = "/tmp/" + filename + "part" + i;
+            int thisSize = (i == numBlocks - 1) && (remainderSize > 0)
                 ? blockSize : remainderSize;
+            // Create a new local file to send to a node
+            File blockFile = new File(blockName);
+            splitFiles[i] = blockFile;
+            // Copy file parts into new file
+            splitFile(file, splitFiles, blockSize);
+
             for (int k = 0; k < replicationFactor; k++)
             {
                 dups[k].location = null;
-                dups[k].fileName = filename;
-                dups[k].index = (int)i;
-                dups[k].size = (int)thisSize;
+                dups[k].fileName = blockName;
+                dups[k].index = i;
+                dups[k].size = thisSize;
             }
+            this.blocks.add(dups);
+        }
+    }
+
+    private void splitFile(File source, File[] destinations, int size)
+    {
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new FileReader(source));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         }
 
+        try{
+            String line;
+            line = reader.readLine();
+            for (File eachFile : destinations)
+            {
+                PrintWriter writer = new PrintWriter(new FileWriter(eachFile));
+                for (int i = 0; (i < size) && (line != null); i++)
+                {
+                    writer.println(line);
+                    line = reader.readLine();
+                }
+                writer.flush();
+                writer.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try{
+                reader.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public ArrayList<FilePartition[]> getBlocks() {
+        return blocks;
+    }
+
+    public String getFileName() {
+        return filename;
     }
 
     //Credit to http://stackoverflow.com/questions/453018/number-of-lines-in-a-file-in-java

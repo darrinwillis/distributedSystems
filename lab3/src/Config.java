@@ -43,6 +43,7 @@ public class Config {
             prop.containsKey("REPLICATION_FACTOR") &&
             prop.containsKey("NODE_SCRIPT_FORMAT") &&
             prop.containsKey("MASTER_SCRIPT_FORMAT") &&
+            prop.containsKey("LOCAL_DIRECTORY") &&
             prop.containsKey("NODE0"));
     
     }
@@ -64,6 +65,7 @@ public class Config {
             prop.setProperty("MONITOR_SCRIPT_FORMAT", "ssh %s -f 'cd private/15440/distributedSystems/lab3/src/;\njava Monitor startMonitor&;exit 1;echo \"Exited\"'");
             prop.setProperty("FILE_PARTITION_SIZE", "1000");
             prop.setProperty("REPLICATION_FACTOR", "3");
+            prop.setProperty("LOCAL_DIRECTORY", "/tmp/distributedFiles/");
 
             //Save properties to config file
             prop.store(new FileOutputStream(configFileName), null);
@@ -76,12 +78,16 @@ public class Config {
         return prop;
     }
 
-    public static long getBlockSize() throws NumberFormatException {
-        return Long.parseLong(sharedProp.getProperty("FILE_PARTITION_SIZE"));
+    public static int getBlockSize() throws NumberFormatException {
+        return Integer.parseInt(sharedProp.getProperty("FILE_PARTITION_SIZE"));
     }
 
     public static int getReplicationFactor() throws NumberFormatException {
         return Integer.parseInt(sharedProp.getProperty("REPLICATION_FACTOR"));
+    }
+
+    public static String getLocalDirectory() {
+        return sharedProp.getProperty("LOCAL_DIRECTORY");
     }
 
     public static String getMasterAddress() {
