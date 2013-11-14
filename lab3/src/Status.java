@@ -1,3 +1,5 @@
-public enum Status {
-    DONE, RUNNING, FAILED, NONE;
+public class Status {
+    public enum TaskStatus {
+	DONE, RUNNING, FAILED, NONE;
+    }
 }

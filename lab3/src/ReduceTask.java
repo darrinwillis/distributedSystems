@@ -1,23 +1,21 @@
 import java.io.Serializable;
 import java.util.List;
+import java.util.*;
 
 public class ReduceTask implements Serializable, Task {        
     private int slaveId;
     private int tid;
     private int jid;
-    private List<String> inputFiles;
+    private SortedMap<String, List<String>> kvs; 
     private Job job;
-    private String outputFile;
-    private Status status;
+    private String outputFile;   
         
-    public ReduceTask(int taskId, int jobId, List<String> i, Job j,
-                      String o) {
+    public ReduceTask(int taskId, int jobId, SortedMap<String, List<String>> k, Job j, String o) {
         this.tid = taskId;
         this.jid = jobId;
-        this.inputFiles = i;
+        this.kvs = k;
         this.job = j;
         this.outputFile = o;
-        this.status = Status.NONE;
     }
         
     public int getTaskId() {
@@ -32,11 +30,11 @@ public class ReduceTask implements Serializable, Task {
     public void setJobId(int jid) {
         this.jid = jid;
     }
-    public List<String> getInputFiles() {
-        return inputFiles;
+    public SortedMap<String, List<String>> getKvs() {
+        return kvs;
     }
-    public void setInputFiles(List<String> inputFiles) {
-        this.inputFiles = inputFiles;
+    public void setKvs(SortedMap<String, List<String>> k) {
+        this.kvs = k;
     }
     public Job getJob() {
         return job;
@@ -49,20 +47,6 @@ public class ReduceTask implements Serializable, Task {
     }
     public void setOutputFile(String outputFile) {
         this.outputFile = outputFile;
-    }
-    public Status getStatus() {
-        return status;
-    }
-    public void setStatus(Status status) {
-        this.status = status;
-    }
-        
-    public int getSlaveId() {
-        return slaveId;
-    }
-
-    public void setSlaveId(int slaveId) {
-        this.slaveId = slaveId;
     }
 
 }

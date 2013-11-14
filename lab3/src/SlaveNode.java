@@ -93,7 +93,6 @@ public class SlaveNode {
         return kvs;
     }
 	
-
     public void doMap(MapTask t){
         System.out.println("Doing Map");
         synchronized(tasks) {
@@ -111,11 +110,10 @@ public class SlaveNode {
         String s;
         try {
             RandomAccessFile out = new RandomAccessFile(t.getOutputFile(),"rws");
-        
             for(String[] kv : outputs) {
-            s = kv[0] + "~" + kv[1] + "\n";
-            byte[] b = s.getBytes();
-            out.write(b);
+		s = kv[0] + "~" + kv[1] + "\n";
+		byte[] b = s.getBytes();
+		out.write(b);
             }
 
             out.close();
@@ -126,16 +124,10 @@ public class SlaveNode {
             tasks.remove(t);
         }
     }
-                
-    public void doReduce(ReduceTask t){
-        System.out.println("Doing Reduce");
-        synchronized(tasks) {
-            tasks.add(t);
-        }
-        
-        Job j = t.getJob();
-        List<String[]> inputs = parseReduceFiles(t.getInputFiles());
-        HashMap<String, List<String>> kvs = new HashMap<String, List<String>>();
+
+    public HashMap<String, List<String>> sort(String fileName) {
+	List<String[]> inputs = parseReduceFile(fileName);
+	HashMap<String, List<String>> kvs = new HashMap<String, List<String>>();
 
         List<String> vals;
         for (String[] kv : inputs) {
@@ -145,11 +137,18 @@ public class SlaveNode {
             vals.add(kv[1]);
             kvs.put(kv[0],vals);
         }
-
-        System.out.println(kvs);
-
+	return kvs;
+    }		    
+                
+    public void doReduce(ReduceTask t){
+        System.out.println("Doing Reduce");
+        synchronized(tasks) {
+            tasks.add(t);
+        }
+	Job j = t.getJob();
         List<String[]> outputs = new LinkedList<String[]>();
         
+	SortedMap<String, List<String>> kvs = t.getKvs();
         Iterator it = kvs.keySet().iterator();
         while (it.hasNext()) {
             String key = (String)it.next();
