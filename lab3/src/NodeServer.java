@@ -49,6 +49,7 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
     }
 
     public void scheduleTask(Task task) throws RemoteException{
+	System.out.println("Recieved Task " + task);
 	TaskThread t = new TaskThread(task);
 	t.start();
 	taskThreads.add(t);
