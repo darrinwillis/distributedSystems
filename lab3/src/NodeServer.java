@@ -128,7 +128,8 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
     {
         boolean foundMaster = false;
         int attemptedConnections = 0;
-        while ((foundMaster == false) && (attemptedConnections < 10)) {
+        int max = Config.getMaxAttempts();
+        while ((foundMaster == false) && (attemptedConnections < max)) {
             try{
                 rmiRegistry = LocateRegistry.getRegistry(registryHost, registryPort);
 
@@ -260,8 +261,12 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
     
     public static void main(String[] args) throws Exception
     {
-        NodeServer server = new NodeServer();
         System.out.println("Starting Server");
-        server.start();
+        if (Config.checkConfigFile()) {
+            NodeServer server = new NodeServer();
+            server.start();
+        }
+        else
+            System.out.println("invalid config file");
     }
 }

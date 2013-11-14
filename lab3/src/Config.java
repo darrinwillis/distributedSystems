@@ -42,6 +42,7 @@ public class Config {
             prop.containsKey("MASTER_SERVER_REGISTRY_KEY") &&
             prop.containsKey("BUF_SIZE") &&
             prop.containsKey("NODE_PORT") &&
+            prop.containsKey("CONNECTION_ATTEMPTS") &&
             prop.containsKey("FILE_PARTITION_SIZE") &&
             prop.containsKey("REPLICATION_FACTOR") &&
             prop.containsKey("NODE_SCRIPT_FORMAT") &&
@@ -69,6 +70,7 @@ public class Config {
             prop.setProperty("FILE_PARTITION_SIZE", "1000");
             prop.setProperty("REPLICATION_FACTOR", "3");
             prop.setProperty("LOCAL_DIRECTORY", "/tmp/distributedFiles/");
+            prop.setProperty("CONNECTION_ATTEMPTS", "20");
 
             //Save properties to config file
             prop.store(new FileOutputStream(configFileName), null);
@@ -79,6 +81,10 @@ public class Config {
             e.printStackTrace();
         }
         return prop;
+    }
+
+    public static int getMaxAttempts() throws NumberFormatException {
+        return Integer.parseInt(sharedProp.getProperty("CONNECTION_ATTEMPTS"));
     }
 
     public static int getBlockSize() throws NumberFormatException {
