@@ -31,4 +31,12 @@ public class FilePartition implements Serializable {
     public String getFileName() {
         return fileName;
     }
+
+    public Node getLocation() {
+        return location;
+    }
+
+    public void setLocation(Node loc) {
+        this.location = loc;
+    }
 }

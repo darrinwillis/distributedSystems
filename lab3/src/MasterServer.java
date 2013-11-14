@@ -366,9 +366,10 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
                 e.printStackTrace();
             }
         }
-        System.out.println("downloaded " + filename + " from remote host");
+        System.out.println("Downloaded " + filename + " from remote host");
         // Partition the files and send it to nodes
-        partitionFile(newFile);
+        this.partitionFile(newFile);
+        System.out.println("file added");
 
         return;
     }
@@ -376,14 +377,18 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     private void partitionFile(File originalFile)
     {
         DistributedFile dfile = null;
+        System.out.println("Distributifying file");
         try{
             dfile = new DistributedFile(originalFile);
+            System.out.println("File is chunked");
+            System.out.println("blocks: " + dfile.getBlocks());
             //Add nodes to all of the parts of dfile
             dfile = allocateFile(dfile);
             //Send relevant partitions to all nodes
             commit(dfile);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Error");
+            e.printStackTrace(System.out);
         }
         return;
     }
@@ -397,7 +402,9 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         while (iter.hasNext()) {
             FilePartition[] block = iter.next();
             // TODO: THIS SHOULD BE DYNAMIC
-            block[0].location = singleNode;
+            System.out.println("File" + block[0].getFileName() + " location set");
+            block[0].setLocation(singleNode);
+            System.out.println("Location now" + block[0].getLocation());
         }
         return dfile;
     }
@@ -409,7 +416,12 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             FilePartition[] eachBlock = iter.next();
             for (FilePartition eachPartition : eachBlock)
             {
-                Node destination = eachPartition.location;
+                Node destination = eachPartition.getLocation();
+                if (destination == null) {
+                    System.out.println("File " + eachPartition.getFileName() + 
+                        " has null location");
+                    continue;
+                }
                 destination.files.add(eachPartition);
                 FileServerInterface server = destination.server;
                 File partitionFile = new File(eachPartition.getFileName());

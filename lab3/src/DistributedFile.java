@@ -24,6 +24,8 @@ public class DistributedFile {
         int remainderSize = (int)(fileLength % blockSize);
         if (remainderSize > 0)
             numBlocks++;
+        System.out.println("Length is "+fileLength+" blocksize is "+blockSize
+            +" numBlocks is "+numBlocks+" remainderSize is "+remainderSize);
         File[] splitFiles = new File[numBlocks];
         for (int i = 0; i < numBlocks; i+= blockSize)
         {
@@ -36,17 +38,14 @@ public class DistributedFile {
             File blockFile = new File(blockName);
             splitFiles[i] = blockFile;
             // Copy file parts into new file
-            splitFile(file, splitFiles, blockSize);
 
             for (int k = 0; k < replicationFactor; k++)
             {
-                dups[k].location = null;
-                dups[k].fileName = blockName;
-                dups[k].index = i;
-                dups[k].size = thisSize;
+                dups[k] = new FilePartition(blockName, i, thisSize);
             }
             this.blocks.add(dups);
         }
+        splitFile(file, splitFiles, blockSize);
     }
 
     private void splitFile(File source, File[] destinations, int size)
@@ -63,14 +62,20 @@ public class DistributedFile {
             line = reader.readLine();
             for (File eachFile : destinations)
             {
-                PrintWriter writer = new PrintWriter(new FileWriter(eachFile));
-                for (int i = 0; (i < size) && (line != null); i++)
-                {
-                    writer.println(line);
-                    line = reader.readLine();
+                if (eachFile != null) {
+                    System.out.println("writing to file: " + eachFile);
+                    eachFile.getParentFile().mkdirs();
+                    PrintWriter writer = new PrintWriter(new FileWriter(eachFile));
+                    for (int i = 0; (i < size) && (line != null); i++)
+                    {
+                        writer.println(line);
+                        line = reader.readLine();
+                    }
+                    writer.flush();
+                    writer.close();
+                } else {
+                    System.out.println("file null");
                 }
-                writer.flush();
-                writer.close();
             }
         } catch (IOException e) {
             e.printStackTrace();

@@ -166,9 +166,23 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
                 }
                 else if (input.equals("quit")) {
                     stop();
+                } else if (args[0].equals("add")) {
+                    System.out.println("add recognized");
+                    if (args.length < 2) {
+                        System.out.println("Format: add (filename)");
+                        continue;
+                    }
+                    String filename = args[1];
+                    File testFile = new File(filename);
+                    if (!testFile.exists())
+                    {
+                        System.out.println("File " + filename + " cannot be found.");
+                    } else {
+                        addNewFile(filename);
+                    }
+
                 }
             }
-            
         } catch (Exception e)
         {
             e.printStackTrace();
@@ -193,12 +207,24 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
       
     }
    
-    public void addNewFile(String filename) throws RemoteException
+    private void addNewFile(String filename) throws RemoteException
     {
+        if (this.masterServer != null)
+        {
+            try {
+                System.out.println("Adding file " + filename + " to master...");
+                masterServer.addNewFile(filename, this);
+                System.out.println("File added to master");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         //Distribute the file among nodes
         System.out.println("adding file " + filename);
+
         return;
     }
+
     public OutputStream getOutputStream(File f) throws IOException {
         return new RMIOutputStream(new RMIOutputStreamImpl(new 
                                         FileOutputStream(f)));
