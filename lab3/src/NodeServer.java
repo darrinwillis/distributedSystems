@@ -64,7 +64,7 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
                         t = taskThreads.get(i);
                         t.join(10);
                         if(!t.isAlive()) {
-                            taskThreads.remove(t.task);
+                            taskThreads.remove(t);
                             if (t.task instanceof MapTask) {
                                 partialKvs = slave.sort(t.task.getOutputFile());
                                 masterServer.finishedMap(t.task,partialKvs);

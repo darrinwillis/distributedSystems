@@ -8,6 +8,11 @@ public abstract class Job implements Serializable {
     private String outputFileName;
     private List<String> inputFileNames;
 
+    public Job() {
+	totalMaps = 1;
+	totalReduces = 2;
+    }
+
     public void setInput(List<String> inputFiles){
 	inputFileNames = inputFiles;
     }

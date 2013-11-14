@@ -4,6 +4,10 @@ import java.util.List;
 
 
 public class WordCount extends Job {
+    
+    public WordCount() {
+	super();
+    }
 
     public String getIdentity() {
 	return "0";
