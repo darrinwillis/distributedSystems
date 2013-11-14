@@ -29,6 +29,7 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
 
     public NodeServer() throws RemoteException
     {
+        System.setProperty("sun.rmi.transport.tcp.responseTimeout", "5000");
         mapSlots = 10;
         reduceSlots = 5;
         taskThreads = new LinkedList<TaskThread>();
@@ -125,15 +126,40 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
     // This allows the server to be reached by any nodes or users
     public void start() throws RemoteException
     {
+        boolean foundMaster = false;
+        int attemptedConnections = 0;
+        while ((foundMaster == false) && (attemptedConnections < 10)) {
+            try{
+                rmiRegistry = LocateRegistry.getRegistry(registryHost, registryPort);
+
+                masterServer = (MasterFileServerInterface)
+                    rmiRegistry.lookup(masterServerRegistryKey);
+
+                //UnicastRemoteObject.exportObject(this, nodePort);
+                masterServer.register(this, this.name);
+                foundMaster = true;
+            } catch (RemoteException|NotBoundException e)
+            {
+                System.out.println("Encountered an issue setting up... try " 
+                    + attemptedConnections);
+                try{
+                    Thread.sleep(1000);
+                } catch (InterruptedException i)
+                {
+                    e.printStackTrace();
+                }
+                attemptedConnections++;
+            } 
+        }
+        if (foundMaster)
+            runTerminal();
+        else
+            stop();
+    }
+
+    private void runTerminal()
+    {
         try{
-            rmiRegistry = LocateRegistry.getRegistry(registryHost, registryPort);
-
-            masterServer = (MasterFileServerInterface)
-                rmiRegistry.lookup(masterServerRegistryKey);
-
-            //UnicastRemoteObject.exportObject(this, nodePort);
-            masterServer.register(this, this.name);
-
             slave = new SlaveNode();
             stdin = new BufferedReader(new InputStreamReader(System.in));
             System.out.println("start list or quit");
@@ -183,10 +209,9 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
 
                 }
             }
-        } catch (Exception e)
-        {
-            e.printStackTrace();
-        }       
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
     }
 
     // This allows a user to stop the server
@@ -195,10 +220,9 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
         //This should probably do other things before ending
         //the registry
         try{
-            System.out.println("all items are" + Arrays.toString(rmiRegistry.list()));
+            isRunning = false;
             unexportObject(this, true);
             System.out.println("Node stopped");
-            isRunning = false; 
         } catch (Exception e)
         {
             e.printStackTrace();
