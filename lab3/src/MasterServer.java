@@ -186,6 +186,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
                     e.printStackTrace();
                 }
             }
+            System.out.println("Scheduler Stopped");
         }
     }   
         
@@ -302,6 +303,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             System.out.println("Hit exception");
             e.printStackTrace();
         }
+        System.exit(0);
     }
   
     private void stopNodes() throws RemoteException
@@ -428,8 +430,10 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
                 FileServerInterface server = destination.server;
                 File partitionFile = new File(eachPartition.getFileName());
                 FileIO.upload(server, partitionFile, partitionFile);
+                System.out.println("Commited partition");
             }
         }
+        System.out.println("File Commited");
     }
 
     //Prints out a status report of the whole system

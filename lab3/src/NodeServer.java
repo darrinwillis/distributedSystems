@@ -21,7 +21,6 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
     private MasterFileServerInterface masterServer;
     private boolean isRunning;
     private SlaveNode slave;
-    private BufferedReader stdin;
     private int mapSlots; // map + reduce + 1 = cores
     private int reduceSlots; 
     private TaskTracker taskTracker; // admin thread
@@ -166,68 +165,10 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
                     attemptedConnections++;
                 } 
         }
-        if (foundMaster)
-            runTerminal();
-        else
+        if (!foundMaster)
             stop();
     }
 
-    private void runTerminal()
-    {
-        try{
-            slave = new SlaveNode();
-            stdin = new BufferedReader(new InputStreamReader(System.in));
-            System.out.println("start list or quit");
-            while(isRunning) {
-                String input = stdin.readLine();
-                String[] args = input.split(" ");
-                
-                if (args[0].equals("start")) {
-                    if (args.length < 4) {
-                        System.out.println("Format: start (jobclass) (outputfile) (inputfiles)");
-                        continue;
-                    }
-                    //Starting a new job
-                    String jobName = args[1];
-                    Job j = (Job) Class.forName(jobName).newInstance();
-
-                    j.setOutput(args[2]);
-                    List<String> inputFiles = new ArrayList<String>();
-                                        
-                    for (int i = 3; i < args.length; i++) {
-                        inputFiles.add(args[i]);
-                    }
-
-                    j.setInput(inputFiles);
-                                        
-                    masterServer.newJob(j);
-                    System.out.println(jobName + " added");
-                } else if (input.equals("list")) {
-                    System.out.println(slave.tasks);
-                }
-                else if (input.equals("quit")) {
-                    stop();
-                } else if (args[0].equals("add")) {
-                    System.out.println("add recognized");
-                    if (args.length < 2) {
-                        System.out.println("Format: add (filename)");
-                        continue;
-                    }
-                    String filename = args[1];
-                    File testFile = new File(filename);
-                    if (!testFile.exists())
-                        {
-                            System.out.println("File " + filename + " cannot be found.");
-                        } else {
-                        addNewFile(filename);
-                    }
-
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     // This allows a user to stop the server
     public void stop() throws RemoteException
@@ -238,11 +179,14 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
             isRunning = false;
             unexportObject(this, true);
             System.out.println("Node stopped");
-        } catch (Exception e)
-            {
-                e.printStackTrace();
-            }
-
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try{
+            Thread.sleep(5);
+        } catch (InterruptedException e) {
+        }
+        System.exit(0);
       
     }
    

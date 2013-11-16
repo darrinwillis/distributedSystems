@@ -61,8 +61,10 @@ public class Monitor {
                     thread.run();
                     break;
                 }
-                case "stopMonitor":
+                case "startTerminal":
                 {
+                    runTerminal();
+                    break;
                 }
                 case "info":
                 {
@@ -75,6 +77,78 @@ public class Monitor {
         return;
     }
     
+    private static void runTerminal()
+    {
+        BufferedReader stdin = null;
+        try{
+            MasterFileServerInterface masterServer = getMaster();
+            stdin = new BufferedReader(new InputStreamReader(System.in));
+            System.out.println("start, add, monitor, or quit");
+            boolean isRunning = true;
+            while(isRunning) {
+                String input = stdin.readLine();
+                String[] args = input.split(" ");
+                
+                if (args[0].equals("start")) {
+                    if (args.length < 4) {
+                        System.out.println("Format: start (jobclass) (outputfile) (inputfiles)");
+                        continue;
+                    }
+                    //Starting a new job
+                    String jobName = args[1];
+                    Job j = (Job) Class.forName(jobName).newInstance();
+
+                    j.setOutput(args[2]);
+                    List<String> inputFiles = new ArrayList<String>();
+                                        
+                    for (int i = 3; i < args.length; i++) {
+                        inputFiles.add(args[i]);
+                    }
+
+                    j.setInput(inputFiles);
+                                        
+                    masterServer.newJob(j);
+                    System.out.println(jobName + " added");
+                } else if (input.equals("quit") || input.equals("exit")) {
+                    isRunning = false;
+                } else if (input.equals("monitor")) {
+                    System.out.println(monitor());
+                } else if (args[0].equals("add")) {
+                    System.out.println("add recognized");
+                    if (args.length < 2) {
+                        System.out.println("Format: add (filename)");
+                        continue;
+                    }
+                    String filename = args[1];
+                    File testFile = new File(filename);
+                    if (!testFile.exists())
+                    {
+                        System.out.println("File " + filename + " cannot be found.");
+                    } else {
+                        addNewFile(filename);
+                    }
+
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void addNewFile(String filename)
+    {
+        MasterFileServerInterface master = getMaster();
+        try {
+            File f = new File(filename);
+            FileIO.upload(master, f, f);
+            // host is null, because it is now local to master
+            master.addNewFile(filename, null);
+            System.out.println("File added to master");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private static MasterFileServerInterface getMaster()
     {
         String registryHost = null;
@@ -107,8 +181,7 @@ public class Monitor {
         try {
             if (master != null)
                 master.stop();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (RemoteException e) {
         }
     }
 
