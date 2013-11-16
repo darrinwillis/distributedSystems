@@ -209,6 +209,7 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
     }
 
     public OutputStream getOutputStream(File f) throws IOException {
+        f.getParentFile().mkdirs();
         return new RMIOutputStream(new RMIOutputStreamImpl(new 
                                                            FileOutputStream(f)));
     }
