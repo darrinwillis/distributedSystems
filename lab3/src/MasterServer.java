@@ -400,6 +400,9 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     private DistributedFile allocateFile(DistributedFile dfile)
     {
         ListIterator<FilePartition[]> iter = dfile.getBlocks().listIterator();
+        // Maps between nodes and size of replicas added to this
+        // Node on this Distributed File
+        Map<Node, Integer> tempSize = new HashMap<Node, Integer>();
         // TODO: THIS SHOULD BE DYNAMIC
         while (iter.hasNext()) {
             FilePartition[] block = iter.next();
@@ -416,9 +419,13 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
                 while (nodeEnum.hasMoreElements())
                 {
                     Node eachNode = nodeEnum.nextElement();
+                    // Determines viable nodes for this replica
                     if (eachNode.isConnected && (!placedNodes.contains(eachNode)))
                     {
-                        int thisSize = eachNode.files.size();
+                        System.out.println("Tempsize is " + tempSize);
+                        Integer tempNodeSize = tempSize.get(eachNode);
+                        int thisSize = eachNode.files.size() + 
+                            ((tempNodeSize == null) ? 0 : tempNodeSize);
                         if (thisSize < optSize) {
                             //This is the new optimal node
                             optSize = thisSize;
@@ -431,6 +438,11 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
                 if (optimalNode != null)
                     placedNodes.add(optimalNode);
                 block[0].setLocation(optimalNode);
+                // Update the TempSize for the chosen node
+                Integer oldsize = tempSize.get(optimalNode);
+                Integer newsize = ((oldsize == null) ? 0 : oldsize)
+                    + block[0].getSize();
+                tempSize.put(optimalNode, newsize);
                 System.out.println("Location now" + block[0].getLocation());
             }
         }
