@@ -13,7 +13,7 @@ public interface MasterFileServerInterface extends FileServerInterface
     void stop() throws RemoteException;
 
     void newJob(Job j) throws RemoteException;
-    void finishedMap(Task t, HashMap<String, List<String>> partialKvs) throws RemoteException;
+    void finishedMap(Task t, String name) throws RemoteException;
     void finishedReduce(Task t) throws RemoteException;
     String monitorAll() throws RemoteException;
 }

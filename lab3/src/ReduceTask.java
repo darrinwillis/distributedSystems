@@ -3,17 +3,18 @@ import java.util.List;
 import java.util.*;
 
 public class ReduceTask implements Serializable, Task {        
-    private int slaveId;
+    private int nid;
     private int tid;
     private int jid;
-    private SortedMap<String, List<String>> kvs; 
+    private List<String> inputFiles; 
+    private List<FileServerInterface> nodeList;
     private Job job;
     private String outputFile;   
         
-    public ReduceTask(int taskId, int jobId, SortedMap<String, List<String>> k, Job j, String o) {
+    public ReduceTask(int taskId, int jobId, List<String> in, Job j, String o) {
         this.tid = taskId;
         this.jid = jobId;
-        this.kvs = k;
+        this.inputFiles = in;
         this.job = j;
         this.outputFile = o;
     }
@@ -30,11 +31,23 @@ public class ReduceTask implements Serializable, Task {
     public void setJobId(int jid) {
         this.jid = jid;
     }
-    public SortedMap<String, List<String>> getKvs() {
-        return kvs;
+    public int getNodeId() {
+        return nid;
     }
-    public void setKvs(SortedMap<String, List<String>> k) {
-        this.kvs = k;
+    public void setNodeId(int nid) {
+        this.nid = nid;
+    }
+    public List<FileServerInterface> getNodeList() {
+        return nodeList;
+    }
+    public void setNodeList(List<FileServerInterface> nl) {
+        this.nodeList = nl;
+    }
+    public List<String> getInputFiles() {
+        return inputFiles;
+    }
+    public void setInputFiles(List<String> in) {
+        this.inputFiles = in;
     }
     public Job getJob() {
         return job;

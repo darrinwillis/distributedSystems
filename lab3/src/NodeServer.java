@@ -29,19 +29,18 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
 
     public NodeServer() throws RemoteException
     {
-        System.setProperty("sun.rmi.transport.tcp.responseTimeout", "5000");
-        mapSlots = 10;
-        reduceSlots = 5;
-        taskThreads = new LinkedList<TaskThread>();
-        taskTracker = new TaskTracker();
-        taskTracker.start();
-        isRunning = true;
-
-        parseFile(configFileName);
         try{
+            System.setProperty("sun.rmi.transport.tcp.responseTimeout", "5000");
+            mapSlots = 10;
+            reduceSlots = 5;
+            taskThreads = new LinkedList<TaskThread>();
+            taskTracker = new TaskTracker();
+            taskTracker.start();
+            isRunning = true;
+
+            parseFile(configFileName);
             name = InetAddress.getLocalHost().getHostName();
-        } catch (Exception e)
-        {
+        } catch (Exception e){
             e.printStackTrace();
         }
     }
@@ -67,8 +66,7 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
                         if(!t.isAlive()) {
                             taskThreads.remove(t);
                             if (t.task instanceof MapTask) {
-                                partialKvs = slave.sort(t.task.getOutputFile());
-                                masterServer.finishedMap(t.task,partialKvs);
+                                masterServer.finishedMap(t.task,name);
                             } else { //reducetask
                                 masterServer.finishedReduce(t.task);
                             }
@@ -91,8 +89,24 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
         public void run() {
             if(task instanceof MapTask) 
                 slave.doMap((MapTask)task);
-            else
-                slave.doReduce((ReduceTask)task);
+            else {//TODO: Get files from nodes
+                ReduceTask r = (ReduceTask) task;
+                List<FileServerInterface> nodeList = r.getNodeList(); 
+                List<String> inputFiles = new LinkedList<String>(); 
+                String name = r.getJob().getJid() + "reduce" + r.getNodeId();
+                int counter = 0;
+                try {
+                    for(FileServerInterface node : nodeList) {
+                        FileIO.download(node,new File(name),new File(name + "_" + counter));
+                        inputFiles.add(name + "_" + counter); 
+                        counter++;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                r.setInputFiles(inputFiles);
+                slave.doReduce(r);
+            }
         }
     }
             
@@ -105,10 +119,10 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
 
         //Check and assure file is formatted correctly
         if (! Config.checkConfigFile())
-        {
-            System.out.println("Invalid file config");
-            return;
-        }
+            {
+                System.out.println("Invalid file config");
+                return;
+            }
 
         try{
             //Load in all config properties
@@ -140,17 +154,17 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
                 masterServer.register(this, this.name);
                 foundMaster = true;
             } catch (RemoteException|NotBoundException e)
-            {
-                System.out.println("Encountered an issue setting up... try " 
-                    + attemptedConnections);
-                try{
-                    Thread.sleep(1000);
-                } catch (InterruptedException i)
                 {
-                    e.printStackTrace();
-                }
-                attemptedConnections++;
-            } 
+                    System.out.println("Encountered an issue setting up... try " 
+                                       + attemptedConnections);
+                    try{
+                        Thread.sleep(1000);
+                    } catch (InterruptedException i)
+                        {
+                            e.printStackTrace();
+                        }
+                    attemptedConnections++;
+                } 
         }
         if (foundMaster)
             runTerminal();
@@ -202,17 +216,17 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
                     String filename = args[1];
                     File testFile = new File(filename);
                     if (!testFile.exists())
-                    {
-                        System.out.println("File " + filename + " cannot be found.");
-                    } else {
+                        {
+                            System.out.println("File " + filename + " cannot be found.");
+                        } else {
                         addNewFile(filename);
                     }
 
                 }
             }
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     // This allows a user to stop the server
@@ -225,9 +239,9 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
             unexportObject(this, true);
             System.out.println("Node stopped");
         } catch (Exception e)
-        {
-            e.printStackTrace();
-        }
+            {
+                e.printStackTrace();
+            }
 
       
     }
@@ -235,15 +249,15 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
     private void addNewFile(String filename) throws RemoteException
     {
         if (this.masterServer != null)
-        {
-            try {
-                System.out.println("Adding file " + filename + " to master...");
-                masterServer.addNewFile(filename, this);
-                System.out.println("File added to master");
-            } catch (Exception e) {
-                e.printStackTrace();
+            {
+                try {
+                    System.out.println("Adding file " + filename + " to master...");
+                    masterServer.addNewFile(filename, this);
+                    System.out.println("File added to master");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
-        }
         //Distribute the file among nodes
         System.out.println("adding file " + filename);
 
@@ -252,11 +266,11 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
 
     public OutputStream getOutputStream(File f) throws IOException {
         return new RMIOutputStream(new RMIOutputStreamImpl(new 
-                                        FileOutputStream(f)));
+                                                           FileOutputStream(f)));
     }
     public InputStream getInputStream(File f) throws IOException {
         return new RMIInputStream(new RMIInputStreamImpl(new 
-                                        FileInputStream(f)));
+                                                         FileInputStream(f)));
     }
     
     public static void main(String[] args) throws Exception

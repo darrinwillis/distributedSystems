@@ -28,14 +28,16 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
 
     //Instance variables
     private volatile Hashtable<String, Node> nodes;
+    private volatile Hashtable<Integer, Node> nodeMap;
     private int currentJid;
     private int currentTid;
+    private int currentNodeId;
     public Queue<Job> jobs;
-    public Queue<Task> tasks; 
+    public Queue<Object[]> tasks; 
     private Queue<Node> nodeQueue;
-    public ConcurrentMap<Integer,Integer> jobMapsDone;
+    public ConcurrentMap<Integer,Integer> jobMapsDone; //jid, maps done
     public ConcurrentMap<Integer,Integer> jobReducesDone;
-    public ConcurrentMap<Integer,HashMap<String, List<String>>> jobKvs;
+    public HashMap<Integer,List<FileServerInterface>> jobNodeList; 
     private Scheduler scheduler;
     private boolean isRunning;
 
@@ -43,11 +45,13 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     {
         System.setProperty("sun.rmi.transport.tcp.responseTimeout", "5000");
         this.nodes = new Hashtable<String, Node>();
+        this.nodeMap = new Hashtable<Integer, Node>();
         this.jobs = new LinkedList<Job>();
-        this.tasks = new LinkedList<Task>();
+        this.tasks = new LinkedList<Object[]>();
         this.jobMapsDone = new ConcurrentHashMap<Integer,Integer>();
         this.jobReducesDone = new ConcurrentHashMap<Integer,Integer>();
-        this.jobKvs = new ConcurrentHashMap<Integer,HashMap<String, List<String>>>();
+        this.jobNodeList = new HashMap<Integer,List<FileServerInterface>>();
+
         nodeQueue = new LinkedList<Node>(nodes.values());
         this.isRunning = true;
         scheduler = new Scheduler();
@@ -55,160 +59,137 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
 
         parseFile(configFileName);
         this.currentJid = 0;
-    }
-
-    public void putAll(HashMap<String, List<String>> partial, Job j) {
-	HashMap<String, List<String>> kvs = jobKvs.get(j.getJid());
-	if(kvs == null)
-	    kvs = new HashMap<String, List<String>>();
-	Iterator it = partial.keySet().iterator();
-        while (it.hasNext()) {
-            String key = (String)it.next();
-            List<String> value = kvs.get(key);
-	    if (value == null) 
-		value = new LinkedList<String>();
-	    value.addAll(partial.get(key));
-            kvs.put(key,value);
-            it.remove(); 
-	}
-	jobKvs.put(j.getJid(),kvs);
-    }
-
-    public int count(String filename) throws IOException {
-	InputStream is = new BufferedInputStream(new FileInputStream(filename));
-	try {
-	    byte[] c = new byte[1024];
-	    int count = 0;
-	    int readChars = 0;
-	    boolean empty = true;
-	    while ((readChars = is.read(c)) != -1) {
-		empty = false;
-		for (int i = 0; i < readChars; ++i) {
-		    if (c[i] == '\n') {
-			++count;
-		    }
-		}
-	    }
-	    return (count == 0 && !empty) ? 1 : count;
-	} finally {
-	    is.close();
-	} 
+        this.currentNodeId = 0;
     }
     
+    public List<Object[]> locateFile(String fileName) {
+        List<Object[]> nodeFiles = new LinkedList<Object[]>();
+        for(Node node : nodeQueue) {
+            for(FilePartition f : node.files) {
+                if (f.getFileName().equals(fileName))
+                    nodeFiles.add(new Object[]{node,f});
+            }
+        }
+        return nodeFiles;
+    }
+
     public void newJob(Job j) {
-	try {
-	    System.out.println("Recieved Job " + j);
-	    int jid = currentJid++;
-	    j.setJid(jid);
-	    jobs.add(j);
-	    jobMapsDone.put(jid,0); 
-	    jobReducesDone.put(jid,0);
-	    jobKvs.put(jid,new HashMap<String,List<String>>());
-	    List<String> inputs = j.getInput();
-	    for(int i = 0; i < j.getTotalMaps(); i++) { //TODO: variable mapTasks
-		String name = inputs.get(i);
-		FilePartition f = new FilePartition(name,0,count(name));
-		MapTask m = new MapTask(i,jid,f,j,"out" + i); 
-		tasks.add(m);
-	    }
-	    System.out.println("Finished Adding Map Tasks");
-	    System.out.println(tasks);
-	} catch(Exception e) {
-	    e.printStackTrace();
-	}
+        try {
+            System.out.println("Recieved Job " + j);
+            int jid = currentJid++;
+            j.setJid(jid);
+            jobs.add(j);
+            jobMapsDone.put(jid,0); 
+            jobReducesDone.put(jid,0);
+            jobNodeList.put(jid,new LinkedList<FileServerInterface>());
+            List<String> inputs = j.getInput();
+            for(int i = 0; i < inputs.size(); i++) { //TODO: variable mapTasks
+                String name = inputs.get(i);
+                List<Object[]> nodeList = locateFile(name);
+                for(Object[] node_file : nodeList ) {
+                    FilePartition f = (FilePartition)node_file[1]; 
+                    Node node = (Node)node_file[0];
+                    MapTask m = new MapTask(i,jid,f,j,jid + "out" + i); 
+                    tasks.add(new Object[]{node,m}); //TODO: change Scheduler
+                }
+            }
+            System.out.println("Finished Adding Map Tasks");
+            System.out.println(tasks);
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void scheduleReducers(Job j) {
-	TreeMap<String, List<String>> sorted = new TreeMap<String, List<String>>(jobKvs.get(j.getJid()));
-	int i;
-	Task r;
-	int tid = 0;
-	int partitionSize = sorted.size() / j.getTotalReduces(); //TODO: better splitting of reduce tasks
-	Object[] objs = sorted.keySet().toArray();
-	String[] keys = Arrays.copyOf(objs,objs.length,String[].class);
-	for(i = 0; i < j.getTotalReduces() - 1; i = i + partitionSize) {
-	    r = new ReduceTask(tid,j.getJid(),sorted.subMap(keys[i],keys[i+partitionSize]),j,j.getJid() + "part" + tid); 
-	    tasks.add(r);
-	    tid++;
-	}
-	r = new ReduceTask(tid,j.getJid(),sorted.subMap(keys[i],keys[keys.length - 1]),j,j.getJid() + "part" + tid); 
-	tasks.add(r);
+        ReduceTask r;
+        int tid = 0;
+        
+        for(int i = 0; i < j.getTotalReduces(); i++) {
+            r = new ReduceTask(tid++,j.getJid(),null,j,j.getJid() + "part" + tid); 
+            r.setNodeList(jobNodeList.get(j)); 
+            r.setNodeId(i);
+            tasks.add(new Object[]{null,r});
+        }
     }
 
     public void scheduleFinalReduce(Job j) {
-	FileInputStream in;
-	RandomAccessFile out;
-	String line;
-	byte[] b;
-	File f;
-	try{
-	    out = new RandomAccessFile(j.getOutput(),"rws");
-	    for(int i = 0; i < 2; i++) {
-		f = new File(j.getJid() + "part" + i);
-		in = new FileInputStream(f);
-	        b = new byte[(int)f.length()];
-		in.read(b);
-		out.write(b);
-		in.close();
-	    }
-	    out.close();
-	} catch (Exception e) {
-	    e.printStackTrace();
-	}
+        FileInputStream in;
+        RandomAccessFile out;
+        String line;
+        byte[] b;
+        File f;
+        try{
+            out = new RandomAccessFile(j.getOutput(),"rws");
+            for(int i = 0; i < j.getTotalReduces(); i++) {
+                f = new File(j.getJid() + "part" + i);
+                in = new FileInputStream(f);
+                b = new byte[(int)f.length()];
+                in.read(b);
+                out.write(b);
+                in.close();
+            }
+            out.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
-		
-    public void finishedMap(Task t, HashMap<String, List<String>> partialKvs) throws RemoteException{
-	Job j = t.getJob();
-	putAll(partialKvs,j);
-	System.out.println(jobMapsDone);
-	System.out.println(j);
-	int maps = jobMapsDone.get(j.getJid()) + 1;
-	jobMapsDone.put(j.getJid(),maps); 
-	if (maps >= j.getTotalMaps()) {
-	    scheduleReducers(j); //TODO: start reducing as maps finish
-	    //jobMapsDone.remove(j.getJid());
-	}
+                
+    public void finishedMap(Task t,String name) throws RemoteException{
+        Job j = t.getJob();
+        System.out.println(jobMapsDone);
+        System.out.println(j);
+        int maps = jobMapsDone.get(j.getJid()) + 1;
+        jobMapsDone.put(j.getJid(),maps); 
+        jobNodeList.get(j.getJid()).add(nodes.get(name).server); 
+        if (maps >= j.getTotalMaps()) {
+            scheduleReducers(j); //TODO: start reducing as maps finish
+            //jobMapsDone.remove(j.getJid());
+        }
     }
     public void finishedReduce(Task t) throws RemoteException{
-	Job j = t.getJob();
-	int reduces = jobReducesDone.get(j.getJid()) + 1;
-	jobReducesDone.put(j.getJid(),reduces);
-	if(reduces >= j.getTotalReduces()){
-	    scheduleFinalReduce(j);
-	    //jobReducesDone.remove(j.getJid());
-	}
+        Job j = t.getJob();
+        int reduces = jobReducesDone.get(j.getJid()) + 1;
+        jobReducesDone.put(j.getJid(),reduces);
+        if(reduces >= j.getTotalReduces()){
+            scheduleFinalReduce(j);
+            //jobReducesDone.remove(j.getJid());
+        }
     }
 
     public class Scheduler extends Thread {
 
-	public Scheduler() {
-	    System.out.println("Scheduler started");
-	}
+        public Scheduler() {
+            System.out.println("Scheduler started");
+        }
 
-	public void run() {
-	    while(isRunning) {
-		try{
-		    while(nodeQueue.size() > 0 && tasks.size() > 0) {
-			System.out.println("Running");
-			if(nodeQueue.element().server.isFull()) {
-			    nodeQueue.add(nodeQueue.remove());
-			} else {
-			    Node n = nodeQueue.remove();
-			    System.out.println("Starting task on node " + n);
-			    Task t = tasks.remove();
-			    n.server.scheduleTask(t); //TODO: schedule based on node location
-			    System.out.println("Scheduled Task");
-			    nodeQueue.add(n);
-			}
-		    }
-		} catch(Exception e) {
-		    e.printStackTrace();
-		}
-	    }
-	}
-    }	
-	
-	    
+        public void run() {
+            while(isRunning) {
+                try{
+                    while(nodeQueue.size() > 0 && tasks.size() > 0) {
+                        System.out.println("Running");
+                        Node n = nodeQueue.element();
+                        Object[] objs = tasks.element();
+                        Node _n = (Node)objs[0];
+                        Task t = (Task)objs[1]; 
+                        if(n.server.isFull() || n != _n) {
+                            nodeQueue.add(nodeQueue.remove());
+                        } else {
+                            nodeQueue.remove();
+                            System.out.println("Starting task on node " + n);
+                            tasks.remove();
+                            n.server.scheduleTask(t); 
+                            System.out.println("Scheduled Task");
+                            nodeQueue.add(n);
+                        }
+                    }
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }   
+        
+            
     // This parses constants in the format
     // key=value from fileConfig.txt
     private void parseFile(String filename)
@@ -261,6 +242,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         newNode.isConnected = false;
         newNode.files = new ArrayList<FilePartition>();
         this.nodes.put(address, newNode);
+        this.nodeMap.put(currentNodeId++, newNode);
     }
 
     // This allows the server to be reached by any nodes or users
@@ -295,7 +277,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         }
         System.out.println("Registry port is: " + registryPort);
         System.out.println("masterServerRegistryKey is: " + masterServerRegistryKey);
-	
+        
     }
 
     // This allows a user to stop the server
@@ -362,7 +344,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             System.out.println(address + " is now connected");
             foundNode.isConnected = true;
             foundNode.server = server;
-	    nodeQueue.add(foundNode);
+            nodeQueue.add(foundNode);
         }
     }
    
