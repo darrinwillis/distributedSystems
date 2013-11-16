@@ -105,7 +105,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
 	    jobReducesDone.put(jid,0);
 	    jobKvs.put(jid,new HashMap<String,List<String>>());
 	    List<String> inputs = j.getInput();
-	    for(int i = 0; i < inputs.size(); i++) { //TODO: variable mapTasks
+	    for(int i = 0; i < j.getTotalMaps(); i++) { //TODO: variable mapTasks
 		String name = inputs.get(i);
 		FilePartition f = new FilePartition(name,0,count(name));
 		MapTask m = new MapTask(i,jid,f,j,"out" + i); 
@@ -193,7 +193,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
 			if(nodeQueue.element().server.isFull()) {
 			    nodeQueue.add(nodeQueue.remove());
 			} else {
-			    Node n = nodeQueue.element();
+			    Node n = nodeQueue.remove();
 			    System.out.println("Starting task on node " + n);
 			    Task t = tasks.remove();
 			    n.server.scheduleTask(t); //TODO: schedule based on node location

@@ -9,8 +9,8 @@ public abstract class Job implements Serializable {
     private List<String> inputFileNames;
 
     public Job() {
-	totalMaps = 1;
-	totalReduces = 2;
+	totalMaps = 10;
+	totalReduces = 3;
     }
 
     public void setInput(List<String> inputFiles){
