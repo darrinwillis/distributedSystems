@@ -83,7 +83,7 @@ public class Monitor {
         try{
             MasterFileServerInterface masterServer = getMaster();
             stdin = new BufferedReader(new InputStreamReader(System.in));
-            System.out.println("start, add, monitor, or quit");
+            System.out.println("start, add, monitor, files, or quit");
             boolean isRunning = true;
             while(isRunning) {
                 String input = stdin.readLine();
@@ -113,8 +113,9 @@ public class Monitor {
                     isRunning = false;
                 } else if (input.equals("monitor")) {
                     System.out.println(monitor());
+                } else if (input.equals("files")) {
+                    System.out.println(files());
                 } else if (args[0].equals("add")) {
-                    System.out.println("add recognized");
                     if (args.length < 2) {
                         System.out.println("Format: add (filename)");
                         continue;
@@ -143,7 +144,6 @@ public class Monitor {
             FileIO.upload(master, f, f);
             // host is null, because it is now local to master
             master.addNewFile(filename, null);
-            System.out.println("File added to master");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -191,6 +191,20 @@ public class Monitor {
         try {
             if (master != null)
                 return master.monitorAll();
+            else
+                return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private static String files()
+    {
+        MasterFileServerInterface master = getMaster();
+        try {
+            if (master != null)
+                return master.monitorFiles();
             else
                 return null;
         } catch (Exception e) {

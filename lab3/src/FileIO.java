@@ -37,13 +37,13 @@ public class FileIO {
     public static void copy(InputStream in, OutputStream out) 
         throws IOException {
         if (in instanceof RMIInputStream) {
-            System.out.println("using RMIPipe of RMIInputStream");
+            //System.out.println("using RMIPipe of RMIInputStream");
             ((RMIInputStream) in).transfer(out);
             return;
         }
     
         if (out instanceof RMIOutputStream) {
-            System.out.println("using RMIPipe of RMIOutputStream");
+            //System.out.println("using RMIPipe of RMIOutputStream");
             ((RMIOutputStream) out).transfer(in);
             return;
         }

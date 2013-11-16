@@ -27,17 +27,21 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     private static final String serverName = "MasterServer";
 
     //Instance variables
+    // DFS information
     private volatile Hashtable<String, Node> nodes;
     private volatile Hashtable<Integer, Node> nodeMap;
+    private List<DistributedFile> fileList;
+
+    // MapReduce information
     private int currentJid;
     private int currentTid;
     private int currentNodeId;
-    public Queue<Job> jobs;
-    public Queue<Object[]> tasks; 
+    private Queue<Job> jobs;
+    private Queue<Object[]> tasks; 
     private Queue<Node> nodeQueue;
-    public ConcurrentMap<Integer,Integer> jobMapsDone; //jid, maps done
-    public ConcurrentMap<Integer,Integer> jobReducesDone;
-    public HashMap<Integer,List<FileServerInterface>> jobNodeList; 
+    private ConcurrentMap<Integer,Integer> jobMapsDone; //jid, maps done
+    private ConcurrentMap<Integer,Integer> jobReducesDone;
+    private Map<Integer,List<FileServerInterface>> jobNodeList; 
     private Scheduler scheduler;
     private boolean isRunning;
 
@@ -51,6 +55,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         this.jobMapsDone = new ConcurrentHashMap<Integer,Integer>();
         this.jobReducesDone = new ConcurrentHashMap<Integer,Integer>();
         this.jobNodeList = new HashMap<Integer,List<FileServerInterface>>();
+        this.fileList = new LinkedList<DistributedFile>();
 
         nodeQueue = new LinkedList<Node>(nodes.values());
         this.isRunning = true;
@@ -355,7 +360,15 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     public void addNewFile(String filename, FileServerInterface host) throws RemoteException
     {
         //Distribute the file among nodes
-        System.out.println("adding file " + filename + " from host " + host);
+        System.out.println("Adding file " + filename + " from host " + host);
+        //Determine if file name is already taken
+        for (DistributedFile eachFile : fileList)
+        {
+            if (filename.equals(eachFile.getFileName())) {
+                System.out.println("File already exists with that name.");
+                return;
+            }
+        }
         //Download the file from the remote host
         File newFile = new File(filename);
         if ((host == null) || (host == this))
@@ -373,7 +386,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         }
         // Partition the files and send it to nodes
         this.partitionFile(newFile);
-        System.out.println("file added");
+        System.out.println(filename + " has been added to the DFS");
 
         return;
     }
@@ -381,11 +394,10 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     private void partitionFile(File originalFile)
     {
         DistributedFile dfile = null;
-        System.out.println("Distributifying file");
+        System.out.println("Making " + originalFile.getName() + 
+            " a distributed file...");
         try{
             dfile = new DistributedFile(originalFile);
-            System.out.println("File is chunked");
-            System.out.println("blocks: " + dfile.getBlocks());
             //Add nodes to all of the parts of dfile
             dfile = allocateFile(dfile);
             //Send relevant partitions to all nodes
@@ -408,9 +420,10 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             FilePartition[] block = iter.next();
             Set<Node> placedNodes = new HashSet<Node>();
             // Place each partition replica on a node
-            for (FilePartition eachPartition : block)
+            for (int i = 0; i < block.length; i++)
             {
-                System.out.println("File" + block[0].getFileName() + " location set");
+                FilePartition eachPartition = block[i];
+                System.out.println("Performing on replica " + eachPartition.getFileName());
                 // Place on node with fewest files
                 Node optimalNode = null;
                 int optSize = Integer.MAX_VALUE;
@@ -419,14 +432,17 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
                 while (nodeEnum.hasMoreElements())
                 {
                     Node eachNode = nodeEnum.nextElement();
+                    System.out.println("Considering " + eachNode.name);
+
                     // Determines viable nodes for this replica
                     if (eachNode.isConnected && (!placedNodes.contains(eachNode)))
                     {
-                        System.out.println("Tempsize is " + tempSize);
+                        System.out.println(eachNode.name + " is viable");
                         Integer tempNodeSize = tempSize.get(eachNode);
                         int thisSize = eachNode.files.size() + 
                             ((tempNodeSize == null) ? 0 : tempNodeSize);
                         if (thisSize < optSize) {
+                            System.out.println(eachNode.name + " chosen for now");
                             //This is the new optimal node
                             optSize = thisSize;
                             optimalNode = eachNode;
@@ -437,13 +453,13 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
                 // is higher than the numberof online nodes
                 if (optimalNode != null)
                     placedNodes.add(optimalNode);
-                block[0].setLocation(optimalNode);
+                block[i].setLocation(optimalNode);
                 // Update the TempSize for the chosen node
                 Integer oldsize = tempSize.get(optimalNode);
                 Integer newsize = ((oldsize == null) ? 0 : oldsize)
-                    + block[0].getSize();
+                    + block[i].getSize();
                 tempSize.put(optimalNode, newsize);
-                System.out.println("Location now" + block[0].getLocation());
+                System.out.println("");
             }
         }
         return dfile;
@@ -466,10 +482,22 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
                 FileServerInterface server = destination.server;
                 File partitionFile = new File(eachPartition.getFileName());
                 FileIO.upload(server, partitionFile, partitionFile);
-                System.out.println("Commited partition");
             }
         }
+        this.fileList.add(dfile);
         System.out.println("File Commited");
+    }
+
+    public String monitorFiles() throws RemoteException
+    {
+        String s = "###### Files ######\n";
+        Iterator<DistributedFile> iter = this.fileList.listIterator();
+        while (iter.hasNext()) {
+            DistributedFile dfile = iter.next();
+            s = s.concat("\n\t" + dfile.getFileName());
+        }
+        s = s.concat("\n\n###### EndFiles ######\n");
+        return s;
     }
 
     //Prints out a status report of the whole system
@@ -486,7 +514,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             ListIterator<FilePartition> iter = each.files.listIterator();
             while (iter.hasNext()) {
                 FilePartition fp = iter.next();
-                s = s + "\n\t\t" + fp.getFileName() + " part " + fp.getIndex() 
+                s = s + "\t\t" + fp.getFileName() + " part " + fp.getIndex() 
                     + " size: " + fp.getSize() + "\n";
             }
         } while (enumerate.hasMoreElements());

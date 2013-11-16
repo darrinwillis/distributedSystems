@@ -63,7 +63,6 @@ public class DistributedFile {
             for (File eachFile : destinations)
             {
                 if (eachFile != null) {
-                    System.out.println("writing to file: " + eachFile);
                     eachFile.getParentFile().mkdirs();
                     PrintWriter writer = new PrintWriter(new FileWriter(eachFile));
                     for (int i = 0; (i < size) && (line != null); i++)
