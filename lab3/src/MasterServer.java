@@ -6,7 +6,7 @@ import java.io.*;
 import java.net.*;
 import java.util.concurrent.*;
 
-final class Node
+final class Node implements Serializable
 {
     String name;
     NodeFileServerInterface server;
@@ -33,7 +33,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     private int currentTid;
     private int currentNodeId;
     public Queue<Job> jobs;
-    public Queue<Object[]> tasks; 
+    public LinkedList<Object[]> tasks; 
     private Queue<Node> nodeQueue;
     public ConcurrentMap<Integer,Integer> jobMapsDone; //jid, maps done
     public ConcurrentMap<Integer,Integer> jobReducesDone;
@@ -65,9 +65,14 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     public List<Object[]> locateFile(String fileName) {
         List<Object[]> nodeFiles = new LinkedList<Object[]>();
         for(Node node : nodeQueue) {
+            System.out.println(node + ": " + node.files);
             for(FilePartition f : node.files) {
-                if (f.getFileName().equals(fileName))
+                String name = f.getFileName().substring(5,5 + fileName.length());
+                System.out.println(fileName + "-" + name);
+                if (name.equals(fileName)) {
                     nodeFiles.add(new Object[]{node,f});
+                    System.out.println("Found partition at node " + node.name);
+                }
             }
         }
         return nodeFiles;
@@ -83,7 +88,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             jobReducesDone.put(jid,0);
             jobNodeList.put(jid,new LinkedList<FileServerInterface>());
             List<String> inputs = j.getInput();
-            for(int i = 0; i < inputs.size(); i++) { //TODO: variable mapTasks
+            for(int i = 0; i < inputs.size(); i++) { //TODO: variable mapTask scheduling
                 String name = inputs.get(i);
                 List<Object[]> nodeList = locateFile(name);
                 for(Object[] node_file : nodeList ) {
@@ -103,13 +108,17 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     public void scheduleReducers(Job j) {
         ReduceTask r;
         int tid = 0;
+        System.out.println("Scheduling Reducers for jid " + j.getJid());
         
+        System.out.println("jobNodeList " + jobNodeList);
         for(int i = 0; i < j.getTotalReduces(); i++) {
-            r = new ReduceTask(tid++,j.getJid(),null,j,j.getJid() + "part" + tid); 
-            r.setNodeList(jobNodeList.get(j)); 
+            System.out.println("Scheduling ReduceTask " + i);
+            r = new ReduceTask(i,j.getJid(),null,j,j.getJid() + "part" + i); 
+            r.setNodeList(jobNodeList.get(j.getJid()));
             r.setNodeId(i);
             tasks.add(new Object[]{null,r});
         }
+        System.out.println("Finished Adding Reduce Tasks");
     }
 
     public void scheduleFinalReduce(Job j) {
@@ -118,6 +127,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         String line;
         byte[] b;
         File f;
+        System.out.println("Compiling all Reduces!");
         try{
             out = new RandomAccessFile(j.getOutput(),"rws");
             for(int i = 0; i < j.getTotalReduces(); i++) {
@@ -132,21 +142,24 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         } catch (Exception e) {
             e.printStackTrace();
         }
+        System.out.println("DONE");
     }
                 
+    // finished maptask t from node name, if all tasks are done, schedule
+    // reducers
     public void finishedMap(Task t,String name) throws RemoteException{
+        System.out.println("Finished Map" + t.getTaskId() +" on node " + name);
         Job j = t.getJob();
-        System.out.println(jobMapsDone);
-        System.out.println(j);
         int maps = jobMapsDone.get(j.getJid()) + 1;
         jobMapsDone.put(j.getJid(),maps); 
-        jobNodeList.get(j.getJid()).add(nodes.get(name).server); 
+        jobNodeList.get(j.getJid()).add(nodes.get(name).server);
         if (maps >= j.getTotalMaps()) {
             scheduleReducers(j); //TODO: start reducing as maps finish
             //jobMapsDone.remove(j.getJid());
         }
     }
     public void finishedReduce(Task t) throws RemoteException{
+        System.out.println("Finished Reduce" + t.getTaskId()); 
         Job j = t.getJob();
         int reduces = jobReducesDone.get(j.getJid()) + 1;
         jobReducesDone.put(j.getJid(),reduces);
@@ -161,29 +174,36 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         public Scheduler() {
             System.out.println("Scheduler started");
         }
-
+        
+        
+        public void scheduleTask(Node n, Task t) throws RemoteException {
+            System.out.println("Starting " + t + " on node " + n.name);
+                            
+            n.server.scheduleTask(t); 
+            System.out.println("Scheduled Task");
+            nodeQueue.remove();
+            tasks.removeFirst();
+            nodeQueue.add(n);
+        }
         public void run() {
             while(isRunning) {
                 try{
                     while(nodeQueue.size() > 0 && tasks.size() > 0) {
-                        System.out.println("Running");
                         Node n = nodeQueue.element();
-                        Object[] objs = tasks.element();
+                        Object[] objs = tasks.getFirst();
                         Node _n = (Node)objs[0];
                         Task t = (Task)objs[1]; 
-                        if(n.server.isFull() || n != _n) {
+                        if(_n == null) 
+                            scheduleTask(n,t);
+                        else if(n.server.isFull() || !n.name.equals(_n.name)) {
+                            System.out.println("Node incompatable, trying next");
                             nodeQueue.add(nodeQueue.remove());
                         } else {
-                            nodeQueue.remove();
-                            System.out.println("Starting task on node " + n);
-                            tasks.remove();
-                            n.server.scheduleTask(t); 
-                            System.out.println("Scheduled Task");
-                            nodeQueue.add(n);
+                            scheduleTask(n,t);
                         }
                     }
                 } catch(Exception e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.out);
                 }
             }
             System.out.println("Scheduler Stopped");
@@ -278,7 +298,6 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         }
         System.out.println("Registry port is: " + registryPort);
         System.out.println("masterServerRegistryKey is: " + masterServerRegistryKey);
-        
     }
 
     // This allows a user to stop the server
@@ -400,9 +419,6 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     private DistributedFile allocateFile(DistributedFile dfile)
     {
         ListIterator<FilePartition[]> iter = dfile.getBlocks().listIterator();
-        // Maps between nodes and size of replicas added to this
-        // Node on this Distributed File
-        Map<Node, Integer> tempSize = new HashMap<Node, Integer>();
         // TODO: THIS SHOULD BE DYNAMIC
         while (iter.hasNext()) {
             FilePartition[] block = iter.next();
@@ -419,13 +435,9 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
                 while (nodeEnum.hasMoreElements())
                 {
                     Node eachNode = nodeEnum.nextElement();
-                    // Determines viable nodes for this replica
                     if (eachNode.isConnected && (!placedNodes.contains(eachNode)))
                     {
-                        System.out.println("Tempsize is " + tempSize);
-                        Integer tempNodeSize = tempSize.get(eachNode);
-                        int thisSize = eachNode.files.size() + 
-                            ((tempNodeSize == null) ? 0 : tempNodeSize);
+                        int thisSize = eachNode.files.size();
                         if (thisSize < optSize) {
                             //This is the new optimal node
                             optSize = thisSize;
@@ -438,11 +450,6 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
                 if (optimalNode != null)
                     placedNodes.add(optimalNode);
                 block[0].setLocation(optimalNode);
-                // Update the TempSize for the chosen node
-                Integer oldsize = tempSize.get(optimalNode);
-                Integer newsize = ((oldsize == null) ? 0 : oldsize)
-                    + block[0].getSize();
-                tempSize.put(optimalNode, newsize);
                 System.out.println("Location now" + block[0].getLocation());
             }
         }

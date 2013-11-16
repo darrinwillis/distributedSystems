@@ -36,6 +36,7 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
             taskTracker = new TaskTracker();
             taskTracker.start();
             isRunning = true;
+            slave = new SlaveNode();
 
             parseFile(configFileName);
             name = InetAddress.getLocalHost().getHostName();
@@ -56,7 +57,6 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
     public class TaskTracker extends Thread {
         public void run() {
             TaskThread t;
-            HashMap<String, List<String>> partialKvs;
             while(isRunning) {
                 for(int i = 0; i < taskThreads.size(); i++){
                     try{
@@ -78,7 +78,9 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
             }
         }
     }
-
+    public void print(String s){
+        System.out.println(s);
+    }
     public class TaskThread extends Thread {
         public Task task;
         
@@ -86,16 +88,26 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
             task = t;
         }
         public void run() {
-            if(task instanceof MapTask) 
+            if(task instanceof MapTask) {
+                System.out.println("Doing Map");
                 slave.doMap((MapTask)task);
-            else {//TODO: Get files from nodes
+            }else {//TODO: Get files from nodes
+                System.out.println("Doing Reduce");
                 ReduceTask r = (ReduceTask) task;
                 List<FileServerInterface> nodeList = r.getNodeList(); 
                 List<String> inputFiles = new LinkedList<String>(); 
                 String name = r.getJob().getJid() + "reduce" + r.getNodeId();
+                System.out.println(name);
                 int counter = 0;
                 try {
                     for(FileServerInterface node : nodeList) {
+                        File f;
+                        if(node.equals(this)){
+                            System.out.println("File is local");
+                            f = new File(name);
+                            f.renameTo(new File(name + "_" + counter));
+                        }
+                            
                         FileIO.download(node,new File(name),new File(name + "_" + counter));
                         inputFiles.add(name + "_" + counter); 
                         counter++;

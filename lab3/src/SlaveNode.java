@@ -5,10 +5,10 @@ import java.util.*;
 public class SlaveNode {
     public List<Task> tasks;
     
-    private HashMap<Integer,RandomAccessFile> files;
+    private HashMap<Integer,PrintWriter> files;
 
     public SlaveNode() {
-	files = new HashMap<Integer,RandomAccessFile>();
+	files = new HashMap<Integer,PrintWriter>();
 	tasks = new ArrayList<Task>(); 
     }
 
@@ -17,10 +17,9 @@ public class SlaveNode {
         int index = p.getIndex();
         int size = p.getSize();
          
-        RandomAccessFile f = null;
+        BufferedReader f = null;
         try{
-            f = new RandomAccessFile(name,"r");
-            f.seek(index);
+            f = new BufferedReader(new FileReader(name));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -46,10 +45,10 @@ public class SlaveNode {
     }
 
     public List<String[]> parseReduceFile(String fileName){
-        RandomAccessFile f = null;
+        BufferedReader f = null;
 
         try{
-            f = new RandomAccessFile(fileName,"r");
+            f = new BufferedReader(new FileReader(fileName));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -99,7 +98,6 @@ public class SlaveNode {
     }
 	
     public void doMap(MapTask t){
-        System.out.println("Doing Map");
         synchronized(tasks) {
             tasks.add(t);
         }
@@ -112,19 +110,19 @@ public class SlaveNode {
 		List<String[]> outputs = j.map(kvs[i][0],kvs[i][1]);
 		for(String[] kv : outputs) {
                     int code = kv[0].hashCode() % j.getTotalReduces();
-                    RandomAccessFile f = files.get(code);
+                    PrintWriter f = files.get(code);
 		    if(f == null) {
-			f = new RandomAccessFile(j.getJid() + "reduce" + code,"rws");
+			f = new PrintWriter(new BufferedWriter(new FileWriter(j.getJid() + "reduce" + code)));
 			files.put(code,f);
 		    }
-		    s = kv[0] + "~" + kv[1] + "\n";
-		    f.write(s.getBytes());
+		    s = kv[0] + "~" + kv[1];
+		    f.println(s);
 		}
 	    }
 	    Iterator it = files.entrySet().iterator();
 	    while (it.hasNext()) {
 		Map.Entry pairs = (Map.Entry)it.next();
-		RandomAccessFile value = (RandomAccessFile) pairs.getValue();
+		PrintWriter value = (PrintWriter) pairs.getValue();
 		if(value != null)
 		    value.close();
 		it.remove(); 
@@ -153,7 +151,6 @@ public class SlaveNode {
     }		    
                 
     public void doReduce(ReduceTask t){
-        System.out.println("Doing Reduce");
         synchronized(tasks) {
             tasks.add(t);
         }
@@ -164,13 +161,13 @@ public class SlaveNode {
         
         String s;
         try {
-            RandomAccessFile out = new RandomAccessFile(t.getOutputFile(),"rws");           
+            PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(t.getOutputFile())));           
 	    Iterator it = kvs.keySet().iterator();
 	    while (it.hasNext()) {
 		String key = (String)it.next();
 		String value = j.reduce(key,kvs.get(key),j.getIdentity());
-		s = key + "~" + value + "\n";
-		out.write(s.getBytes());
+		s = key + "~" + value;
+		out.println(s);
 		it.remove(); 
 	    }
 
