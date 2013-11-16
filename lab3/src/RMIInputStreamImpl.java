@@ -7,7 +7,7 @@ public class RMIInputStreamImpl implements RMIInputStreamInterf {
     private byte[] b;
     public RMIInputStreamImpl(InputStream in) throws IOException {
         this.in = in;
-        UnicastRemoteObject.exportObject(this, 1099);
+        UnicastRemoteObject.exportObject(this, Config.getPipePort()) ;
     }
     public void close() throws IOException, RemoteException {
         in.close();

@@ -10,7 +10,7 @@ public class RMIOutputStreamImpl implements RMIOutputStreamInterf {
     public RMIOutputStreamImpl(OutputStream out) throws IOException {
         this.out = out;
         this.pipe = new RMIPipe(out);
-        UnicastRemoteObject.exportObject(this, 1099);
+        UnicastRemoteObject.exportObject(this, Config.getPipePort());
     }
     
     public void write(int b) throws IOException {

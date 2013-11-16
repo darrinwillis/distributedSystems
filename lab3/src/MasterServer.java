@@ -270,7 +270,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         // Get the old registry, or create a new one
         try{
             rmiRegistry = LocateRegistry.getRegistry(registryPort);
-            rmiRegistry.list();
+            System.out.println(Arrays.toString(rmiRegistry.list()));
             System.out.println("Registry server found");
         } catch (RemoteException e) {
             rmiRegistry = LocateRegistry.createRegistry(registryPort);
@@ -383,12 +383,12 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             try{
 
                 FileIO.download(host, newFile, newFile);
+                System.out.println("Downloaded " + filename + " from remote host");
             } catch(IOException e) {
                 System.out.println("Failed to download");
                 e.printStackTrace();
             }
         }
-        System.out.println("Downloaded " + filename + " from remote host");
         // Partition the files and send it to nodes
         this.partitionFile(newFile);
         System.out.println("file added");
@@ -418,15 +418,39 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     private DistributedFile allocateFile(DistributedFile dfile)
     {
         ListIterator<FilePartition[]> iter = dfile.getBlocks().listIterator();
-        Enumeration<Node> nodeEnum = this.nodes.elements();
         // TODO: THIS SHOULD BE DYNAMIC
-        Node singleNode = nodeEnum.nextElement();
         while (iter.hasNext()) {
             FilePartition[] block = iter.next();
-            // TODO: THIS SHOULD BE DYNAMIC
-            System.out.println("File" + block[0].getFileName() + " location set");
-            block[0].setLocation(singleNode);
-            System.out.println("Location now" + block[0].getLocation());
+            Set<Node> placedNodes = new HashSet<Node>();
+            // Place each partition replica on a node
+            for (FilePartition eachPartition : block)
+            {
+                System.out.println("File" + block[0].getFileName() + " location set");
+                // Place on node with fewest files
+                Node optimalNode = null;
+                int optSize = Integer.MAX_VALUE;
+                // Looks through all nodes to find optimal location to place
+                Enumeration<Node> nodeEnum = this.nodes.elements();
+                while (nodeEnum.hasMoreElements())
+                {
+                    Node eachNode = nodeEnum.nextElement();
+                    if (eachNode.isConnected && (!placedNodes.contains(eachNode)))
+                    {
+                        int thisSize = eachNode.files.size();
+                        if (thisSize < optSize) {
+                            //This is the new optimal node
+                            optSize = thisSize;
+                            optimalNode = eachNode;
+                        }
+                    }
+                }
+                // This can be null if the replication factor
+                // is higher than the numberof online nodes
+                if (optimalNode != null)
+                    placedNodes.add(optimalNode);
+                block[0].setLocation(optimalNode);
+                System.out.println("Location now" + block[0].getLocation());
+            }
         }
         return dfile;
     }

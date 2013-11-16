@@ -42,6 +42,7 @@ public class Config {
             prop.containsKey("MASTER_SERVER_REGISTRY_KEY") &&
             prop.containsKey("BUF_SIZE") &&
             prop.containsKey("NODE_PORT") &&
+            prop.containsKey("PIPE_PORT") &&
             prop.containsKey("CONNECTION_ATTEMPTS") &&
             prop.containsKey("FILE_PARTITION_SIZE") &&
             prop.containsKey("REPLICATION_FACTOR") &&
@@ -63,6 +64,7 @@ public class Config {
             prop.setProperty("MASTER_SERVER_REGISTRY_KEY", "masterServer");
             prop.setProperty("BUF_SIZE", "65536"); 
             prop.setProperty("NODE_PORT", "1098");
+            prop.setProperty("PIPE_PORT", "1097");
             prop.setProperty("NODE0", "unix2.andrew.cmu.edu");
             prop.setProperty("NODE_SCRIPT_FORMAT", "ssh %s -f 'cd private/15440/distributedSystems/lab3/src/;\njava NodeServer &;exit 1;echo \"Exited\"'");
             prop.setProperty("MASTER_SCRIPT_FORMAT", "ssh %s -f 'cd private/15440/distributedSystems/lab3/src/;\njava Monitor startMaster&;exit 1;echo \"Exited\"'");
@@ -102,8 +104,13 @@ public class Config {
     public static String getMasterAddress() {
         return sharedProp.getProperty("MASTER_HOST");
     }
+
     public static String getNodePort() {
-	return sharedProp.getProperty("NODE_PORT");
+        return sharedProp.getProperty("NODE_PORT");
+    }
+
+    public static int getPipePort() {
+        return Integer.parseInt(sharedProp.getProperty("PIPE_PORT"));
     }
 
     public static ArrayList<String> getNodeAddresses(){
