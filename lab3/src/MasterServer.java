@@ -170,42 +170,43 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
 	}
     }
     public void finishedReduce(Task t) throws RemoteException{
-	Job j = t.getJob();
-	int reduces = jobReducesDone.get(j.getJid()) + 1;
-	jobReducesDone.put(j.getJid(),reduces);
-	if(reduces >= j.getTotalReduces()){
-	    scheduleFinalReduce(j);
-	    //jobReducesDone.remove(j.getJid());
-	}
+        Job j = t.getJob();
+        int reduces = jobReducesDone.get(j.getJid()) + 1;
+        jobReducesDone.put(j.getJid(),reduces);
+        if(reduces >= j.getTotalReduces()){
+            scheduleFinalReduce(j);
+            //jobReducesDone.remove(j.getJid());
+        }
     }
 
     public class Scheduler extends Thread {
 
-	public Scheduler() {
-	    System.out.println("Scheduler started");
-	}
+        public Scheduler() {
+            System.out.println("Scheduler started");
+        }
 
-	public void run() {
-	    while(isRunning) {
-		try{
-		    while(nodeQueue.size() > 0 && tasks.size() > 0) {
-			System.out.println("Running");
-			if(nodeQueue.element().server.isFull()) {
-			    nodeQueue.add(nodeQueue.remove());
-			} else {
-			    Node n = nodeQueue.remove();
-			    System.out.println("Starting task on node " + n);
-			    Task t = tasks.remove();
-			    n.server.scheduleTask(t); //TODO: schedule based on node location
-			    System.out.println("Scheduled Task");
-			    nodeQueue.add(n);
-			}
-		    }
-		} catch(Exception e) {
-		    e.printStackTrace();
-		}
-	    }
-	}
+        public void run() {
+            while(isRunning) {
+                try{
+                    while(nodeQueue.size() > 0 && tasks.size() > 0) {
+                        System.out.println("Running");
+                        if(nodeQueue.element().server.isFull()) {
+                            nodeQueue.add(nodeQueue.remove());
+                        } else {
+                            Node n = nodeQueue.remove();
+                            System.out.println("Starting task on node " + n);
+                            Task t = tasks.remove();
+                            n.server.scheduleTask(t); //TODO: schedule based on node location
+                            System.out.println("Scheduled Task");
+                            nodeQueue.add(n);
+                        }
+                    }
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            System.out.println("Scheduler Stopped");
+        }
     }	
 	
 	    
@@ -320,6 +321,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             System.out.println("Hit exception");
             e.printStackTrace();
         }
+        System.exit(0);
     }
   
     private void stopNodes() throws RemoteException
@@ -446,8 +448,10 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
                 FileServerInterface server = destination.server;
                 File partitionFile = new File(eachPartition.getFileName());
                 FileIO.upload(server, partitionFile, partitionFile);
+                System.out.println("Commited partition");
             }
         }
+        System.out.println("File Commited");
     }
 
     //Prints out a status report of the whole system

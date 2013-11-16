@@ -27,24 +27,24 @@ public class DistributedFile {
         System.out.println("Length is "+fileLength+" blocksize is "+blockSize
             +" numBlocks is "+numBlocks+" remainderSize is "+remainderSize);
         File[] splitFiles = new File[numBlocks];
-        for (int i = 0; i < numBlocks; i+= blockSize)
+        for (int i = 0; i < numBlocks; i++)
         {
             FilePartition[] dups = new FilePartition[replicationFactor];
             // Names the file so it is stored locally
             String blockName = "/tmp/" + filename + "part" + i;
             int thisSize = (i == numBlocks - 1) && (remainderSize > 0)
-                ? blockSize : remainderSize;
+                ? remainderSize : blockSize ;
             // Create a new local file to send to a node
             File blockFile = new File(blockName);
             splitFiles[i] = blockFile;
-            // Copy file parts into new file
-
+            // Setup each replicated part to have correct info
             for (int k = 0; k < replicationFactor; k++)
             {
                 dups[k] = new FilePartition(blockName, i, thisSize);
             }
             this.blocks.add(dups);
         }
+        // Copy file parts into new file
         splitFile(file, splitFiles, blockSize);
     }
 
