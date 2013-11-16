@@ -67,9 +67,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         for(Node node : nodeQueue) {
             System.out.println(node + ": " + node.files);
             for(FilePartition f : node.files) {
-                String name = f.getFileName().substring(5,5 + fileName.length());
-                System.out.println(fileName + "-" + name);
-                if (name.equals(fileName)) {
+                if (f.getFileName().indexOf(fileName) >= 0) {
                     nodeFiles.add(new Object[]{node,f});
                     System.out.println("Found partition at node " + node.name);
                 }
