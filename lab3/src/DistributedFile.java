@@ -1,7 +1,7 @@
 import java.io.*;
 import java.util.*;
 
-public class DistributedFile {
+public class DistributedFile implements Serializable {
     private String filename;
     private ArrayList<FilePartition[]> blocks;
 

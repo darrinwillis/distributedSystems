@@ -6,22 +6,7 @@ import java.rmi.registry.*;
 // This is a class to handle any administrative duties
 // and system-level user interaction
 
-class MonitorThread extends Thread{
-    public MasterFileServerInterface server;
-    public void run() {
-        while (true)
-        {
-            try{
-                System.out.println(server.monitorAll());
-                Thread.sleep(10*1000);
-            } catch(Exception e){
-                e.printStackTrace();
-            }
-        }
-    }
-}
 public class Monitor {
-    private static MasterFileServerInterface masterServer;
     private static MonitorThread monitorThread;
     private static volatile boolean shouldMonitor;
 
@@ -34,7 +19,6 @@ public class Monitor {
                 {
                     try{
                         MasterServer server = new MasterServer();
-                        masterServer = server;
                         server.start();
                     } catch (Exception e)
                     {
@@ -51,14 +35,6 @@ public class Monitor {
                 {
                     System.out.println("Stopping system");
                     stopSystem();
-                    break;
-                }
-                case "startMonitor":
-                {
-                    MonitorThread thread = new MonitorThread();
-                    monitorThread = thread;
-                    thread.server = masterServer;
-                    thread.run();
                     break;
                 }
                 case "startTerminal":
@@ -133,13 +109,14 @@ public class Monitor {
 
     private static void startNewJob(String input)
     {
+        MasterFileServerInterface master = getMaster();
         String[] args = input.split(" ");
         if (args.length != 5) {
             System.out.println("Format: start (jobclass) (outputfile) (inputfiles) (# reduces)");
             return;
         }
         try{
-            if (masterServer != null) {
+            if (master != null) {
                 //Starting a new job
                 String jobName = args[1];
                 Job j = (Job) Class.forName(jobName).newInstance();
@@ -149,7 +126,9 @@ public class Monitor {
                 j.setInput(args[3]);
                 
                 j.setTotalReduces(Integer.parseInt(args[4]));
-                masterServer.newJob(j);
+                                    
+                master.newJob(j);
+
                 System.out.println(jobName + " added");
             } else {
                 System.out.println("Master could not be reached");

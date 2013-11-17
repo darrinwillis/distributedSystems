@@ -70,7 +70,7 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
                             if (t.task instanceof MapTask) {
                                 masterServer.finishedMap(t.task,name);
                             } else { //reducetask
-                                masterServer.finishedReduce(t.task);
+                                masterServer.finishedReduce(t.task,name);
                             }
                         }
                     } catch(Exception e) {
