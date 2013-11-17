@@ -199,8 +199,10 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
                         Object[] objs = tasks.getFirst();
                         Node _n = (Node)objs[0];
                         Task t = (Task)objs[1]; 
-                        if(_n == null) 
+                        // _n is null only when it is a reduce task
+                        if(_n == null && !n.server.isFull()) 
                             scheduleTask(n,t);
+                        // This task is not going to be scheduled on this node
                         else if(n.server.isFull() || !n.name.equals(_n.name)) {
                             System.out.println("Node incompatable, trying next");
                             nodeQueue.add(nodeQueue.remove());
@@ -254,6 +256,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         return;
     }
 
+    // Initializes and adds a new Node object to Master's list of nodes
     private void addNode(String address)
     {
         InetAddress newAddress = null;
@@ -482,6 +485,8 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         return dfile;
     }
 
+    // This actually makes the network requests to inform the nodes what
+    // files they should have based on this server's information
     private void commit(DistributedFile dfile) throws IOException
     {
         ListIterator<FilePartition[]> iter = dfile.getBlocks().listIterator();

@@ -97,29 +97,7 @@ public class Monitor {
                 String[] args = input.split(" ");
 
                 if (args[0].equals("start")) {
-                    if (args.length < 4) {
-                        System.out.println("Format: start (jobclass) (outputfile) (inputfiles)");
-                        continue;
-                    }
-                    if (masterServer != null) {
-                        //Starting a new job
-                        String jobName = args[1];
-                        Job j = (Job) Class.forName(jobName).newInstance();
-
-                        j.setOutput(args[2]);
-                        List<String> inputFiles = new ArrayList<String>();
-                                            
-                        for (int i = 3; i < args.length; i++) {
-                            inputFiles.add(args[i]);
-                        }
-
-                        j.setInput(inputFiles);
-                                            
-                        masterServer.newJob(j);
-                        System.out.println(jobName + " added");
-                    } else {
-                        System.out.println("Master could not be reached");
-                    }
+                    startNewJob(input);
                 } else if (input.equals("quit") || input.equals("exit")) {
                     isRunning = false;
                 } else if (input.equals("monitor")) {
@@ -132,7 +110,7 @@ public class Monitor {
                     System.out.println(nodes());
                 } else if (args[0].equals("add")) {
                     if (args.length < 2) {
-                        System.out.println("Format: add (filename)");
+                        System.out.println("Format: add [filename]");
                         continue;
                     }
                     String filename = args[1];
@@ -151,6 +129,39 @@ public class Monitor {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private static void startNewJob(String input)
+    {
+        String[] args = input.split(" ");
+        if (args.length < 4) {
+            System.out.println("Format: start [jobclass]([arg0, arg1]) [outputfile] [inputfiles]");
+            return;
+        }
+        try{
+            if (masterServer != null) {
+                //Starting a new job
+                String jobName = args[1];
+                Job j = (Job) Class.forName(jobName).newInstance();
+
+                j.setOutput(args[2]);
+                List<String> inputFiles = new ArrayList<String>();
+                                    
+                for (int i = 3; i < args.length; i++) {
+                    inputFiles.add(args[i]);
+                }
+
+                j.setInput(inputFiles);
+                                    
+                masterServer.newJob(j);
+                System.out.println(jobName + " added");
+            } else {
+                System.out.println("Master could not be reached");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     private static void addNewFile(String filename)
