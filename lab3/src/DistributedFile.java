@@ -116,7 +116,10 @@ public class DistributedFile {
                 }
             }
             return (count == 0 && !empty) ? 1 : count;
-        } finally {
+        } catch (Exception e){
+            e.printStackTrace(System.out);
+            throw new IOException();
+        }finally {
             is.close();
         }
     }

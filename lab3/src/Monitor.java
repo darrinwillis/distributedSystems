@@ -97,25 +97,7 @@ public class Monitor {
                 String[] args = input.split(" ");
 
                 if (args[0].equals("start")) {
-                    if (args.length != 5) {
-                        System.out.println("Format: start (jobclass) (outputfile) (inputfiles) (# reduces)");
-                        continue;
-                    }
-                    if (masterServer != null) {
-                        //Starting a new job
-                        String jobName = args[1];
-                        Job j = (Job) Class.forName(jobName).newInstance();
-
-                        j.setOutput(args[2]);
-
-                        j.setInput(args[3]);
-                        
-                        j.setTotalReduces(Integer.parseInt(args[4]));
-                        masterServer.newJob(j);
-                        System.out.println(jobName + " added");
-                    } else {
-                        System.out.println("Master could not be reached");
-                    }
+                    startNewJob(input);
                 } else if (input.equals("quit") || input.equals("exit")) {
                     isRunning = false;
                 } else if (input.equals("monitor")) {
@@ -128,7 +110,7 @@ public class Monitor {
                     System.out.println(nodes());
                 } else if (args[0].equals("add")) {
                     if (args.length < 2) {
-                        System.out.println("Format: add (filename)");
+                        System.out.println("Format: add [filename]");
                         continue;
                     }
                     String filename = args[1];
@@ -147,6 +129,35 @@ public class Monitor {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private static void startNewJob(String input)
+    {
+        String[] args = input.split(" ");
+        if (args.length != 5) {
+            System.out.println("Format: start (jobclass) (outputfile) (inputfiles) (# reduces)");
+            return;
+        }
+        try{
+            if (masterServer != null) {
+                //Starting a new job
+                String jobName = args[1];
+                Job j = (Job) Class.forName(jobName).newInstance();
+
+                j.setOutput(args[2]);
+
+                j.setInput(args[3]);
+                
+                j.setTotalReduces(Integer.parseInt(args[4]));
+                masterServer.newJob(j);
+                System.out.println(jobName + " added");
+            } else {
+                System.out.println("Master could not be reached");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     private static void addNewFile(String filename)
