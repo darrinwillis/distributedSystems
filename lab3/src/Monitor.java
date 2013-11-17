@@ -7,7 +7,7 @@ import java.rmi.registry.*;
 // and system-level user interaction
 
 public class Monitor {
-    private static MonitorThread monitorThread;
+    //private static MonitorThread monitorThread;
     private static volatile boolean shouldMonitor;
 
     public static void main(String[] args)

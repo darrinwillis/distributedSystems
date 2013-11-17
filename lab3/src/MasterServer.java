@@ -138,6 +138,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
                 in.read(b,0,b.length);
                 out.print(b);
                 in.close();
+                f.delete();
             }
             out.close();
         } catch (Exception e) {
