@@ -101,21 +101,25 @@ public class Monitor {
                         System.out.println("Format: start (jobclass) (outputfile) (inputfiles)");
                         continue;
                     }
-                    //Starting a new job
-                    String jobName = args[1];
-                    Job j = (Job) Class.forName(jobName).newInstance();
+                    if (masterServer != null) {
+                        //Starting a new job
+                        String jobName = args[1];
+                        Job j = (Job) Class.forName(jobName).newInstance();
 
-                    j.setOutput(args[2]);
-                    List<String> inputFiles = new ArrayList<String>();
-                                        
-                    for (int i = 3; i < args.length; i++) {
-                        inputFiles.add(args[i]);
+                        j.setOutput(args[2]);
+                        List<String> inputFiles = new ArrayList<String>();
+                                            
+                        for (int i = 3; i < args.length; i++) {
+                            inputFiles.add(args[i]);
+                        }
+
+                        j.setInput(inputFiles);
+                                            
+                        masterServer.newJob(j);
+                        System.out.println(jobName + " added");
+                    } else {
+                        System.out.println("Master could not be reached");
                     }
-
-                    j.setInput(inputFiles);
-                                        
-                    masterServer.newJob(j);
-                    System.out.println(jobName + " added");
                 } else if (input.equals("quit") || input.equals("exit")) {
                     isRunning = false;
                 } else if (input.equals("monitor")) {
