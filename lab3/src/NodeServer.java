@@ -32,8 +32,9 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
         try{
             System.setProperty("sun.rmi.transport.tcp.responseTimeout", "5000");
             numCores = Runtime.getRuntime().availableProcessors();
-            mapSlots = 10; //TODO: This should be less bad
-            reduceSlots = 5;
+            float mapRatio = Config.getMappertoReducer();
+            mapSlots = (int)(numCores * mapRatio);
+            reduceSlots = numCores - mapSlots-1;
             taskThreads = new LinkedList<TaskThread>();
             taskTracker = new TaskTracker();
             taskTracker.start();

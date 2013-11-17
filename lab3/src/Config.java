@@ -41,6 +41,7 @@ public class Config {
             prop.containsKey("MASTER_HOST") &&
             prop.containsKey("MASTER_SERVER_REGISTRY_KEY") &&
             prop.containsKey("BUF_SIZE") &&
+            prop.containsKey("MAPPERS/REDUCERS") &&
             prop.containsKey("NODE_PORT") &&
             prop.containsKey("PIPE_PORT") &&
             prop.containsKey("CONNECTION_ATTEMPTS") &&
@@ -63,6 +64,7 @@ public class Config {
             prop.setProperty("REGISTRY_PORT", "1099");
             prop.setProperty("MASTER_SERVER_REGISTRY_KEY", "masterServer");
             prop.setProperty("BUF_SIZE", "65536"); 
+            prop.setProperty("MAPPERS/REDUCERS", "0.80"); 
             prop.setProperty("NODE_PORT", "1098");
             prop.setProperty("PIPE_PORT", "1097");
             prop.setProperty("NODE0", "unix2.andrew.cmu.edu");
@@ -91,6 +93,10 @@ public class Config {
 
     public static int getBlockSize() throws NumberFormatException {
         return Integer.parseInt(sharedProp.getProperty("FILE_PARTITION_SIZE"));
+    }
+
+    public static float getMappertoReducer() throws NumberFormatException {
+        return Float.parseFloat(sharedProp.getProperty("MAPPERS/REDUCERS"));
     }
 
     public static int getReplicationFactor() throws NumberFormatException {
