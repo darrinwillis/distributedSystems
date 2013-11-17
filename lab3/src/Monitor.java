@@ -109,8 +109,8 @@ public class Monitor {
     {
         MasterFileServerInterface master = getMaster();
         String[] args = input.split(" ");
-        if (args.length < 4) {
-            System.out.println("Format: start [jobclass]([arg0, arg1]) [outputfile] [inputfiles]");
+        if (args.length != 5) {
+            System.out.println("Format: start (jobclass) (outputfile) (inputfiles) (# reduces)");
             return;
         }
         try{
@@ -120,15 +120,13 @@ public class Monitor {
                 Job j = (Job) Class.forName(jobName).newInstance();
 
                 j.setOutput(args[2]);
-                List<String> inputFiles = new ArrayList<String>();
-                                    
-                for (int i = 3; i < args.length; i++) {
-                    inputFiles.add(args[i]);
-                }
 
-                j.setInput(inputFiles);
+                j.setInput(args[3]);
+                
+                j.setTotalReduces(Integer.parseInt(args[4]));
                                     
                 master.newJob(j);
+
                 System.out.println(jobName + " added");
             } else {
                 System.out.println("Master could not be reached");

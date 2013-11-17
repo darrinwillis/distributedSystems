@@ -112,8 +112,8 @@ public class SlaveNode {
                     int code = kv[0].hashCode() % j.getTotalReduces();
                     PrintWriter f = files.get(code);
 		    if(f == null) {
-                        String name = "/tmp/"+j.getJid()+"reduce"+code;
-			f = new PrintWriter(new BufferedWriter(new FileWriter(name)));
+                        String name = Config.getLocalDirectory()+j.getJid()+"reduce"+code;
+			f = new PrintWriter(new BufferedWriter(new FileWriter(name,true)));
 			files.put(code,f);
 		    }
 		    s = kv[0] + "~" + kv[1];

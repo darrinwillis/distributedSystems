@@ -70,7 +70,7 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
                             if (t.task instanceof MapTask) {
                                 masterServer.finishedMap(t.task,name);
                             } else { //reducetask
-                                masterServer.finishedReduce(t.task);
+                                masterServer.finishedReduce(t.task,name);
                             }
                         }
                     } catch(Exception e) {
@@ -99,7 +99,7 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
                 ReduceTask r = (ReduceTask) task;
                 List<FileServerInterface> nodeList = r.getNodeList(); 
                 List<String> inputFiles = new LinkedList<String>(); 
-                String name = "/tmp/" + r.getJob().getJid() + "reduce" + r.getNodeId();
+                String name = Config.getLocalDirectory() + r.getJob().getJid() + "reduce" + r.getNodeId();
                 System.out.println(name);
                 int counter = 0;
                 try {

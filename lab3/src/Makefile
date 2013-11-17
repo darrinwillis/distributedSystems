@@ -17,11 +17,11 @@ JFLAGS = -g
 	@$(JC) $(JFLAGS) $*.java
 
 CLASSES = \
+	MasterServer.java \
 	FileServerInterface.java \
 	MasterFileServerInterface.java \
 	Config.java \
 	Monitor.java \
-	MasterServer.java \
 	NodeServer.java \
 	RMIOutputStreamInterf.java \
 	RMIInputStreamInterf.java \

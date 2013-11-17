@@ -14,7 +14,7 @@ public interface MasterFileServerInterface extends FileServerInterface
 
     void newJob(Job j) throws RemoteException;
     void finishedMap(Task t, String name) throws RemoteException;
-    void finishedReduce(Task t) throws RemoteException;
+    void finishedReduce(Task t, String name) throws RemoteException;
     String monitorAll() throws RemoteException;
     String monitorFiles() throws RemoteException;
     String monitorNodes() throws RemoteException;

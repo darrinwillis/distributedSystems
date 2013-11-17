@@ -1,7 +1,7 @@
 import java.io.*;
 import java.util.*;
 
-public class DistributedFile {
+public class DistributedFile implements Serializable {
     private String filename;
     private ArrayList<FilePartition[]> blocks;
 
@@ -116,7 +116,10 @@ public class DistributedFile {
                 }
             }
             return (count == 0 && !empty) ? 1 : count;
-        } finally {
+        } catch (Exception e){
+            e.printStackTrace(System.out);
+            throw new IOException();
+        }finally {
             is.close();
         }
     }
