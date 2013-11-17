@@ -116,7 +116,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         System.out.println("jobNodeList " + jobNodeList);
         for(int i = 0; i < j.getTotalReduces(); i++) {
             System.out.println("Scheduling ReduceTask " + i);
-            r = new ReduceTask(i,j.getJid(),null,j,j.getJid() + "part" + i); 
+            r = new ReduceTask(i,j.getJid(),null,j,"/tmp/" + j.getJid() + "part" + i); 
             r.setNodeList(jobNodeList.get(j.getJid()));
             r.setNodeId(i);
             tasks.add(new Object[]{null,r});
@@ -125,20 +125,20 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     }
 
     public void scheduleFinalReduce(Job j) {
-        FileInputStream in;
-        RandomAccessFile out;
+        BufferedReader in;
+        PrintWriter out;
         String line;
-        byte[] b;
+        char[] b;
         File f;
         System.out.println("Compiling all Reduces!");
         try{
-            out = new RandomAccessFile(j.getOutput(),"rws");
+            out = new PrintWriter(new BufferedWriter(new FileWriter(j.getOutput())));
             for(int i = 0; i < j.getTotalReduces(); i++) {
-                f = new File(j.getJid() + "part" + i);
-                in = new FileInputStream(f);
-                b = new byte[(int)f.length()];
-                in.read(b);
-                out.write(b);
+                f = new File("/tmp/" + j.getJid() + "part" + i);
+                in = new BufferedReader(new FileReader(f));
+                b = new char[(int)f.length()];
+                in.read(b,0,b.length);
+                out.print(b);
                 in.close();
             }
             out.close();

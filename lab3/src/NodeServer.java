@@ -96,7 +96,7 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
                 ReduceTask r = (ReduceTask) task;
                 List<FileServerInterface> nodeList = r.getNodeList(); 
                 List<String> inputFiles = new LinkedList<String>(); 
-                String name = r.getJob().getJid() + "reduce" + r.getNodeId();
+                String name = "/tmp/" + r.getJob().getJid() + "reduce" + r.getNodeId();
                 System.out.println(name);
                 int counter = 0;
                 try {
