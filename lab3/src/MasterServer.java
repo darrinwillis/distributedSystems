@@ -113,6 +113,8 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         System.out.println("Scheduling Reducers for jid " + j.getJid());
         
         System.out.println("jobNodeList " + jobNodeList);
+        ///////////////// Use localDir //////////////////
+        String localDir = Config.getLocalDirectory();
         for(int i = 0; i < j.getTotalReduces(); i++) {
             System.out.println("Scheduling ReduceTask " + i);
             r = new ReduceTask(i,j.getJid(),null,j,"/tmp/" + j.getJid() + "part" + i); 
@@ -130,6 +132,8 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         char[] b;
         File f;
         System.out.println("Compiling all Reduces!");
+        ///////////////// Use localDir //////////////////
+        String localDir = Config.getLocalDirectory();
         try{
             out = new PrintWriter(new BufferedWriter(new FileWriter(j.getOutput())));
             for(int i = 0; i < j.getTotalReduces(); i++) {
