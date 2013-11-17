@@ -11,6 +11,7 @@ final class Node implements Serializable
     String name;
     NodeFileServerInterface server;
     boolean isConnected;
+    boolean beenCleaned;
     InetAddress address;
     int cores;
     ArrayList<FilePartition> files;
@@ -262,6 +263,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         newNode.address = newAddress;
         newNode.server = null;
         newNode.isConnected = false;
+        newNode.beenCleaned = false;
         newNode.files = new ArrayList<FilePartition>();
         this.nodes.put(address, newNode);
     }
@@ -278,17 +280,6 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             rmiRegistry = LocateRegistry.createRegistry(registryPort);
             System.out.println("Registry server created");
         }
-    
-        // Attempt to stop a previous instance of the server
-        // TODO: This doesn't seem to work. 
-        try{        
-            MasterFileServerInterface oldServer = 
-             (MasterFileServerInterface)rmiRegistry.lookup(masterServerRegistryKey);
-            oldServer.stop();
-            System.out.println("Stopped old server");
-        } catch (NotBoundException|RemoteException e) {
-            System.out.println("No old server found on old registry");
-        }
 
         // Bind the new server
         try {
@@ -296,8 +287,11 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("Registry port is: " + registryPort);
-        System.out.println("masterServerRegistryKey is: " + masterServerRegistryKey);
+        // Clean all nodes
+        for (Node eachNode : nodes.values().toArray(new Node[0])) {
+            System.out.println("Cleaning " + eachNode.name);
+            eachNode.server.cleanLocalDirectory();
+        }
     }
 
     // This allows a user to stop the server
@@ -366,6 +360,12 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             foundNode.isConnected = true;
             foundNode.server = server;
             foundNode.cores = cores;
+            try{
+                if (!foundNode.beenCleaned)
+                    foundNode.server.cleanLocalDirectory();
+            } catch (RemoteException e) {
+                System.out.println("Unable to clean " + foundNode.name);
+            }
             nodeQueue.add(foundNode);
         }
     }
@@ -417,6 +417,9 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             dfile = allocateFile(dfile);
             //Send relevant partitions to all nodes
             commit(dfile);
+            //Remove local Copy
+            File localDir = new File(Config.getLocalDirectory());
+            for (File f:localDir.listFiles()) f.delete();
         } catch (Exception e) {
             System.out.println("Error");
             e.printStackTrace(System.out);
@@ -500,8 +503,10 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
 
     public String monitorFiles() throws RemoteException
     {
-        String s = "###### Files ######\n";
+        String s = "\n###### Files ######\n";
         Iterator<DistributedFile> iter = this.fileList.listIterator();
+        if (!iter.hasNext())
+            s = s.concat("\t No files");
         while (iter.hasNext()) {
             DistributedFile dfile = iter.next();
             s = s.concat("\n\t" + dfile.getFileName());
@@ -512,7 +517,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     
     public String monitorNodes() throws RemoteException
     {
-        String s = "###### Nodes ######\n";
+        String s = "\n###### Nodes ######\n";
         Enumeration<Node> en = this.nodes.elements();
         while (en.hasMoreElements()) {
             Node n = en.nextElement();

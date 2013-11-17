@@ -223,6 +223,13 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
         return;
     }
 
+    //Delete all local files
+    public void cleanLocalDirectory() throws RemoteException
+    {
+        File localDir = new File(Config.getLocalDirectory());
+        for (File f:localDir.listFiles()) f.delete();
+    }
+
     public OutputStream getOutputStream(File f) throws IOException {
         f.getParentFile().mkdirs();
         return new RMIOutputStream(new RMIOutputStreamImpl(new 

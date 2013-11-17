@@ -83,12 +83,12 @@ public class Monitor {
         try{
             MasterFileServerInterface masterServer = getMaster();
             stdin = new BufferedReader(new InputStreamReader(System.in));
-            String helpString = "start: begin a mapreduce job\n" +
+            String helpString = "\nstart: begin a mapreduce job\n" +
                                 "add: add a file to the DFS\n" +
                                 "nodes: view info about all nodes\n" +
                                 "files: view a list of all files\n" +
                                 "monitor: view a comprehensive breakdown of files\n"+
-                                "quit: exit this terminal";
+                                "quit: exit this terminal\n";
             System.out.println("start, add, monitor, nodes, files, or quit");
             boolean isRunning = true;
             while(isRunning) {
