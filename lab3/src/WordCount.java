@@ -14,7 +14,6 @@ public class WordCount extends Job {
     }
     
     public List<String[]> map(String key, String val) {
-	System.out.println("Map");
 	String[] words = val.split(" ");
 	List<String[]> out = new ArrayList<String[]>(words.length);
 	for (String s : words) {
@@ -25,7 +24,6 @@ public class WordCount extends Job {
     }
 
     public String reduce(String key, List<String> vals, String initVal) {
-	System.out.println("Reduce");
 	int count = Integer.parseInt(initVal);
 	for (String s : vals) {
 	    try {

@@ -9,7 +9,7 @@ public abstract class Job implements Serializable {
     private List<String> inputFileNames;
 
     public Job() {
-	totalMaps = 10;
+	totalMaps = 1;
 	totalReduces = 3;
     }
 
