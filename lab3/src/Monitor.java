@@ -97,8 +97,8 @@ public class Monitor {
                 String[] args = input.split(" ");
 
                 if (args[0].equals("start")) {
-                    if (args.length < 4) {
-                        System.out.println("Format: start (jobclass) (outputfile) (inputfiles)");
+                    if (args.length != 5) {
+                        System.out.println("Format: start (jobclass) (outputfile) (inputfiles) (# reduces)");
                         continue;
                     }
                     if (masterServer != null) {
@@ -107,14 +107,10 @@ public class Monitor {
                         Job j = (Job) Class.forName(jobName).newInstance();
 
                         j.setOutput(args[2]);
-                        List<String> inputFiles = new ArrayList<String>();
-                                            
-                        for (int i = 3; i < args.length; i++) {
-                            inputFiles.add(args[i]);
-                        }
 
-                        j.setInput(inputFiles);
-                                            
+                        j.setInput(args[3]);
+                        
+                        j.setTotalReduces(Integer.parseInt(args[4]));
                         masterServer.newJob(j);
                         System.out.println(jobName + " added");
                     } else {

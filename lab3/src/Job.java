@@ -6,21 +6,27 @@ public abstract class Job implements Serializable {
     private int totalMaps;
     private int totalReduces;
     private String outputFileName;
-    private List<String> inputFileNames;
+    private String inputFileName;
+    private DistributedFile dFile;
 
     public Job() {
-	totalMaps = 1;
-	totalReduces = 3;
     }
 
-    public void setInput(List<String> inputFiles){
-	inputFileNames = inputFiles;
+    public void setDFile(DistributedFile file) {
+        dFile = file;
+        totalMaps = dFile.getBlocks().size();
+    }
+    public DistributedFile getDFile() {
+        return dFile;
+    }
+    public void setInput(String inputFile){
+	inputFileName = inputFile;
     }
     public void setOutput(String outputFile){
 	outputFileName = outputFile;
     }
-    public List<String> getInput(){
-	return inputFileNames;
+    public String getInput(){
+	return inputFileName;
     }
     public String getOutput(){
 	return outputFileName;

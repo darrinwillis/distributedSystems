@@ -38,7 +38,6 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     private int currentNodeId;
     private Queue<Job> jobs;
     private LinkedList<Object[]> tasks; 
-    private Queue<Node> nodeQueue;
     private ConcurrentMap<Integer,Integer> jobMapsDone; //jid, maps done
     private ConcurrentMap<Integer,Integer> jobReducesDone;
     private Map<Integer,List<FileServerInterface>> jobNodeList; 
@@ -56,7 +55,6 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         this.jobNodeList = new HashMap<Integer,List<FileServerInterface>>();
         this.fileList = new LinkedList<DistributedFile>();
 
-        nodeQueue = new LinkedList<Node>(nodes.values());
         this.isRunning = true;
         scheduler = new Scheduler();
         scheduler.start();
@@ -66,39 +64,33 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         this.currentNodeId = 0;
     }
     
-    public List<Object[]> locateFile(String fileName) {
-        List<Object[]> nodeFiles = new LinkedList<Object[]>();
-        for(Node node : nodeQueue) {
-            System.out.println(node + ": " + node.files);
-            for(FilePartition f : node.files) {
-                if (f.getFileName().indexOf(fileName) >= 0) {
-                    nodeFiles.add(new Object[]{node,f});
-                    System.out.println("Found partition at node " + node.name);
-                }
-            }
+    public DistributedFile findDistributedFile(String name) {
+        for (DistributedFile d : fileList) {
+            if (d.getFileName().equals(name))
+                return d;
         }
-        return nodeFiles;
+        System.out.println("File not found");
+        return null;
     }
-
+    
+    
     public void newJob(Job j) {
         try {
             System.out.println("Recieved Job " + j);
             int jid = currentJid++;
+            int tid = 0;
+            DistributedFile d = findDistributedFile(j.getInput());
+            j.setDFile(d);
+            
             j.setJid(jid);
             jobs.add(j);
             jobMapsDone.put(jid,0); 
             jobReducesDone.put(jid,0);
             jobNodeList.put(jid,new LinkedList<FileServerInterface>());
-            List<String> inputs = j.getInput();
-            for(int i = 0; i < inputs.size(); i++) { //TODO: variable mapTask scheduling
-                String name = inputs.get(i);
-                List<Object[]> nodeList = locateFile(name);
-                for(Object[] node_file : nodeList ) {
-                    FilePartition f = (FilePartition)node_file[1]; 
-                    Node node = (Node)node_file[0];
-                    MapTask m = new MapTask(i,jid,f,j,jid + "out" + i); 
-                    tasks.add(new Object[]{node,m}); //TODO: change Scheduler
-                }
+            List<FilePartition[]> blocks = j.getDFile().getBlocks();
+            for(Object[] fps : blocks ) {
+                MapTask m = new MapTask(tid++,jid,null,j,""); 
+                tasks.add(new Object[]{fps,m}); //TODO: change Scheduler
             }
             System.out.println("Finished Adding Map Tasks");
             System.out.println(tasks);
@@ -117,7 +109,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         String localDir = Config.getLocalDirectory();
         for(int i = 0; i < j.getTotalReduces(); i++) {
             System.out.println("Scheduling ReduceTask " + i);
-            r = new ReduceTask(i,j.getJid(),null,j,"/tmp/" + j.getJid() + "part" + i); 
+            r = new ReduceTask(i,j.getJid(),null,j,localDir + j.getJid() + "part" + i); 
             r.setNodeList(jobNodeList.get(j.getJid()));
             r.setNodeId(i);
             tasks.add(new Object[]{null,r});
@@ -137,7 +129,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         try{
             out = new PrintWriter(new BufferedWriter(new FileWriter(j.getOutput())));
             for(int i = 0; i < j.getTotalReduces(); i++) {
-                f = new File("/tmp/" + j.getJid() + "part" + i);
+                f = new File(j.getOutput());
                 in = new BufferedReader(new FileReader(f));
                 b = new char[(int)f.length()];
                 in.read(b,0,b.length);
@@ -176,37 +168,56 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     }
 
     public class Scheduler extends Thread {
-
+        private LinkedList<Node> nodeQueue;
+        
         public Scheduler() {
             System.out.println("Scheduler started");
+            nodeQueue = new LinkedList<Node>(nodes.values()); 
         }
         
-        
-        public void scheduleTask(Node n, Task t) throws RemoteException {
-            System.out.println("Starting " + t + " on node " + n.name);
-                            
-            n.server.scheduleTask(t); 
-            System.out.println("Scheduled Task");
-            nodeQueue.remove();
-            tasks.removeFirst();
-            nodeQueue.add(n);
+        public void scheduleMap(FilePartition[] fps, MapTask m) throws RemoteException{
+            List<Node> ns = new ArrayList<Node>();
+            
+            for(int i = 0; i < fps.length; i++) {
+                ns.add(fps[i].getLocation());
+            }
+            
+            for(Node n : nodeQueue) {
+                if(ns.contains(n) && !n.server.isFull()) {
+                    m.setPartition(fps[ns.indexOf(n)]);
+                    n.server.scheduleTask(m);
+                    System.out.println("Starting " + m + " on node " + n.name);
+                    nodeQueue.remove(n);
+                    nodeQueue.add(n); 
+                    tasks.removeFirst();
+                    return;
+                }
+            }
+            System.out.println("Unable to Schedule Task " + m);
+            System.exit(0);
+        }
+        public void scheduleReduce(ReduceTask t) throws RemoteException {
+            Node n = nodeQueue.element(); 
+            if(n.server.isFull())
+                nodeQueue.add(nodeQueue.removeFirst());
+            else {
+                n.server.scheduleTask(t); 
+                System.out.println("Starting " + t + " on node " + n.name);
+                nodeQueue.remove(n);
+                tasks.removeFirst();
+                nodeQueue.add(n);
+            }
         }
         public void run() {
             while(isRunning) {
                 try{
                     while(nodeQueue.size() > 0 && tasks.size() > 0) {
-                        Node n = nodeQueue.element();
                         Object[] objs = tasks.getFirst();
-                        Node _n = (Node)objs[0];
                         Task t = (Task)objs[1]; 
-                        if(_n == null) 
-                            scheduleTask(n,t);
-                        else if(n.server.isFull() || !n.name.equals(_n.name)) {
-                            System.out.println("Node incompatable, trying next");
-                            nodeQueue.add(nodeQueue.remove());
-                        } else {
-                            scheduleTask(n,t);
-                        }
+                        if (t instanceof MapTask) 
+                            scheduleMap((FilePartition[])objs[0],(MapTask)t);
+                        else 
+                            scheduleReduce((ReduceTask)t);
                     }
                 } catch(Exception e) {
                     e.printStackTrace(System.out);
@@ -370,7 +381,6 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             } catch (RemoteException e) {
                 System.out.println("Unable to clean " + foundNode.name);
             }
-            nodeQueue.add(foundNode);
         }
     }
    
