@@ -440,7 +440,6 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             for (int i = 0; i < block.length; i++)
             {
                 FilePartition eachPartition = block[i];
-                System.out.println("Performing on replica " + eachPartition.getFileName());
                 // Place on node with fewest files
                 Node optimalNode = null;
                 int optSize = Integer.MAX_VALUE;
@@ -449,7 +448,6 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
                 while (nodeEnum.hasMoreElements())
                 {
                     Node eachNode = nodeEnum.nextElement();
-                    System.out.println("Considering " + eachNode.name);
 
                     // Determines viable nodes for this replica
                     if (eachNode.isConnected && (!placedNodes.contains(eachNode)))
@@ -458,7 +456,6 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
                         int thisSize = eachNode.files.size() + 
                             ((tempNodeSize == null) ? 0 : tempNodeSize);
                         if (thisSize < optSize) {
-                            System.out.println(eachNode.name + " chosen for now");
                             //This is the new optimal node
                             optSize = thisSize;
                             optimalNode = eachNode;
@@ -475,7 +472,6 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
                 Integer newsize = ((oldsize == null) ? 0 : oldsize)
                     + block[i].getSize();
                 tempSize.put(optimalNode, newsize);
-                System.out.println("");
             }
         }
         return dfile;
