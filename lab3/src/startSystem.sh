@@ -18,3 +18,4 @@ do
     bash $each
 done ;
 echo "System is up"
+./terminal.sh

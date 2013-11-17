@@ -83,12 +83,19 @@ public class Monitor {
         try{
             MasterFileServerInterface masterServer = getMaster();
             stdin = new BufferedReader(new InputStreamReader(System.in));
-            System.out.println("start, add, monitor, files, or quit");
+            String helpString = "start: begin a mapreduce job\n" +
+                                "add: add a file to the DFS\n" +
+                                "nodes: view info about all nodes\n" +
+                                "files: view a list of all files\n" +
+                                "monitor: view a comprehensive breakdown of files\n"+
+                                "quit: exit this terminal";
+            System.out.println("start, add, monitor, nodes, files, or quit");
             boolean isRunning = true;
             while(isRunning) {
+                System.out.print("[MapReduce]> ");
                 String input = stdin.readLine();
                 String[] args = input.split(" ");
-                
+
                 if (args[0].equals("start")) {
                     if (args.length < 4) {
                         System.out.println("Format: start (jobclass) (outputfile) (inputfiles)");
@@ -113,8 +120,12 @@ public class Monitor {
                     isRunning = false;
                 } else if (input.equals("monitor")) {
                     System.out.println(monitor());
+                } else if (input.equals("help")) {
+                    System.out.println(helpString);
                 } else if (input.equals("files")) {
                     System.out.println(files());
+                } else if (input.equals("nodes")) {
+                    System.out.println(nodes());
                 } else if (args[0].equals("add")) {
                     if (args.length < 2) {
                         System.out.println("Format: add (filename)");
@@ -129,6 +140,8 @@ public class Monitor {
                         addNewFile(filename);
                     }
 
+                } else {
+                    System.out.println("Unrecognized command. Type help for info");
                 }
             }
         } catch (Exception e) {
@@ -205,6 +218,20 @@ public class Monitor {
         try {
             if (master != null)
                 return master.monitorFiles();
+            else
+                return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private static String nodes()
+    {
+        MasterFileServerInterface master = getMaster();
+        try {
+            if (master != null)
+                return master.monitorNodes();
             else
                 return null;
         } catch (Exception e) {
