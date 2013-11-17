@@ -40,8 +40,8 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     private LinkedList<Object[]> tasks; 
     private ConcurrentMap<Integer,Integer> jobMapsDone; //jid, maps done
     private ConcurrentMap<Integer,Integer> jobReducesDone;
-    private Map<Integer,List<FileServerInterface>> jobMapNodeList;
-    private Map<Integer,List<FileServerInterface>> jobReduceNodeList;
+    private ConcurrentMap<Integer,List<FileServerInterface>> jobMapNodeList;
+    private ConcurrentMap<Integer,HashMap<String,Node>> jobReduceNodeList;
     private Scheduler scheduler;
     private boolean isRunning;
 
@@ -53,12 +53,13 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         this.tasks = new LinkedList<Object[]>();
         this.jobMapsDone = new ConcurrentHashMap<Integer,Integer>();
         this.jobReducesDone = new ConcurrentHashMap<Integer,Integer>();
-        this.jobMapNodeList = new HashMap<Integer,List<FileServerInterface>>();
-        this.jobReduceNodeList = new HashMap<Integer,List<FileServerInterface>>();
+        this.jobMapNodeList = new ConcurrentHashMap<Integer,List<FileServerInterface>>();
+        this.jobReduceNodeList = new ConcurrentHashMap<Integer,HashMap<String,Node>>();
         this.fileList = new LinkedList<DistributedFile>();
 
         this.isRunning = true;
         scheduler = new Scheduler();
+        scheduler.start();
 
         parseFile(configFileName);
         this.currentJid = 0;
@@ -76,7 +77,6 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     
     public void newJob(Job j) {
         try {
-            scheduler.start();
             System.out.println("Recieved Job " + j);
             int jid = currentJid++;
             int tid = 0;
@@ -88,7 +88,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             jobMapsDone.put(jid,0); 
             jobReducesDone.put(jid,0);
             jobMapNodeList.put(jid,new LinkedList<FileServerInterface>());
-            jobReduceNodeList.put(jid,new LinkedList<FileServerInterface>());
+            jobReduceNodeList.put(jid,new HashMap<String,Node>());
             List<FilePartition[]> blocks = j.getDFile().getBlocks();
             for(Object[] fps : blocks ) {
                 MapTask m = new MapTask(tid++,jid,null,j,""); 
@@ -130,9 +130,11 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         try{
             out = new PrintWriter(new BufferedWriter(new FileWriter(j.getOutput())));
             for(int i = 0; i < j.getTotalReduces(); i++) {
+                String fileName = localDir + j.getJid() + "part" + i;
                 f = new File(j.getJid() + "part" + i); 
-                FileServerInterface node = jobReduceNodeList.get(j.getJid()).get(i);
-                FileIO.download(node,new File(localDir + j.getJid() + "part" + i),f);
+                Node node = jobReduceNodeList.get(j.getJid()).get(fileName);
+                System.out.println("Got node " + node.name);
+                FileIO.download(node.server,new File(fileName),f);
                 in = new BufferedReader(new FileReader(f));
                 b = new char[(int)f.length()];
                 in.read(b,0,b.length);
@@ -142,7 +144,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             }
             out.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            e.printStackTrace(System.out);
         }
         System.out.println("DONE");
     }
@@ -165,7 +167,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         Job j = t.getJob();
         int reduces = jobReducesDone.get(j.getJid()) + 1;
         jobReducesDone.put(j.getJid(),reduces);
-        jobReduceNodeList.get(j.getJid()).add(nodes.get(name).server);
+        jobReduceNodeList.get(j.getJid()).put(t.getOutputFile(),nodes.get(name));
         if(reduces >= j.getTotalReduces()){
             scheduleFinalReduce(j);
             //jobReducesDone.remove(j.getJid());
