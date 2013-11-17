@@ -31,7 +31,7 @@ public class DistributedFile {
         {
             FilePartition[] dups = new FilePartition[replicationFactor];
             // Names the file so it is stored locally
-            String blockName = "/tmp/dfiles/" + filename + "part" + i;
+            String blockName = Config.getLocalDirectory() + filename + "part" + i;
             int thisSize = (i == numBlocks - 1) && (remainderSize > 0)
                 ? remainderSize : blockSize ;
             // Create a new local file to send to a node
