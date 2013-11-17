@@ -28,8 +28,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
 
     //Instance variables
     // DFS information
-    private volatile Hashtable<String, Node> nodes;
-    private volatile Hashtable<Integer, Node> nodeMap;
+    private ConcurrentHashMap<String, Node> nodes;
     private List<DistributedFile> fileList;
 
     // MapReduce information
@@ -48,8 +47,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     public MasterServer() throws RemoteException
     {
         System.setProperty("sun.rmi.transport.tcp.responseTimeout", "5000");
-        this.nodes = new Hashtable<String, Node>();
-        this.nodeMap = new Hashtable<Integer, Node>();
+        this.nodes = new ConcurrentHashMap<String, Node>();
         this.jobs = new LinkedList<Job>();
         this.tasks = new LinkedList<Object[]>();
         this.jobMapsDone = new ConcurrentHashMap<Integer,Integer>();
@@ -266,7 +264,6 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         newNode.isConnected = false;
         newNode.files = new ArrayList<FilePartition>();
         this.nodes.put(address, newNode);
-        this.nodeMap.put(currentNodeId++, newNode);
     }
 
     // This allows the server to be reached by any nodes or users
@@ -350,7 +347,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         
     }
 
-    public void register(NodeFileServerInterface server, String address)
+    public void register(NodeFileServerInterface server, String address, int cores)
     {
         System.out.println("Client connected");
         Node foundNode = this.nodes.get(address);
@@ -368,6 +365,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             System.out.println(address + " is now connected");
             foundNode.isConnected = true;
             foundNode.server = server;
+            foundNode.cores = cores;
             nodeQueue.add(foundNode);
         }
     }
@@ -508,7 +506,25 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             DistributedFile dfile = iter.next();
             s = s.concat("\n\t" + dfile.getFileName());
         }
-        s = s.concat("\n\n###### EndFiles ######\n");
+        s = s.concat("\n\n###### End Files ######\n");
+        return s;
+    }
+    
+    public String monitorNodes() throws RemoteException
+    {
+        String s = "###### Nodes ######\n";
+        Enumeration<Node> en = this.nodes.elements();
+        while (en.hasMoreElements()) {
+            Node n = en.nextElement();
+            s = s.concat("\n\t" + n.name);
+            s = s.concat("\n\t\tStatus: " + 
+                (n.isConnected ? "Connected" : "Not Connected"));
+            s = s.concat("\n\t\tCores: " + n.cores);
+            s = s.concat("\n\t\tNumber of File Partitions: " + n.files.size());
+            //TODO: mapreduce info 
+
+        }
+        s = s.concat("\n\n###### End Nodes ######\n");
         return s;
     }
 
@@ -522,8 +538,9 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             s = s.concat("\nReport for: " + each.name);
             s = s.concat(each.isConnected ? "\n\tConnected" : "\n\tNot Connected");
             s = s.concat("\n\tInetAddress: " + each.address);
-            s = s.concat("\n\tFiles are:\n");
+
             ListIterator<FilePartition> iter = each.files.listIterator();
+            s = s.concat(iter.hasNext() ? "\n\tFiles are:\n" : "\n\tNo Files");
             while (iter.hasNext()) {
                 FilePartition fp = iter.next();
                 s = s + "\t\t" + fp.getFileName() + " part " + fp.getIndex() 

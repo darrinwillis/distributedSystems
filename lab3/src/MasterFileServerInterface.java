@@ -9,7 +9,7 @@ public interface MasterFileServerInterface extends FileServerInterface
 {
     // Adds
     void addNewFile(String filename, FileServerInterface host) throws RemoteException;
-    void register(NodeFileServerInterface node, String address) throws RemoteException;
+    void register(NodeFileServerInterface node, String address, int cores) throws RemoteException;
     void stop() throws RemoteException;
 
     void newJob(Job j) throws RemoteException;
@@ -17,5 +17,6 @@ public interface MasterFileServerInterface extends FileServerInterface
     void finishedReduce(Task t) throws RemoteException;
     String monitorAll() throws RemoteException;
     String monitorFiles() throws RemoteException;
+    String monitorNodes() throws RemoteException;
 }
 

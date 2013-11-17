@@ -21,6 +21,7 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
     private MasterFileServerInterface masterServer;
     private boolean isRunning;
     private SlaveNode slave;
+    private int numCores;
     private int mapSlots; // map + reduce + 1 = cores
     private int reduceSlots; 
     private TaskTracker taskTracker; // admin thread
@@ -30,7 +31,8 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
     {
         try{
             System.setProperty("sun.rmi.transport.tcp.responseTimeout", "5000");
-            mapSlots = 10;
+            numCores = Runtime.getRuntime().availableProcessors();
+            mapSlots = 10; //TODO: This should be less bad
             reduceSlots = 5;
             taskThreads = new LinkedList<TaskThread>();
             taskTracker = new TaskTracker();
@@ -162,7 +164,7 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
                     rmiRegistry.lookup(masterServerRegistryKey);
 
                 //UnicastRemoteObject.exportObject(this, nodePort);
-                masterServer.register(this, this.name);
+                masterServer.register(this, this.name, this.numCores);
                 foundMaster = true;
             } catch (RemoteException|NotBoundException e)
                 {
