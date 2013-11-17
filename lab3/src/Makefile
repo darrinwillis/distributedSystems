@@ -35,6 +35,7 @@ CLASSES = \
 	TestClient.java \
 	Job.java \
 	Task.java \
+	Status.java \
 	ReduceTask.java \
 	MapTask.java \
 	SlaveNode.java \

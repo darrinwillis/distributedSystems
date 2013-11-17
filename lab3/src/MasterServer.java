@@ -9,6 +9,7 @@ import java.util.concurrent.*;
 final class Node implements Serializable
 {
     String name;
+    Status status;
     NodeFileServerInterface server;
     boolean isConnected;
     boolean beenCleaned;
@@ -43,6 +44,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
     private ConcurrentMap<Integer,Integer> jobReducesDone;
     private Map<Integer,List<FileServerInterface>> jobNodeList; 
     private Scheduler scheduler;
+    private Heartbeater heartbeater;
     private boolean isRunning;
 
     public MasterServer() throws RemoteException
@@ -60,11 +62,50 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         this.isRunning = true;
         scheduler = new Scheduler();
         scheduler.start();
+        heartbeater = new Heartbeater();
+        heartbeater.start();
 
         parseFile(configFileName);
         this.currentJid = 0;
         this.currentNodeId = 0;
     }
+
+    public class Heartbeater extends Thread {
+
+        public Heartbeater() {
+            System.setProperty("sun.rmi.transport.tcp.responseTimeout", "5000");
+            System.out.println("Heartbeater started");
+        }
+        
+        public void run() {
+            while(isRunning) {
+                Enumeration<Node> enumerate = nodes.elements();
+                // Iterate through all nodes to check if connected
+                while (enumerate.hasMoreElements()) {
+                    Node each = enumerate.nextElement();
+                    try {
+                        if (each.server != null) {
+                            each.status = each.server.getStatus();
+                            each.isConnected = true;
+                        }
+                        else
+                            each.isConnected = false;
+                    } catch (RemoteException e) {
+                        // This is thrown when a node cannot be reached
+                        each.isConnected = false;
+                    }
+
+                }
+                try{
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            System.out.println("HeartBeater Stopped");
+        }
+    }   
+
     
     public List<Object[]> locateFile(String fileName) {
         List<Object[]> nodeFiles = new LinkedList<Object[]>();
@@ -353,7 +394,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         System.out.println("Client connected");
         Node foundNode = this.nodes.get(address);
         if (foundNode == null){
-            System.out.println("Unrecognized client; ignoring");
+            System.out.println("Unrecognized client" + address + " ; ignoring");
             return;
         }
         if (foundNode.isConnected)

@@ -7,7 +7,6 @@ import java.rmi.registry.*;
 // and system-level user interaction
 
 public class Monitor {
-    private static MonitorThread monitorThread;
     private static volatile boolean shouldMonitor;
 
     public static void main(String[] args)
@@ -57,7 +56,6 @@ public class Monitor {
     {
         BufferedReader stdin = null;
         try{
-            MasterFileServerInterface masterServer = getMaster();
             stdin = new BufferedReader(new InputStreamReader(System.in));
             String helpString = "\nstart: begin a mapreduce job\n" +
                                 "add: add a file to the DFS\n" +

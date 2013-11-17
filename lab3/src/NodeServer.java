@@ -123,6 +123,15 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
             }
         }
     }
+
+    public Status getStatus() throws RemoteException
+    {
+        Status currentStatus = new Status();
+        currentStatus.tasks = this.slave.tasks;
+        currentStatus.mapSlots = this.mapSlots;
+        currentStatus.reduceSlots = this.reduceSlots;
+        return currentStatus;
+    }
             
     
     // This parses constants in the format
