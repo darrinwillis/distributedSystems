@@ -54,5 +54,5 @@ public abstract class Job implements Serializable {
     public abstract String getIdentity();
 
     public abstract List<String[]> map(String key, String val);
-    public abstract String reduce(String key, List<String> vals, String init);
+    public abstract String reduce(String key, List<String> vals);
 }

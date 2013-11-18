@@ -23,8 +23,8 @@ public class WordCount extends Job {
         return out;
     }
 
-    public String reduce(String key, List<String> vals, String initVal) {
-        int c = Integer.parseInt(initVal);
+    public String reduce(String key, List<String> vals) {
+        int c = Integer.parseInt(getIdentity());
         for (String s : vals) {
             c += Integer.parseInt(s.trim());
             

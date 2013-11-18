@@ -14,8 +14,8 @@ class LongestLine extends Job {
         return output;
     }
 
-    public String reduce(String key, List<String> vals, String initVal) {
-        int maxLen = Integer.parseInt(initVal);
+    public String reduce(String key, List<String> vals) {
+        int maxLen = Integer.parseInt(getIdentity());
         String longestLine = "";
         for (String s : vals) {
             if (s.length() > maxLen) {
