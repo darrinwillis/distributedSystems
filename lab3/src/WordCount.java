@@ -14,9 +14,9 @@ public class WordCount extends Job {
     }
     
     public List<String[]> map(String key, String val) {
-        String[] words = val.split(" ");
-        List<String[]> out = new ArrayList<String[]>(words.length);
-        for (String s : words) {
+        String[] ws = val.split(" ");
+        List<String[]> out = new ArrayList<String[]>(ws.length);
+        for (String s : ws) {
             out.add(new String[] {s, "1"});
         }
                     
@@ -24,15 +24,12 @@ public class WordCount extends Job {
     }
 
     public String reduce(String key, List<String> vals, String initVal) {
-        int count = Integer.parseInt(initVal);
+        int c = Integer.parseInt(initVal);
         for (String s : vals) {
-            try {
-                count += Integer.parseInt(s.trim());
-            } catch (Exception e) {
-                System.err.println("Error parsing number string:" + s);
-            }
+            c += Integer.parseInt(s.trim());
+            
         }
-        return ""+count;
+        return ""+c;
     }
 
 }

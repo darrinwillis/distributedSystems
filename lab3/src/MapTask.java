@@ -1,4 +1,5 @@
 import java.io.Serializable;
+import java.util.*;
 
 public class MapTask implements Serializable, Task{    
     private int tid;
@@ -6,15 +7,14 @@ public class MapTask implements Serializable, Task{
     private int slaveId; //location of the node
     private FilePartition partition;
     private Job job;
-    private String outputFile;
+    private List<String> outputFiles;
         
-    public MapTask(int t, int ji, FilePartition p, Job j,
-                   String o) {
+    public MapTask(int t, int ji, FilePartition p, Job j) {
         this.tid = t;
         this.jid = ji;
         this.partition = p;
         this.job = j;
-        this.outputFile = o;
+        this.outputFiles = new LinkedList<String>();
     }
         
     public int getTaskId() {
@@ -41,10 +41,10 @@ public class MapTask implements Serializable, Task{
     public void setJob(Job job) {
         this.job = job;
     }
-    public String getOutputFile() {
-        return outputFile;
+    public List<String> getOutputFiles() {
+        return outputFiles;
     }
-    public void setOutputFile(String outputFile) {
-        this.outputFile = outputFile;
+    public void setOutputFile(List<String> outputFiles) {
+        this.outputFiles = outputFiles;
     }
 }

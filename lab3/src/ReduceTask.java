@@ -7,7 +7,7 @@ public class ReduceTask implements Serializable, Task {
     private int tid;
     private int jid;
     private List<String> inputFiles; 
-    private List<FileServerInterface> nodeList;
+    private List<Node> nodeList;
     private Job job;
     private String outputFile;   
         
@@ -37,10 +37,10 @@ public class ReduceTask implements Serializable, Task {
     public void setNodeId(int nid) {
         this.nid = nid;
     }
-    public List<FileServerInterface> getNodeList() {
+    public List<Node> getNodeList() {
         return nodeList;
     }
-    public void setNodeList(List<FileServerInterface> nl) {
+    public void setNodeList(List<Node> nl) {
         this.nodeList = nl;
     }
     public List<String> getInputFiles() {

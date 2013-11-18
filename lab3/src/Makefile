@@ -40,7 +40,7 @@ CLASSES = \
 	MapTask.java \
 	SlaveNode.java \
 	WordCount.java \
-	Grep.java
+	LongestLine.java
 
 
 default: classes 

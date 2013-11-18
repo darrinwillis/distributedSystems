@@ -5,6 +5,4 @@ public interface Task {
     public void setJobId(int jid);
     public Job getJob();
     public void setJob(Job job);
-        
-    public String getOutputFile();
 }

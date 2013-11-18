@@ -68,9 +68,9 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
                         if(!t.isAlive()) {
                             taskThreads.remove(t);
                             if (t.task instanceof MapTask) {
-                                masterServer.finishedMap(t.task,name);
+                                masterServer.finishedMap((MapTask)t.task,name);
                             } else { //reducetask
-                                masterServer.finishedReduce(t.task,name);
+                                masterServer.finishedReduce((ReduceTask)t.task,name);
                             }
                         }
                     } catch(Exception e) {
@@ -92,31 +92,36 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
         }
         public void run() {
             if(task instanceof MapTask) {
-                System.out.println("Doing Map");
+    
                 slave.doMap((MapTask)task);
-            }else {//TODO: Get files from nodes
-                System.out.println("Doing Reduce");
+            }else {
+        
                 ReduceTask r = (ReduceTask) task;
-                List<FileServerInterface> nodeList = r.getNodeList(); 
+                List<Node> nodeList = r.getNodeList(); 
                 List<String> inputFiles = new LinkedList<String>(); 
-                String name = Config.getLocalDirectory() + r.getJob().getJid() + "reduce" + r.getNodeId();
-                System.out.println(name);
+                String fileName = Config.getLocalDirectory() + r.getJob().getJid() + "reduce" + r.getNodeId();
+                System.out.println("Node " + name +  " Doing " + fileName);
                 int counter = 0;
                 try {
-                    for(FileServerInterface node : nodeList) {
-                        File f;
-                        if(node.equals(this)){
-                            System.out.println("File is local");
-                            f = new File(name);
-                            f.renameTo(new File(name + "_" + counter));
-                        }
+                    for(Node node : nodeList) {
+                        try {
+                            File f;
+                            if(node.name.equals(name)){
+                                System.out.println(fileName + " is local");
+                                f = new File(fileName);
+                                f.renameTo(new File(fileName + "_" + counter));
+                          
+                            } else {
+                                System.out.println("Dowloading " + fileName + " from " + node.name);
+                                FileIO.download(node.server,new File(fileName),new File(fileName + "_" + counter)); 
                             
-                        FileIO.download(node,new File(name),new File(name + "_" + counter));
-                        inputFiles.add(name + "_" + counter); 
-                        counter++;
+                            }
+                            inputFiles.add(fileName + "_" + counter); 
+                            counter++;
+                        } catch(FileNotFoundException e) {}
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
+                }catch (Exception e) {
+                    e.printStackTrace(System.out);
                 }
                 r.setInputFiles(inputFiles);
                 slave.doReduce(r);
