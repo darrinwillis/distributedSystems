@@ -39,7 +39,9 @@ CLASSES = \
 	ReduceTask.java \
 	MapTask.java \
 	SlaveNode.java \
-	WordCount.java 
+	WordCount.java \
+	Grep.java
+
 
 default: classes 
 		@echo "Project Built"

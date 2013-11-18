@@ -333,6 +333,8 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         newNode.server = null;
         newNode.isConnected = false;
         newNode.beenCleaned = false;
+        Status newStat = new Status();
+        newNode.status = newStat;
         newNode.files = new ArrayList<FilePartition>();
         this.nodes.put(address, newNode);
     }
@@ -596,9 +598,11 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             s = s.concat("\n\t" + n.name);
             s = s.concat("\n\t\tStatus: " + 
                 (n.isConnected ? "Connected" : "Not Connected"));
-            s = s.concat("\n\t\tCores: " + n.cores);
+            s = s.concat("\n\t\tCores: " + n.cores + "; " 
+                + n.status.mapSlots + " Mappers and "
+                + n.status.reduceSlots +"Reducers");
             s = s.concat("\n\t\tNumber of File Partitions: " + n.files.size());
-            //TODO: mapreduce info 
+            s = s.concat("\n\t\tNumber of Tasks: " + n.status.tasks.size());
 
         }
         s = s.concat("\n\n###### End Nodes ######\n");
@@ -622,6 +626,17 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
                 FilePartition fp = iter.next();
                 s = s + "\t\t" + fp.getFileName() + " part " + fp.getIndex() 
                     + " size: " + fp.getSize() + "\n";
+            }
+            if (each.status.tasks != null) {
+                Iterator<Task> taskIter = each.status.tasks.iterator();
+                s = s.concat(taskIter.hasNext() ? 
+                    "\n\tTasks are:\n" : "\n\tNo Tasks");
+                while (taskIter.hasNext()) {
+                    Task eachTask = taskIter.next();
+                    Job j = eachTask.getJob();
+                    s = s + "\t\tTask for " + j.getInput() + 
+                        "; Task " + eachTask.getTaskId();
+                }
             }
         } while (enumerate.hasMoreElements());
         s = s.concat("\n\n######  END  REPORT  ######");
