@@ -244,7 +244,6 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
                 }
             }
             System.out.println("Unable to Schedule Task " + m);
-            System.exit(0);
         }
         public void scheduleReduce(ReduceTask t) throws RemoteException {
             Node n = nodeQueue.element(); 
