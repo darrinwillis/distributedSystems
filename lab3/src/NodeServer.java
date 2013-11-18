@@ -44,7 +44,7 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
             parseFile(configFileName);
             name = InetAddress.getLocalHost().getHostName();
         } catch (Exception e){
-            e.printStackTrace();
+            e.printStackTrace(System.out);
         }
     }
     public boolean isFull() throws RemoteException {
@@ -52,7 +52,6 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
     }
 
     public void scheduleTask(Task task) throws RemoteException{
-        System.out.println("Recieved Task " + task);
         TaskThread t = new TaskThread(task);
         t.start();
         taskThreads.add(t);
@@ -74,7 +73,7 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
                             }
                         }
                     } catch(Exception e) {
-                        e.printStackTrace();
+                        e.printStackTrace(System.out);
                         continue;
                     }
                 }           
@@ -100,19 +99,19 @@ public class NodeServer extends UnicastRemoteObject implements NodeFileServerInt
                 List<Node> nodeList = r.getNodeList(); 
                 List<String> inputFiles = new LinkedList<String>(); 
                 String fileName = Config.getLocalDirectory() + r.getJob().getJid() + "reduce" + r.getNodeId();
-                System.out.println("Node " + name +  " Doing " + fileName);
+                //System.out.println("Node " + name +  " Doing " + fileName);
                 int counter = 0;
                 try {
                     for(Node node : nodeList) {
                         try {
                             File f;
                             if(node.name.equals(name)){
-                                System.out.println(fileName + " is local");
+                                //System.out.println(fileName + " is local");
                                 f = new File(fileName);
                                 f.renameTo(new File(fileName + "_" + counter));
                           
                             } else {
-                                System.out.println("Dowloading " + fileName + " from " + node.name);
+                                //System.out.println("Dowloading " + fileName + " from " + node.name);
                                 FileIO.download(node.server,new File(fileName),new File(fileName + "_" + counter)); 
                             
                             }

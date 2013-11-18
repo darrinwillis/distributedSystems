@@ -136,7 +136,6 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
                 tasks.add(new Object[]{fps,m}); //TODO: change Scheduler
             }
             System.out.println("Finished Adding Map Tasks");
-            System.out.println(tasks);
         } catch(Exception e) {
             e.printStackTrace();
         }
@@ -224,7 +223,6 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         public Scheduler() {
             System.out.println("Scheduler started");
             nodeQueue = new LinkedList<Node>(nodes.values());
-            System.out.println(nodeQueue);
         }
         
         public void scheduleMap(FilePartition[] fps, MapTask m) throws RemoteException{
@@ -292,7 +290,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
             prop = Config.generateConfigFile(); 
         } catch (IOException e)
         {
-            e.printStackTrace();
+            e.printStackTrace(System.out);
         }
 
         //Check and assure file is formatted correctly
@@ -324,7 +322,7 @@ public class MasterServer extends UnicastRemoteObject implements MasterFileServe
         try{
             newAddress = InetAddress.getByName(address);
         } catch(Exception e) {
-            e.printStackTrace();
+            e.printStackTrace(System.out);
         }
         Node newNode = new Node();
         newNode.name = address;
