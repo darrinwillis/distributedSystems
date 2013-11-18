@@ -167,7 +167,7 @@ public class SlaveNode {
 	    Iterator it = kvs.keySet().iterator();
 	    while (it.hasNext()) {
 		String key = (String)it.next();
-		String value = j.reduce(key,kvs.get(key),j.getIdentity());
+		String value = j.reduce(key,kvs.get(key));
 		s = key + "~" + value;
 		out.println(s);
 		it.remove(); 
