@@ -1,6 +1,0 @@
-This is the first line
-This is the second line
-And the third
-and line 4
-And with a line 5 here
-And finally line 6
