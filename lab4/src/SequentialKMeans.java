@@ -10,6 +10,7 @@ public class SequentialKMeans
         public Cluster(DataInterface d)
         {
             this.centroid = d;
+            this.data = new ArrayList<DataUnit>();
         }
 
         public Cluster(DataInterface d, List<DataUnit> givenData)
@@ -28,7 +29,7 @@ public class SequentialKMeans
     }
 
     //TODO: Take this as a commandline argument
-    private static int K = 3;
+    private static int K = 4;
     //TODO: Dynamically determine mu
     private static int mu = 10;
 
@@ -40,21 +41,25 @@ public class SequentialKMeans
     public SequentialKMeans(List<DataInterface> inputData, int k) 
         throws IllegalArgumentException
     {
+        System.out.println("Making new Sequential K means object");
         if (inputData.size() < k)
             throw new IllegalArgumentException();
         // Convert the input data into DataUnits
         List<DataUnit> units = new ArrayList<DataUnit>();
         Iterator<DataInterface> iter = inputData.iterator();
+        System.out.println("Adding data units");
         while (iter.hasNext()) {
             units.add(new DataUnit(iter.next()));
         }
         this.dataList = units;
-        this.k = k; 
+        this.k = k;
+        this.clusters = new ArrayList<Cluster>();
+        System.out.println("Sequential K means object created");
     }
 
     public List<List<DataInterface>> calculateGroups()
     {
-        //Pick initial centroids
+        System.out.println("Picking initial centroids");
         pickInitialCentroids();
 
         for (int i = 0; i < mu; i++)
@@ -64,6 +69,7 @@ public class SequentialKMeans
             assignData();
             
             //Recalculate Centroids
+            System.out.println("Calculating new centroids");
             recalculateCentroids();
         }
         return formList();
@@ -83,7 +89,7 @@ public class SequentialKMeans
             do {
                 // index is [0, data.length)
                 index = (int)(Math.random() * numElements);
-            } while (!picked.contains(index));
+            } while (picked.contains(index));
             picked.add(index);
             //This is now guaranteed to be a unique DataUnit
             DataUnit newCentroid = dataList.get(index);
@@ -94,11 +100,18 @@ public class SequentialKMeans
 
     private void assignData()
     {
+        Iterator<Cluster> resetIter = clusters.iterator();
+        while (resetIter.hasNext())
+        {
+            resetIter.next().data = new ArrayList<DataUnit>();
+        }
+
         Iterator<DataUnit> diter = dataList.iterator();
         // Assign each DataInterface in the data list
         while (diter.hasNext())
         {
             DataUnit d = diter.next();
+            System.out.println("TESTING DATA " + d.data);
             Iterator<Cluster> citer = clusters.iterator();
             Cluster closest = null;
             int minDistance = Integer.MAX_VALUE;
@@ -107,12 +120,15 @@ public class SequentialKMeans
             {
                 Cluster c = citer.next();
                 int thisDistance = d.data.distance(c.centroid);
+                System.out.println("Testing cluster " + c.centroid + 
+                    "; distance is " + thisDistance);
                 if (thisDistance < minDistance) 
                 {
                     closest = c;
                     minDistance = thisDistance;
                 }
             }
+            System.out.println("closest cluster center is " + closest.centroid);
             // closest is now the optimal cluster; add d to it
             d.cluster = closest;
             closest.data.add(d);
@@ -161,6 +177,7 @@ public class SequentialKMeans
     {
         List<DataInterface> theData = getData();
         SequentialKMeans worker = new SequentialKMeans(theData, K);
+        System.out.println("Starting calculation");
         List<List<DataInterface>> groups = worker.calculateGroups();
         System.out.println("The resultant groups were:\n" + groups);
     }
@@ -185,6 +202,11 @@ public class SequentialKMeans
         list.add(b3);
         list.add(b4);
         return list;
+
+        //Pair c1 = new Pair(20, 20);
+
+
+
     }
 }
 
