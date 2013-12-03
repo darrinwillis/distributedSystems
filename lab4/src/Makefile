@@ -17,8 +17,9 @@ JFLAGS = -g
 	@$(JC) $(JFLAGS) $*.java
 
 CLASSES = \
-	WordCount.java \
-	LongestLine.java
+	DataInterface.java \
+	Pair.java \
+	SequentialKMeans.java
 
 
 default: classes 
