@@ -1,4 +1,5 @@
 import java.util.*;
+import java.io.*;
 
 public class SequentialKMeans
 {
@@ -29,9 +30,9 @@ public class SequentialKMeans
     }
 
     //TODO: Take this as a commandline argument
-    private static int K = 4;
+    private static int K = 3;
     //TODO: Dynamically determine mu
-    private static int mu = 10;
+    private static int mu = 20;
 
     //Instace Variables
     private int k;
@@ -64,12 +65,10 @@ public class SequentialKMeans
 
         for (int i = 0; i < mu; i++)
         {
-            System.out.println("Executing K means, iteration " + i);
             //Assign all data to centroids
             assignData();
             
             //Recalculate Centroids
-            System.out.println("Calculating new centroids");
             recalculateCentroids();
         }
         return formList();
@@ -111,7 +110,7 @@ public class SequentialKMeans
         while (diter.hasNext())
         {
             DataUnit d = diter.next();
-            System.out.println("TESTING DATA " + d.data);
+            //System.out.println("TESTING DATA " + d.data);
             Iterator<Cluster> citer = clusters.iterator();
             Cluster closest = null;
             int minDistance = Integer.MAX_VALUE;
@@ -120,15 +119,13 @@ public class SequentialKMeans
             {
                 Cluster c = citer.next();
                 int thisDistance = d.data.distance(c.centroid);
-                System.out.println("Testing cluster " + c.centroid + 
-                    "; distance is " + thisDistance);
                 if (thisDistance < minDistance) 
                 {
                     closest = c;
                     minDistance = thisDistance;
                 }
             }
-            System.out.println("closest cluster center is " + closest.centroid);
+            //System.out.println("closest cluster center is " + closest.centroid);
             // closest is now the optimal cluster; add d to it
             d.cluster = closest;
             closest.data.add(d);
@@ -169,20 +166,23 @@ public class SequentialKMeans
                 newList.add(diter.next().data);
             }
             finalList.add(newList);
+            System.out.println("Cluster has centroid " + c.centroid);
         }
         return finalList;
     }
 
     public static void main(String[] args)
     {
-        List<DataInterface> theData = getData();
+        long startTime = System.currentTimeMillis();
+        List<DataInterface> theData = getData(args);
         SequentialKMeans worker = new SequentialKMeans(theData, K);
-        System.out.println("Starting calculation");
+        System.out.println("Starting calculation with K:" + K + " mu:" + mu);
         List<List<DataInterface>> groups = worker.calculateGroups();
-        System.out.println("The resultant groups were:\n" + groups);
+        long endTime = System.currentTimeMillis();
+        System.out.println("Execution time was " + (endTime-startTime) + "ms");
     }
 
-    private static List<DataInterface> getData()
+    private static List<DataInterface> getData(String[] args)
     {
         Pair a1 = new Pair(5,5);
         Pair b1 = new Pair(6,6);
@@ -201,12 +201,23 @@ public class SequentialKMeans
         list.add(b2);
         list.add(b3);
         list.add(b4);
-        return list;
 
-        //Pair c1 = new Pair(20, 20);
+        if (args.length == 0)
+            return list;
 
-
-
+        // File input
+        List<DataInterface> randomList = new ArrayList<DataInterface>();
+        try{
+            File f = new File(args[0]);
+            Scanner s = new Scanner(f);
+            while (s.hasNextInt()) {
+                Pair p = new Pair(s.nextInt(), s.nextInt());
+                randomList.add(p);
+            }
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+        return randomList;
     }
 }
 
