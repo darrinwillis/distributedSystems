@@ -23,7 +23,7 @@ public class DNA implements DataInterface
         {
             if (ca1[i] != ca2[i]) differences++;
         }
-        return (length - differences);
+        return differences;
     }
 
     public DataInterface average(List<DataInterface> list) throws IllegalArgumentException

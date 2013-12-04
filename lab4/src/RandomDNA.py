@@ -1,6 +1,6 @@
 import random
 def main():
-    num_strands = 100
+    num_strands = 1000
     strand_length = 1000
     letters = 'atcg'
     randomDNA = []

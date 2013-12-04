@@ -178,7 +178,7 @@ public class SequentialKMeans
             maxDistance = Math.max(thisDistance, maxDistance);
        }
        System.out.println("max distance is " + maxDistance);
-       return (maxDistance < distanceThreshold);
+       return (maxDistance <= distanceThreshold);
     }
 
     private List<List<DataInterface>> formList()
