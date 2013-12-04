@@ -173,8 +173,21 @@ public class SequentialKMeans
 
     public static void main(String[] args)
     {
+        if (args.length != 3) {
+            System.out.println("Run with java SequentialKMeans [points or dna] [K] [inputfile]");
+            return;
+        }
+        //Start clock before performing any computation
         long startTime = System.currentTimeMillis();
-        List<DataInterface> theData = getData(args);
+        K = Integer.parseInt(args[1]); 
+
+        //Select which data type to use
+        List<DataInterface> theData = null;
+        if (args[0].equals("points"))
+            theData = getPairData(args);
+        else if (args[0].equals("dna"))
+            theData = getDNAData(args);
+
         SequentialKMeans worker = new SequentialKMeans(theData, K);
         System.out.println("Starting calculation with K:" + K + " mu:" + mu);
         List<List<DataInterface>> groups = worker.calculateGroups();
@@ -182,33 +195,11 @@ public class SequentialKMeans
         System.out.println("Execution time was " + (endTime-startTime) + "ms");
     }
 
-    private static List<DataInterface> getData(String[] args)
+    private static List<DataInterface> getPairData(String[] args)
     {
-        Pair a1 = new Pair(5,5);
-        Pair b1 = new Pair(6,6);
-        Pair a2 = new Pair(-5,5);
-        Pair b2 = new Pair(-6,6);
-        Pair a3 = new Pair(-5,-5);
-        Pair b3 = new Pair(-6,-6);
-        Pair a4 = new Pair(5,-5);
-        Pair b4 = new Pair(6,-6);
-        List<DataInterface> list = new ArrayList<DataInterface>();
-        list.add(a1);
-        list.add(a2);
-        list.add(a3);
-        list.add(a4);
-        list.add(b1);
-        list.add(b2);
-        list.add(b3);
-        list.add(b4);
-
-        if (args.length == 0)
-            return list;
-
-        // File input
         List<DataInterface> randomList = new ArrayList<DataInterface>();
         try{
-            File f = new File(args[0]);
+            File f = new File(args[2]);
             Scanner s = new Scanner(f);
             while (s.hasNextInt()) {
                 Pair p = new Pair(s.nextInt(), s.nextInt());
@@ -218,6 +209,23 @@ public class SequentialKMeans
             e.printStackTrace();
         }
         return randomList;
+    }
+
+    private static List<DataInterface> getDNAData(String[] args)
+    {
+        List<DataInterface> randomList = new ArrayList<DataInterface>();
+        try{
+            File f = new File(args[2]);
+            Scanner s = new Scanner(f);
+            while (s.hasNextLine()) {
+                DNA dna = new DNA(s.nextLine());
+                randomList.add(dna);
+            }
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+        return randomList;
+
     }
 }
 

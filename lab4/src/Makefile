@@ -19,6 +19,7 @@ JFLAGS = -g
 CLASSES = \
 	DataInterface.java \
 	Pair.java \
+	DNA.java \
 	SequentialKMeans.java
 
 
