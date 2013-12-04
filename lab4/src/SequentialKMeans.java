@@ -6,17 +6,20 @@ public class SequentialKMeans
     //This is a data struct to hold the centroid and data list
     private class Cluster{
         DataInterface centroid;
+        DataInterface lastCentroid;
         List<DataUnit> data;
 
         public Cluster(DataInterface d)
         {
             this.centroid = d;
+            this.lastCentroid = null;
             this.data = new ArrayList<DataUnit>();
         }
 
         public Cluster(DataInterface d, List<DataUnit> givenData)
         {
             this.centroid = d;
+            this.lastCentroid = null;
             this.data = givenData;
         }
     }
@@ -29,22 +32,24 @@ public class SequentialKMeans
         }
     }
 
-    //TODO: Take this as a commandline argument
     private static int K = 3;
-    //TODO: Dynamically determine mu
-    private static int mu = 20;
+    //maximum number of iterations to ensure completion
+    private static int maxMu = 100;
 
     //Instace Variables
     private int k;
+    private int distanceThreshold;
     private List<DataUnit> dataList;
     private List<Cluster> clusters;
 
-    public SequentialKMeans(List<DataInterface> inputData, int k) 
+    // Note, distance is a threshold for determining when to stop
+    public SequentialKMeans(List<DataInterface> inputData, int k, int distance) 
         throws IllegalArgumentException
     {
         System.out.println("Making new Sequential K means object");
         if (inputData.size() < k)
             throw new IllegalArgumentException();
+
         // Convert the input data into DataUnits
         List<DataUnit> units = new ArrayList<DataUnit>();
         Iterator<DataInterface> iter = inputData.iterator();
@@ -52,9 +57,11 @@ public class SequentialKMeans
         while (iter.hasNext()) {
             units.add(new DataUnit(iter.next()));
         }
+        
         this.dataList = units;
         this.k = k;
         this.clusters = new ArrayList<Cluster>();
+        this.distanceThreshold = distance;
         System.out.println("Sequential K means object created");
     }
 
@@ -63,14 +70,19 @@ public class SequentialKMeans
         System.out.println("Picking initial centroids");
         pickInitialCentroids();
 
-        for (int i = 0; i < mu; i++)
+        int i;
+        for (i = 0; i < maxMu; i++)
         {
             //Assign all data to centroids
             assignData();
             
             //Recalculate Centroids
             recalculateCentroids();
+
+            if (checkConvergence())
+                break;
         }
+        System.out.println("Converged after " + (i+1) + " iterations");
         return formList();
     }
 
@@ -140,6 +152,7 @@ public class SequentialKMeans
         while (citer.hasNext())
         {
             Cluster eachCluster = citer.next();
+            eachCluster.lastCentroid = eachCluster.centroid;
             Iterator<DataUnit> diter = eachCluster.data.iterator();
             List<DataInterface> dataList = new ArrayList<DataInterface>();
             while (diter.hasNext())
@@ -150,6 +163,22 @@ public class SequentialKMeans
                 eachCluster.centroid = average;
             }
         }
+    }
+
+    private boolean checkConvergence()
+    {
+       Iterator<Cluster> citer = clusters.iterator();
+       
+       //Calculate the most that any centroid has moved
+       int maxDistance = 0;
+       while (citer.hasNext())
+       {
+            Cluster c = citer.next();
+            int thisDistance = c.centroid.distance(c.lastCentroid);
+            maxDistance = Math.max(thisDistance, maxDistance);
+       }
+       System.out.println("max distance is " + maxDistance);
+       return (maxDistance < distanceThreshold);
     }
 
     private List<List<DataInterface>> formList()
@@ -173,33 +202,36 @@ public class SequentialKMeans
 
     public static void main(String[] args)
     {
-        if (args.length != 3) {
-            System.out.println("Run with java SequentialKMeans [points or dna] [K] [inputfile]");
+        if (args.length != 4) {
+            System.out.println("Run with java SequentialKMeans [points or dna] [K] [distanceThreshold] [inputfile]");
             return;
         }
         //Start clock before performing any computation
         long startTime = System.currentTimeMillis();
-        K = Integer.parseInt(args[1]); 
+        K = Integer.parseInt(args[1]);
+        int distanceT = Integer.parseInt(args[2]);
 
+        String filename = args[3];
         //Select which data type to use
         List<DataInterface> theData = null;
         if (args[0].equals("points"))
-            theData = getPairData(args);
+            theData = getPairData(filename);
         else if (args[0].equals("dna"))
-            theData = getDNAData(args);
+            theData = getDNAData(filename);
 
-        SequentialKMeans worker = new SequentialKMeans(theData, K);
-        System.out.println("Starting calculation with K:" + K + " mu:" + mu);
+
+        SequentialKMeans worker = new SequentialKMeans(theData, K, distanceT);
+        System.out.println("Starting calculation with K:" + K);
         List<List<DataInterface>> groups = worker.calculateGroups();
         long endTime = System.currentTimeMillis();
         System.out.println("Execution time was " + (endTime-startTime) + "ms");
     }
 
-    private static List<DataInterface> getPairData(String[] args)
+    private static List<DataInterface> getPairData(String filename)
     {
         List<DataInterface> randomList = new ArrayList<DataInterface>();
         try{
-            File f = new File(args[2]);
+            File f = new File(filename);
             Scanner s = new Scanner(f);
             while (s.hasNextInt()) {
                 Pair p = new Pair(s.nextInt(), s.nextInt());
@@ -211,11 +243,11 @@ public class SequentialKMeans
         return randomList;
     }
 
-    private static List<DataInterface> getDNAData(String[] args)
+    private static List<DataInterface> getDNAData(String filename)
     {
         List<DataInterface> randomList = new ArrayList<DataInterface>();
         try{
-            File f = new File(args[2]);
+            File f = new File(filename);
             Scanner s = new Scanner(f);
             while (s.hasNextLine()) {
                 DNA dna = new DNA(s.nextLine());
