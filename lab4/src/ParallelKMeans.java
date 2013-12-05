@@ -205,7 +205,7 @@ public class ParallelKMeans
             // Package data to be sent
             clusterArray = clusters.toArray(new Cluster[0]);
             //System.out.println("Slave " + myrank + " data " + Arrays.toString(data));
-            //System.out.println("Slave " + myrank + " cluster " + Arrays.toString(cluster));
+            //System.out.println("Slave " + myrank + " cluster " + Arrays.toString(clusterArray));
             MPI.COMM_WORLD.Send(clusterArray,0,K,MPI.OBJECT,0,CLUSTER);
             Status s3 = MPI.COMM_WORLD.Recv(doneArray,0,1,MPI.BOOLEAN,0,DONECHECK);
         }     
@@ -310,9 +310,11 @@ public class ParallelKMeans
         {
             Cluster eachCluster = citer.next();
             eachCluster.lastCentroid = eachCluster.centroid;
-            if (dataList.size() != 0)
+            List<DataInterface> data = eachCluster.data;
+            if (data.size() != 0)
             {
-                DataInterface average = dataList.get(0).average(dataList);
+                DataInterface average = dataList.get(0).average(data);
+                //System.out.println("Centroid changed from " + eachCluster.centroid + " to " + average);
                 eachCluster.centroid = average;
             }
         }
