@@ -20,7 +20,8 @@ CLASSES = \
 	DataInterface.java \
 	Pair.java \
 	SequentialKMeans.java \
-	ParallelKMeans.java
+	ParallelKMeans.java \
+	DNA.java 
 
 
 default: classes 
