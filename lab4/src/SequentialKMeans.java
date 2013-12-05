@@ -7,16 +7,16 @@ public class SequentialKMeans
     private class Cluster{
         DataInterface centroid;
         DataInterface lastCentroid;
-        List<DataUnit> data;
+        List<DataInterface> data;
 
         public Cluster(DataInterface d)
         {
             this.centroid = d;
             this.lastCentroid = null;
-            this.data = new ArrayList<DataUnit>();
+            this.data = new ArrayList<DataInterface>();
         }
 
-        public Cluster(DataInterface d, List<DataUnit> givenData)
+        public Cluster(DataInterface d, List<DataInterface> givenData)
         {
             this.centroid = d;
             this.lastCentroid = null;
@@ -24,13 +24,6 @@ public class SequentialKMeans
         }
     }
 
-    private class DataUnit{
-        DataInterface data;
-        Cluster cluster;
-        public DataUnit(DataInterface d) {
-            data = d;
-        }
-    }
 
     private static int K = 3;
     //maximum number of iterations to ensure completion
@@ -39,30 +32,20 @@ public class SequentialKMeans
     //Instace Variables
     private int k;
     private int distanceThreshold;
-    private List<DataUnit> dataList;
+    private List<DataInterface> dataList;
     private List<Cluster> clusters;
 
     // Note, distance is a threshold for determining when to stop
     public SequentialKMeans(List<DataInterface> inputData, int k, int distance) 
         throws IllegalArgumentException
     {
-        System.out.println("Making new Sequential K means object");
         if (inputData.size() < k)
             throw new IllegalArgumentException();
 
-        // Convert the input data into DataUnits
-        List<DataUnit> units = new ArrayList<DataUnit>();
-        Iterator<DataInterface> iter = inputData.iterator();
-        System.out.println("Adding data units");
-        while (iter.hasNext()) {
-            units.add(new DataUnit(iter.next()));
-        }
-        
-        this.dataList = units;
+        this.dataList = inputData;
         this.k = k;
         this.clusters = new ArrayList<Cluster>();
         this.distanceThreshold = distance;
-        System.out.println("Sequential K means object created");
     }
 
     public List<List<DataInterface>> calculateGroups()
@@ -102,9 +85,9 @@ public class SequentialKMeans
                 index = (int)(Math.random() * numElements);
             } while (picked.contains(index));
             picked.add(index);
-            //This is now guaranteed to be a unique DataUnit
-            DataUnit newCentroid = dataList.get(index);
-            Cluster newCluster = new Cluster(newCentroid.data);
+            //This is now guaranteed to be a unique DataInterface
+            DataInterface newCentroid = dataList.get(index);
+            Cluster newCluster = new Cluster(newCentroid);
             clusters.add(newCluster);
         }
     }
@@ -114,14 +97,14 @@ public class SequentialKMeans
         Iterator<Cluster> resetIter = clusters.iterator();
         while (resetIter.hasNext())
         {
-            resetIter.next().data = new ArrayList<DataUnit>();
+            resetIter.next().data = new ArrayList<DataInterface>();
         }
 
-        Iterator<DataUnit> diter = dataList.iterator();
+        Iterator<DataInterface> diter = dataList.iterator();
         // Assign each DataInterface in the data list
         while (diter.hasNext())
         {
-            DataUnit d = diter.next();
+            DataInterface d = diter.next();
             //System.out.println("TESTING DATA " + d.data);
             Iterator<Cluster> citer = clusters.iterator();
             Cluster closest = null;
@@ -130,7 +113,7 @@ public class SequentialKMeans
             while (citer.hasNext())
             {
                 Cluster c = citer.next();
-                int thisDistance = d.data.distance(c.centroid);
+                int thisDistance = d.distance(c.centroid);
                 if (thisDistance < minDistance) 
                 {
                     closest = c;
@@ -139,7 +122,6 @@ public class SequentialKMeans
             }
             //System.out.println("closest cluster center is " + closest.centroid);
             // closest is now the optimal cluster; add d to it
-            d.cluster = closest;
             closest.data.add(d);
         }
         return;
@@ -153,13 +135,9 @@ public class SequentialKMeans
         {
             Cluster eachCluster = citer.next();
             eachCluster.lastCentroid = eachCluster.centroid;
-            Iterator<DataUnit> diter = eachCluster.data.iterator();
-            List<DataInterface> dataList = new ArrayList<DataInterface>();
-            while (diter.hasNext())
-                dataList.add(diter.next().data);
             if (dataList.size() != 0)
             {
-                DataInterface average = dataList.get(0).average(dataList);
+                DataInterface average = dataList.get(0).average(eachCluster.data);
                 eachCluster.centroid = average;
             }
         }
@@ -177,7 +155,6 @@ public class SequentialKMeans
             int thisDistance = c.centroid.distance(c.lastCentroid);
             maxDistance = Math.max(thisDistance, maxDistance);
        }
-       System.out.println("max distance is " + maxDistance);
        return (maxDistance <= distanceThreshold);
     }
 
@@ -188,13 +165,7 @@ public class SequentialKMeans
         while (iter.hasNext())
         {
             Cluster c = iter.next();
-            List<DataInterface> newList = new ArrayList<DataInterface>();
-            Iterator<DataUnit> diter = c.data.iterator();
-            while (diter.hasNext())
-            {
-                newList.add(diter.next().data);
-            }
-            finalList.add(newList);
+            finalList.add(c.data);
             System.out.println("Cluster has centroid " + c.centroid);
         }
         return finalList;

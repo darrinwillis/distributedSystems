@@ -1,7 +1,8 @@
 import random
+import sys
 def main():
-    num_each = 100000
-    range = 1000
+    num_each = int(sys.argv[1])
+    range = int(sys.argv[2])
     random_nums = []
 
     for i in xrange(0, num_each):

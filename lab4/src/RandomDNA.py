@@ -1,7 +1,8 @@
 import random
+import sys
 def main():
-    num_strands = 1000
-    strand_length = 1000
+    num_strands = int(sys.argv[1])
+    strand_length = int(sys.argv[2])
     letters = 'atcg'
     randomDNA = []
 

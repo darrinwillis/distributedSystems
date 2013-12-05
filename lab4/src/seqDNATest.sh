@@ -1,6 +1,6 @@
 #!/bin/bash
 echo "Generating random DNA..."
-python RandomDNA.py > randomDNA.txt
+python RandomDNA.py 10000 1000 > randomDNA.txt
 echo "Performing K-means clustering"
-java SequentialKMeans dna 3 0  randomDNA.txt
+java SequentialKMeans dna 3 2  randomDNA.txt
 
