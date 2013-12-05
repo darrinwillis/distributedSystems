@@ -1,7 +1,7 @@
 # A makefile for lab2
 
 # Java compiler variable
-JC = javac
+JC = mpijavac
 
 # RMI compiler variable
 RMI = rmic
@@ -10,7 +10,7 @@ RMI = rmic
 ECHO = (echo)
 
 # Any compilation flags
-JFLAGS = -g
+JFLAGS = -g -cp /usr/local/lib/openmpi/lib/mpi.jar:.
 
 .SUFFIXES: .java .class
 .java.class:
@@ -19,8 +19,9 @@ JFLAGS = -g
 CLASSES = \
 	DataInterface.java \
 	Pair.java \
-	DNA.java \
-	SequentialKMeans.java
+	SequentialKMeans.java \
+	ParallelKMeans.java \
+	DNA.java 
 
 
 default: classes 
