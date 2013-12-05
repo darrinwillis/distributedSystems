@@ -100,7 +100,7 @@ public class SequentialKMeans
         Iterator<Cluster> resetIter = clusters.iterator();
         while (resetIter.hasNext())
         {
-            resetIter.next().data = new ArrayList<DataInterface>();
+            resetIter.next().data.clear();
         }
 
         Iterator<DataInterface> diter = dataList.iterator();

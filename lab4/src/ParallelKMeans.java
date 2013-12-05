@@ -2,8 +2,15 @@ import java.util.*;
 import java.io.*;
 import mpi.*;
 
+// Implements a parallelized version of K means clustering using
+// OpenMPI in java
 public class ParallelKMeans
 {
+    private static final int PARTSIZE   = 0;
+    private static final int CLUSTER    = 1;
+    private static final int DATA       = 2;
+    private static final int DONECHECK  = 3;
+
     //This is a data struct to hold the centroid and data list
     private static class Cluster implements Serializable {
         DataInterface centroid;
@@ -28,14 +35,14 @@ public class ParallelKMeans
         }
     }
 
-    //TODO: Take this as a commandline argument
     private static int K = 3;
-    //TODO: Dynamically determine mu
+    // This is the maximum number of k means interations
     private static int mu = 100;
 
     //Instace Variables
     private static List<DataInterface> dataList;
     private static List<Cluster> clusters;
+    // Instance rank of the local openmpi process (0 is master)
     private static int myrank;
     private static int distanceThreshold;
     private static int p; //num processors
@@ -44,31 +51,37 @@ public class ParallelKMeans
     public static void main(String[] args) 
     {
         try{
+            // Needed for any MPI calls
             MPI.Init(args);
+
+            // Parse cmd line input
             if (args.length != 4) {
                 System.out.println("Run with java SequentialKMeans [points or dna] [K] [distanceThreshold] [inputfile]");
                 return;
             }
             K = Integer.parseInt(args[1]);
 
-            long startTime = System.currentTimeMillis();
             
+            // unique process number (0 is master)
             myrank = MPI.COMM_WORLD.Rank();
+            // p is the number of processors
             p = MPI.COMM_WORLD.Size();
+
+            // If master, master code
             if(myrank == 0) 
                 master(args);
             else 
                 slave();
 
+            // Necessary to close MPI connections
             MPI.Finalize();
-            long endTime = System.currentTimeMillis();
-            System.out.println("Execution time was " + (endTime-startTime) + "ms");
         } catch(Exception e) {
             e.printStackTrace();
         }
     }
 
     public static void master(String[] args) throws MPIException{
+        // Parse cmd line args
         distanceThreshold = Integer.parseInt(args[2]);
 
         String filename = args[3];
@@ -78,75 +91,123 @@ public class ParallelKMeans
             theData = getPairData(filename);
         else if (args[0].equals("dna"))
             theData = getDNAData(filename);
+
+
+        // Start time (before any real computation)
+        long startTime = System.currentTimeMillis();
         
+        // Add data to local
         initialize(theData);
 
-        partSize = dataList.size()/(p-1);
+        int numWorkers = p-1;
+        partSize = dataList.size()/(numWorkers);
 
         System.out.println("Num processors " + p);
         System.out.println("Part Size " + partSize);
 
         System.out.println("Picking initial centroids");
         pickInitialCentroids();
+        // Here formList is just printing initial centroids
         formList();
 
         int i;
         for(i = 0; i < mu; i++){
             System.out.println("Scheduling workers");
-            int remainder = dataList.size()-(p-1)*partSize;
+            
+            int remainder = dataList.size()-numWorkers*partSize;
+            // MPI necessitates arrays, instead of lists
             DataInterface[] dataArray = dataList.toArray(new DataInterface[0]);
             Cluster[] clusterArray = clusters.toArray(new Cluster[0]);
+            // MPI only takes arrays, so psize must be sent as a singleton array
+            // in order to account for remainders, psize is 1 more than necessary
+            // and will be decremented later when all remainder is accounted for
             int[] psize = {partSize + 1};
+            // current location in total data array
             int index = 0;
 
-            for(int rank = 1; rank < p; rank++) {//partition and send work to slaves
+            // slaves start at rank 1, so start there
+            // send work to slaves
+            for(int rank = 1; rank <= numWorkers; rank++) {
                 if(remainder == 0){ 
+                    // All remainders have been allocated, thus psize is reduced
                     psize[0]--;
                     remainder--;
                 } else 
                     remainder--;
-                MPI.COMM_WORLD.Send(psize,0,1,MPI.INT,rank,99);
-                MPI.COMM_WORLD.Send(clusterArray,0,K,MPI.OBJECT,rank,0); //clusters
-            
-                MPI.COMM_WORLD.Send(dataArray,index,psize[0],MPI.OBJECT,rank,1); //datapoints
+                // first the arraysize is sent, so slaves know the coming size
+                // Send(array, offset, num_things_to_send, type, destination, tag)
+                MPI.COMM_WORLD.Send(psize,0,1,MPI.INT,rank,PARTSIZE);
+                // All slaves should know all clusters
+                MPI.COMM_WORLD.Send(clusterArray,0,K,MPI.OBJECT,rank,CLUSTER);
+                
+                // Each slave should only know a portion of data          
+                MPI.COMM_WORLD.Send(dataArray,index,psize[0],MPI.OBJECT,rank,DATA);
+                // just sent psize datapoints, inc index
                 index += psize[0];
             }
+            // Slaves now calculate; wait for their response of datapoint
+            // to cluster allocation
 
-            Cluster[][] results = new Cluster[p-1][K];
+            Cluster[][] results = new Cluster[numWorkers][K];
+            // count number of slaves which have responded
             int counter = 0;
-            while(counter < p-1) { //receiving output
-                Status s = MPI.COMM_WORLD.Recv(results[counter],0,K,MPI.OBJECT,MPI.ANY_SOURCE,2);
+            while(counter < numWorkers) {
+                //Recv(variable, offset, num_received, type, source, tag)
+                Status s = MPI.COMM_WORLD.Recv(results[counter],0,K,MPI.OBJECT,MPI.ANY_SOURCE,CLUSTER);
                 //System.out.println("Recieved " + Arrays.toString(results[counter]) + " from Slave");
                 counter++;
             }
        
-            System.out.println("All messages recieved");
+            System.out.println("All datapoint reallocation messages recieved");
             mergeData(results);
+            // Local copy of all clusters is now complete
+            // TODO: Parallelize this
             recalculateCentroids();
 
-            if(checkConvergence()) 
+            boolean done = checkConvergence();
+            boolean[] doneArray = {done};
+            for(int rank = 1; rank <= numWorkers; rank++) {
+                MPI.COMM_WORLD.Send(doneArray,0,1,MPI.BOOLEAN,rank,DONECHECK);
+            }
+            if (done)
                 break;
         }
-
+        
+        // Form output into a usable form
         formList();
+
+        // Done with real computation; stop time
+        long endTime = System.currentTimeMillis();
+        System.out.println("Execution time was " + (endTime-startTime) + "ms");
     }
     
+    // This is what each non-master processor runs
     public static void slave() throws MPIException {
-        while(true) {
+        // Singleton array
+        boolean[] doneArray = {false};
+        while(!doneArray[0]) {
+            // This will be the size of the received dataportion
             int[] psize = new int[1];
         
-            Status s = MPI.COMM_WORLD.Recv(psize,0,1,MPI.INT,0,99); //recieve partition size info
+            // Receive size of data portion
+            Status s = MPI.COMM_WORLD.Recv(psize,0,1,MPI.INT,0,PARTSIZE);
             partSize = psize[0];
 
-            Cluster[] cluster = new Cluster[K];
+            // Array of all clusters
+            Cluster[] clusterArray = new Cluster[K];
+            // This slave's portion of the overall data
             DataInterface[] data = new DataInterface[partSize];
-            Status s1 = MPI.COMM_WORLD.Recv(cluster,0,K,MPI.OBJECT,0,0); //recieve cluster list
-            Status s2 = MPI.COMM_WORLD.Recv(data,0,partSize,MPI.OBJECT,0,1); //recieve data list 
-            calculateGroups(cluster,data);
-            cluster = clusters.toArray(new Cluster[0]);
-            System.out.println("Slave " + myrank + " data " + Arrays.toString(data));
-            System.out.println("Slave " + myrank + " cluster " + Arrays.toString(cluster));
-            MPI.COMM_WORLD.Send(cluster,0,K,MPI.OBJECT,0,2);
+            // Receive info
+            Status s1 = MPI.COMM_WORLD.Recv(clusterArray,0,K,MPI.OBJECT,0,CLUSTER);
+            Status s2 = MPI.COMM_WORLD.Recv(data,0,partSize,MPI.OBJECT,0,DATA);
+            // Assign each slave's portion of the data to nearest cluster
+            assignData(clusterArray,data);
+            // Package data to be sent
+            clusterArray = clusters.toArray(new Cluster[0]);
+            //System.out.println("Slave " + myrank + " data " + Arrays.toString(data));
+            //System.out.println("Slave " + myrank + " cluster " + Arrays.toString(cluster));
+            MPI.COMM_WORLD.Send(clusterArray,0,K,MPI.OBJECT,0,CLUSTER);
+            Status s3 = MPI.COMM_WORLD.Recv(doneArray,0,1,MPI.BOOLEAN,0,DONECHECK);
         }     
     }
 
@@ -166,29 +227,15 @@ public class ParallelKMeans
        return (maxDistance <= distanceThreshold);
     }
 
+    // Add data
     public static void initialize(List<DataInterface> inputData) 
     {
         System.out.println("Making new Parallel K means object");
-        // Convert the input data into DataInterfaces
-        List<DataInterface> units = new ArrayList<DataInterface>();
-        Iterator<DataInterface> iter = inputData.iterator();
-        System.out.println("Adding data units");
-        while (iter.hasNext()) {
-            units.add(iter.next());
-        }
-        dataList = units;
+        // Assign total input data to master instance
+        dataList = inputData;
         clusters = new ArrayList<Cluster>();
         System.out.println("Parallel K means object created");
         System.out.println("Data size " + dataList.size());
-    }
-
-    public static void calculateGroups(Cluster[] c, DataInterface[] d)
-    {
-        dataList = new ArrayList<DataInterface>(Arrays.asList(d));
-        clusters = new ArrayList<Cluster>(Arrays.asList(c));
-
-        //Assign all data to centroids
-        assignData();
     }
 
     // This random selects k unique points
@@ -214,8 +261,12 @@ public class ParallelKMeans
         }
     }
 
-    private static void assignData()
+    // Assign each slave's portion of the data
+    private static void assignData(Cluster[] clusterArray, DataInterface[] dataArray)
     {
+        // TODO: use simple Arrays.asList
+        dataList = new ArrayList<DataInterface>(Arrays.asList(dataArray));
+        clusters = new ArrayList<Cluster>(Arrays.asList(clusterArray));
         Iterator<Cluster> resetIter = clusters.iterator();
         while (resetIter.hasNext())
         {
@@ -259,14 +310,9 @@ public class ParallelKMeans
         {
             Cluster eachCluster = citer.next();
             eachCluster.lastCentroid = eachCluster.centroid;
-            Iterator<DataInterface> diter = eachCluster.data.iterator();
-            List<DataInterface> dataList = new ArrayList<DataInterface>();
-            while (diter.hasNext())
-                dataList.add(diter.next());
             if (dataList.size() != 0)
             {
                 DataInterface average = dataList.get(0).average(dataList);
-                System.out.println("Centroid changed to " + average + " from " + eachCluster.centroid);
                 eachCluster.centroid = average;
             }
         }
@@ -279,13 +325,7 @@ public class ParallelKMeans
         while (iter.hasNext())
         {
             Cluster c = iter.next();
-            List<DataInterface> newList = new ArrayList<DataInterface>();
-            Iterator<DataInterface> diter = c.data.iterator();
-            while (diter.hasNext())
-            {
-                newList.add(diter.next());
-            }
-            finalList.add(newList);
+            finalList.add(c.data);
             System.out.println("Cluster has centroid " + c.centroid);
         }
         return finalList;
@@ -322,13 +362,21 @@ public class ParallelKMeans
         return randomList;
     }
  
+    //This takes all slave's versions of clusters, datapoints should be
+    //simply added from each cluster 
     public static void mergeData(Cluster[][] cs) {
-        dataList.clear();
-        for(int rank = 0; rank < cs.length; rank++) {
-            System.out.println(Arrays.toString(cs[rank]));
+        // Reset all clusters
+        Iterator<Cluster> resetIter = clusters.iterator();
+        while (resetIter.hasNext())
+        {
+            resetIter.next().data.clear();
+        }
+
+        // For each slave
+        for(int j = 0; j < cs.length; j++) {
+            // For each slave's version of cluster K 
             for(int i = 0; i < K; i++) {             
-                clusters.get(i).data.addAll(cs[rank][i].data);
-                dataList.addAll(cs[rank][i].data);
+                clusters.get(i).data.addAll(cs[j][i].data);
             }
         }
     }
