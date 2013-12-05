@@ -22,6 +22,9 @@ public class SequentialKMeans
             this.lastCentroid = null;
             this.data = givenData;
         }
+        public String toString() {
+            return (data.toString());
+        }
     }
 
     private class DataUnit{
@@ -237,7 +240,7 @@ public class SequentialKMeans
                 Pair p = new Pair(s.nextInt(), s.nextInt());
                 randomList.add(p);
             }
-        } catch(IOException e) {
+       } catch(IOException e) {
             e.printStackTrace();
         }
         return randomList;

@@ -1,8 +1,8 @@
 import random
 def main():
-    num_each = 1000
+    num_each = 100
     centers = [[50,50], [-50, 50], [-50, -50], [50, -50]]
-    range = 10
+    range = 5
     random_nums = []
 
     for pair in centers:

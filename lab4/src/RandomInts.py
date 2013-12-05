@@ -1,7 +1,7 @@
 import random
 def main():
-    num_each = 100000
-    range = 1000
+    num_each = 20
+    range = 10
     random_nums = []
 
     for i in xrange(0, num_each):
