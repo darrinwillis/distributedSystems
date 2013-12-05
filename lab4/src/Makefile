@@ -17,6 +17,7 @@ JFLAGS = -g -cp /usr/local/lib/openmpi/lib/mpi.jar:.
 	@$(JC) $(JFLAGS) $*.java
 
 CLASSES = \
+	Hello.java \
 	DataInterface.java \
 	Pair.java \
 	SequentialKMeans.java \
