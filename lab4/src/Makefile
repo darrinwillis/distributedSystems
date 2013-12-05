@@ -21,7 +21,8 @@ CLASSES = \
 	Pair.java \
 	SequentialKMeans.java \
 	ParallelKMeans.java \
-	DNA.java 
+	DNA.java \
+	Hello.java
 
 
 default: classes 

@@ -101,6 +101,7 @@ public class ParallelKMeans
 
         int numWorkers = p-1;
         partSize = dataList.size()/(numWorkers);
+        int remainder = dataList.size()-numWorkers*partSize;
 
         System.out.println("Num processors " + p);
         System.out.println("Part Size " + partSize);
@@ -109,41 +110,49 @@ public class ParallelKMeans
         pickInitialCentroids();
         // Here formList is just printing initial centroids
         formList();
+        
+        // MPI only takes arrays, so psize must be sent as a singleton array
+        // in order to account for remainders, psize is 1 more than necessary
+        // and will be decremented later when all remainder is accounted for
+        int[] psize = {partSize + 1};
+        // current location in total data array
+        int index = 0;
 
+        DataInterface[] dataArray = dataList.toArray(new DataInterface[0]);
+        // slaves start at rank 1, so start there
+        // send work to slaves
+        for(int rank = 1; rank <= numWorkers; rank++) {
+            if(remainder == 0){ 
+                // All remainders have been allocated, thus psize is reduced
+                psize[0]--;
+                remainder--;
+            } else 
+                remainder--;
+            // first the arraysize is sent, so slaves know the coming size
+            MPI.COMM_WORLD.Send(psize,0,1,MPI.INT,rank,PARTSIZE);
+            // Each slave should only know a portion of data          
+            MPI.COMM_WORLD.Send(dataArray,index,psize[0],MPI.OBJECT,rank,DATA);
+            // just sent psize datapoints, inc index
+            index += psize[0];
+        }
+            
         int i;
         for(i = 0; i < mu; i++){
             System.out.println("Scheduling workers");
             
-            int remainder = dataList.size()-numWorkers*partSize;
             // MPI necessitates arrays, instead of lists
-            DataInterface[] dataArray = dataList.toArray(new DataInterface[0]);
-            Cluster[] clusterArray = clusters.toArray(new Cluster[0]);
-            // MPI only takes arrays, so psize must be sent as a singleton array
-            // in order to account for remainders, psize is 1 more than necessary
-            // and will be decremented later when all remainder is accounted for
-            int[] psize = {partSize + 1};
-            // current location in total data array
-            int index = 0;
+            Cluster[] clusterArray = new Cluster[K];
 
+            //clear existing cluster data, all we need are the centroids
+            for(int c = 0; c < clusterArray.length; c++) {
+                clusterArray[c] = new Cluster(clusters.get(c).centroid);
+            }
+            
             // slaves start at rank 1, so start there
             // send work to slaves
             for(int rank = 1; rank <= numWorkers; rank++) {
-                if(remainder == 0){ 
-                    // All remainders have been allocated, thus psize is reduced
-                    psize[0]--;
-                    remainder--;
-                } else 
-                    remainder--;
-                // first the arraysize is sent, so slaves know the coming size
-                // Send(array, offset, num_things_to_send, type, destination, tag)
-                MPI.COMM_WORLD.Send(psize,0,1,MPI.INT,rank,PARTSIZE);
                 // All slaves should know all clusters
-                MPI.COMM_WORLD.Send(clusterArray,0,K,MPI.OBJECT,rank,CLUSTER);
-                
-                // Each slave should only know a portion of data          
-                MPI.COMM_WORLD.Send(dataArray,index,psize[0],MPI.OBJECT,rank,DATA);
-                // just sent psize datapoints, inc index
-                index += psize[0];
+                MPI.COMM_WORLD.Send(clusterArray,0,K,MPI.OBJECT,rank,CLUSTER);   
             }
             // Slaves now calculate; wait for their response of datapoint
             // to cluster allocation
@@ -172,7 +181,8 @@ public class ParallelKMeans
             if (done)
                 break;
         }
-        
+        System.out.println("Finished after " + i + " conversions");
+
         // Form output into a usable form
         formList();
 
@@ -185,25 +195,26 @@ public class ParallelKMeans
     public static void slave() throws MPIException {
         // Singleton array
         boolean[] doneArray = {false};
-        while(!doneArray[0]) {
-            // This will be the size of the received dataportion
-            int[] psize = new int[1];
+        // This will be the size of the received dataportion
+        int[] psize = new int[1];
         
-            // Receive size of data portion
-            Status s = MPI.COMM_WORLD.Recv(psize,0,1,MPI.INT,0,PARTSIZE);
-            partSize = psize[0];
+        // Receive size of data portion
+        Status s = MPI.COMM_WORLD.Recv(psize,0,1,MPI.INT,0,PARTSIZE);
+        partSize = psize[0];
+        
+        // This slave's portion of the overall data
+        DataInterface[] data = new DataInterface[partSize];
+        Status s2 = MPI.COMM_WORLD.Recv(data,0,partSize,MPI.OBJECT,0,DATA);
+        dataList = new ArrayList<DataInterface>(Arrays.asList(data));
 
+        while(!doneArray[0]) {
             // Array of all clusters
             Cluster[] clusterArray = new Cluster[K];
-            // This slave's portion of the overall data
-            DataInterface[] data = new DataInterface[partSize];
             // Receive info
             Status s1 = MPI.COMM_WORLD.Recv(clusterArray,0,K,MPI.OBJECT,0,CLUSTER);
-            Status s2 = MPI.COMM_WORLD.Recv(data,0,partSize,MPI.OBJECT,0,DATA);
             // Assign each slave's portion of the data to nearest cluster
-            assignData(clusterArray,data);
+            assignData(clusterArray);
             // Package data to be sent
-            clusterArray = clusters.toArray(new Cluster[0]);
             //System.out.println("Slave " + myrank + " data " + Arrays.toString(data));
             //System.out.println("Slave " + myrank + " cluster " + Arrays.toString(clusterArray));
             MPI.COMM_WORLD.Send(clusterArray,0,K,MPI.OBJECT,0,CLUSTER);
@@ -262,10 +273,9 @@ public class ParallelKMeans
     }
 
     // Assign each slave's portion of the data
-    private static void assignData(Cluster[] clusterArray, DataInterface[] dataArray)
+    private static void assignData(Cluster[] clusterArray)
     {
-        // TODO: use simple Arrays.asList
-        dataList = new ArrayList<DataInterface>(Arrays.asList(dataArray));
+        // TODO: use simple Arrays.asList;
         clusters = new ArrayList<Cluster>(Arrays.asList(clusterArray));
         Iterator<Cluster> resetIter = clusters.iterator();
         while (resetIter.hasNext())
