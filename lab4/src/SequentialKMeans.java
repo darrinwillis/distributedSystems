@@ -169,7 +169,7 @@ public class SequentialKMeans
         {
             Cluster c = iter.next();
             finalList.add(c.data);
-            System.out.println("Cluster has centroid " + c.centroid);
+            //System.out.println("Cluster has centroid " + c.centroid);
         }
         return finalList;
     }

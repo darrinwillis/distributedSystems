@@ -103,10 +103,10 @@ public class ParallelKMeans
         partSize = dataList.size()/(numWorkers);
         int remainder = dataList.size()-numWorkers*partSize;
 
-        System.out.println("Num processors " + p);
-        System.out.println("Part Size " + partSize);
+        //System.out.println("Num processors " + p);
+        //System.out.println("Part Size " + partSize);
 
-        System.out.println("Picking initial centroids");
+        //System.out.println("Picking initial centroids");
         pickInitialCentroids();
         // Here formList is just printing initial centroids
         formList();
@@ -138,7 +138,6 @@ public class ParallelKMeans
             
         int i;
         for(i = 0; i < mu; i++){
-            System.out.println("Scheduling workers");
             
             // MPI necessitates arrays, instead of lists
             Cluster[] clusterArray = new Cluster[K];
@@ -163,11 +162,9 @@ public class ParallelKMeans
             while(counter < numWorkers) {
                 //Recv(variable, offset, num_received, type, source, tag)
                 Status s = MPI.COMM_WORLD.Recv(results[counter],0,K,MPI.OBJECT,MPI.ANY_SOURCE,CLUSTER);
-                //System.out.println("Recieved " + Arrays.toString(results[counter]) + " from Slave");
                 counter++;
             }
        
-            System.out.println("All datapoint reallocation messages recieved");
             mergeData(results);
             // Local copy of all clusters is now complete
             // TODO: Parallelize this
@@ -234,18 +231,17 @@ public class ParallelKMeans
             int thisDistance = c.centroid.distance(c.lastCentroid);
             maxDistance = Math.max(thisDistance, maxDistance);
        }
-       System.out.println("max distance is " + maxDistance);
        return (maxDistance <= distanceThreshold);
     }
 
     // Add data
     public static void initialize(List<DataInterface> inputData) 
     {
-        System.out.println("Making new Parallel K means object");
+        //System.out.println("Making new Parallel K means object");
         // Assign total input data to master instance
         dataList = inputData;
         clusters = new ArrayList<Cluster>();
-        System.out.println("Parallel K means object created");
+        //System.out.println("Parallel K means object created");
         System.out.println("Data size " + dataList.size());
     }
 
@@ -338,7 +334,7 @@ public class ParallelKMeans
         {
             Cluster c = iter.next();
             finalList.add(c.data);
-            System.out.println("Cluster has centroid " + c.centroid);
+            //System.out.println("Cluster has centroid " + c.centroid);
         }
         return finalList;
     }

@@ -1,6 +1,6 @@
 #!/bin/bash
 echo "Generating random ints..."
-python RandomInts.py $1 1000 > random.txt
+python RandomInts.py 10000 1000 > random.txt
 echo "Performing K-means clustering"
-mpirun -np 6 --host ghc40 java ParallelKMeans points 4 1 random.txt
+mpirun -np 6 --host ghc41 java ParallelKMeans points 4 1 random.txt
 
